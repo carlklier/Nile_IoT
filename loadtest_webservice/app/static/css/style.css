@@ -1,0 +1,16 @@
+body {
+    margin: 5;
+    font-family: sans-serif;
+}
+
+table, th, td {
+    border: 1px solid black;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+content {
+    text-align: center;
+}

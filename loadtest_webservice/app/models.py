@@ -9,11 +9,8 @@ class Test(db.Model):
     end = db.Column(db.String())
     workers = db.Column(db.Integer())
 
-    def __init__(self, config, start, end, workers):
-        self.config = config
-        self.start = start
-        self.end = end
-        self.workers = workers
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def __repr__(self):
         return '<id {}>'.format(self.id)
