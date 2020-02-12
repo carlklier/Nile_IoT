@@ -53,7 +53,7 @@ class Request(db.Model):
         }
 
 class SystemMetric(db.Model):
-    __tablename__ = 'system metrics'
+    __tablename__ = 'system_metrics'
 
     id = db.Column(db.Integer, primary_key=True)
     time = db.Column(db.TIMESTAMP)
