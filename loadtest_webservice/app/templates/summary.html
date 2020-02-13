@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+<div class="content">
+        <h1>View Test {{ test.id }} Summary</h1>
+
+        <div class="box_section">
+            <h2>Test Configuration</h2>
+            <div>
+                <td>Test ID: {{ test.id }}</td>
+                <br>
+                <td>Configuration: {{ test.config }}</td>
+                <br>
+                <td>Start Time: {{ test.start }}</td>
+                <br>
+                <td>End Time: {{ test.end }}</td>
+                <br>
+                <td># Workers: {{ test.workers }}</td>
+            </div>
+        </div>
+
+        <div class="box_section">
+            <h2>Test Summary</h2>
+            <div>
+
+            </div>
+        </div>
+</div>
+{% endblock %}

@@ -4,8 +4,8 @@ class Test(db.Model):
     __tablename__ = 'dev_tests'
 
     id = db.Column(db.Integer, primary_key=True)
-    config = db.Column(db.String())
-    start = db.Column(db.String())
+    config = db.Column(db.TIMESTAMP)
+    start = db.Column(db.TIMESTAMP)
     end = db.Column(db.String())
     workers = db.Column(db.Integer())
 
@@ -28,6 +28,7 @@ class Request(db.Model):
     __tablename__ = 'requests'
 
     id = db.Column(db.Integer, primary_key=True)
+    test_id = db.Column(db.Integer())
     time_sent = db.Column(db.TIMESTAMP)
     request_type = db.Column(db.String())
     request_length = db.Column(db.Integer())
@@ -56,6 +57,7 @@ class SystemMetric(db.Model):
     __tablename__ = 'system_metrics'
 
     id = db.Column(db.Integer, primary_key=True)
+    test_id = db.Column(db.Integer())
     time = db.Column(db.TIMESTAMP)
     metric_type = db.Column(db.String())
     metric_value = db.Column(db.BigInteger)

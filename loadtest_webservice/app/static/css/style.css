@@ -14,3 +14,9 @@ table {
 content {
     text-align: center;
 }
+
+.box_section {
+    border: 1px solid black;
+    float: left; 
+    width: 50%"
+}
