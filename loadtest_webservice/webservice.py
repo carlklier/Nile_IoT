@@ -105,7 +105,7 @@ def metrics():
 
     new_metric = SystemMetric(
             test_id = test_id,
-            metric_time = time,
+            metric_time = metric_time, 
             metric_type = metric_type,
             metric_value = metric_value)
 
