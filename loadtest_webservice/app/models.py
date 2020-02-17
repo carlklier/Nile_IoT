@@ -4,10 +4,11 @@ class Test(db.Model):
     __tablename__ = 'dev_tests'
 
     id = db.Column(db.Integer, primary_key=True)
-    config = db.Column(db.TIMESTAMP)
-    start = db.Column(db.TIMESTAMP)
-    end = db.Column(db.String())
-    workers = db.Column(db.Integer())
+    config = db.Column(db.TIMESTAMP) # STRING
+    start = db.Column(db.TIMESTAMP) # good
+    end = db.Column(db.String()) # TIMESTAMP
+    # Will come back to later
+    # workers = db.Column(db.Integer()) 
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
