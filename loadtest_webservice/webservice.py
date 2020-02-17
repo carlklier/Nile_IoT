@@ -123,6 +123,13 @@ def get_test(test_id):
     test = db.session.query(Test).filter(Test.test_id == test_id)
     return test
 
+@app.route('/api/v1/tests/<test_id>/finalize')
+def finalize_test(test_id):
+    #Get the test id
+    #Update the fields with given JSON body
+    #Delete old test 
+    #POST that new test
+    pass
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)
