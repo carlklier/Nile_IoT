@@ -105,7 +105,7 @@ def metrics():
 
     new_metric = SystemMetric(
             test_id = test_id,
-            metric_time = metric_time, 
+            time = metric_time, 
             metric_type = metric_type,
             metric_value = metric_value)
 
@@ -123,13 +123,21 @@ def get_test(test_id):
     test = db.session.query(Test).filter(Test.test_id == test_id)
     return test
 
-@app.route('/api/v1/tests/<test_id>/finalize')
+@app.route('/api/v1/tests/<test_id>/finalize', methods=['POST'])
 def finalize_test(test_id):
+    #Get data sent
+    data = request.get_json()
     #Get the test id
-    #Update the fields with given JSON body
-    #Delete old test 
-    #POST that new test
-    pass
+    test = db.session.query(Test).filter(Test.test_id == test_id)
+    #update the attributes of that test
+    db.session.flush()
+    setattr(test, 'config', data['config'])
+    setattr(test, 'start', data['start'])
+    setattr(test, 'end', data['end'])
+    setattr(test, 'workers', data['workers'])
+    #commit the data
+    db.session.commit()
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)
