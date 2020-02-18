@@ -1,14 +1,15 @@
 from app import db
 
 class Test(db.Model):
-    __tablename__ = 'dev_tests'
+    __tablename__ = 'loadtest_tests'
 
+    # These fields are subject to change depending
+    # on the final test config implementation
     id = db.Column(db.Integer, primary_key=True)
-    config = db.Column(db.TIMESTAMP) # STRING
-    start = db.Column(db.TIMESTAMP) # good
-    end = db.Column(db.String()) # TIMESTAMP
-    # Will come back to later
-    # workers = db.Column(db.Integer()) 
+    config = db.Column(db.String())
+    start = db.Column(db.TIMESTAMP)
+    end = db.Column(db.TIMESTAMP)
+    workers = db.Column(db.Integer)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -26,15 +27,15 @@ class Test(db.Model):
         }
 
 class Request(db.Model):
-    __tablename__ = 'requests'
+    __tablename__ = 'loadtest_requests'
 
     id = db.Column(db.Integer, primary_key=True)
-    test_id = db.Column(db.Integer())
+    test_id = db.Column(db.Integer)
     time_sent = db.Column(db.TIMESTAMP)
     request_type = db.Column(db.String())
-    request_length = db.Column(db.Integer())
+    request_length = db.Column(db.Integer)
     response_type = db.Column(db.String())
-    response_length = db.Column(db.Integer())
+    response_length = db.Column(db.Integer)
     duration = db.Column(db.TIMESTAMP)
 
     def __init__(self, **kwargs):
@@ -46,6 +47,7 @@ class Request(db.Model):
     def serialize(self):
         return {
             'id': self.id,
+            'test_id': self.test_id,
             'time_sent': self.time_sent,
             'request_type': self.request_type,
             'request_length': self.request_length,
@@ -55,10 +57,10 @@ class Request(db.Model):
         }
 
 class SystemMetric(db.Model):
-    __tablename__ = 'system_metrics'
+    __tablename__ = 'loadtest_metrics'
 
     id = db.Column(db.Integer, primary_key=True)
-    test_id = db.Column(db.Integer())
+    test_id = db.Column(db.Integer)
     time = db.Column(db.TIMESTAMP)
     metric_type = db.Column(db.String())
     metric_value = db.Column(db.BigInteger)
@@ -72,6 +74,7 @@ class SystemMetric(db.Model):
     def serialize(self):
         return {
             'id': self.id,
+            'test_id': self.test_id,
             'time': self.time,
             'metric type': self.metric_type,
             'metric value': self.metric_value

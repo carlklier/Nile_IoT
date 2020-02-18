@@ -27,10 +27,8 @@ def view_tests():
 @app.route("/tests/<test_id>/")
 def view_test_id(test_id):
     test = Test.query.get(test_id)
-    #requests = Request.query.filter(Request.test_id == test_id).all()
-    #metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
-    metrics = None
-    requests = None
+    requests = Request.query.filter(Request.test_id == test_id).all()
+    metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
     return render_template('summary.html', 
                             test=test, 
                             requests=requests,
@@ -59,10 +57,11 @@ def tests():
     try:
         db.session.add(new_test)
         db.session.commit()
+        return "Test configurations added\n"
     except:
         'There was an error adding the test data to the database.\n'
 
-    return "Test configurations added\n"
+    return 'Test configurations not added\n'
 
 @app.route('/api/v1/requests', methods=['POST'])
 def requests():
@@ -89,10 +88,11 @@ def requests():
     try:
         db.session.add(new_request)
         db.session.commit()
+        return "Locust request added\n"
     except:
         'There was an error adding the locust request data to the database.\n'
 
-    return "Locust request added\n"
+    return 'Locust request not added\n'
 
 @app.route('/api/v1/metrics', methods=['POST'])
 def metrics():
@@ -112,11 +112,11 @@ def metrics():
     try:
         db.session.add(new_metric)
         db.session.commit()
-        return redirect('/')
+        return "System metric added\n"
     except:
         'There was an error adding the system metric data to the database.\n'
 
-    return "System metric added\n"
+    return "System metric not added\n"
 
 @app.route('/api/v1/tests/<test_id>')
 def get_test(test_id):

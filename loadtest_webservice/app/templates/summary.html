@@ -25,7 +25,40 @@
         <div class="box_section">
             <h2>Test Summary</h2>
             <div>
-
+                <h3>System Metrics</h3>
+                {% for metric in metrics %}
+                <div>
+                    <td>Metric ID: {{ metric.id }}</td>
+                    <br>
+                    <td>Time: {{ metric.time }}</td>
+                    <br>
+                    <td>Metric Type: {{ metric.metric_type }}</td>
+                    <br>
+                    <td>Value: {{ metric.metric_value }}</td>
+                    <br>
+                </div>
+                {% endfor %}
+            </div>
+            <div>
+                <h3>Requests</h3>
+                {% for request in requests %}
+                <div>
+                    <td>Request ID: {{ request.id }}</td>
+                    <br>
+                    <td>Time Sent: {{ request.time_sent }}</td>
+                    <br>
+                    <td>Request Type: {{ request.request_type }}</td>
+                    <br>
+                    <td>Request Length: {{ request.request_length }}</td>
+                    <br>
+                    <td>Response Type: {{ request.response_type }}</td>
+                    <br>
+                    <td>Response Length: {{ request.response_length }}</td>
+                    <br>
+                    <td>Duration: {{ request.duration }}</td>
+                    <br>
+                </div>
+                {% endfor %}
             </div>
         </div>
 </div>
