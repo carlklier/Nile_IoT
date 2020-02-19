@@ -17,6 +17,10 @@ from flask import Flask, jsonify, render_template, url_for, request, redirect
 # Request Pages section #
 #########################
 
+@app.route("/")
+def landing():
+    return redirect("/tests/")
+
 @app.route("/tests/")
 def view_tests():
     tests = Test.query.all()
