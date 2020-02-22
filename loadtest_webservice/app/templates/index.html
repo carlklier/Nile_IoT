@@ -4,20 +4,20 @@
 {% endblock %}
 
 {% block body %}
-<div >
+<div  class="content p-3 mb-2 bg-secondary">
     <h1>View Tests</h1>
 
-    <table>
-        <tr>
-            <th>Test ID</th>
-            <th>Config</th>
-            <th>Start Time</th>
-            <th>End Time</th>
-            <th>Workers</th>
+    <table class="table">
+        <tr class="thead-dark">
+            <th scope="col">Test ID</th>
+            <th scope="col">Config</th>
+            <th scope="col">Start Time</th>
+            <th scope="col">End Time</th>
+            <th scope="col">Workers</th>
         </tr>
         {% for test in tests %}
             <tr>
-                <td>{{ test.id }}</td>
+                <td scope="row">{{ test.id }}</td>
                 <td>{{ test.config }}</td>
                 <td>{{ test.start }}</td>
                 <td>{{ test.end }}</td>

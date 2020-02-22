@@ -4,61 +4,68 @@
 {% endblock %}
 
 {% block body %}
-<div class="content">
+<div class="p-3 mb-2 bg-secondary overflow-hidden">
         <h1>View Test {{ test.id }} Summary</h1>
-
-        <div class="box_section">
-            <h2>Test Configuration</h2>
-            <div>
-                <td>Test ID: {{ test.id }}</td>
-                <br>
-                <td>Configuration: {{ test.config }}</td>
-                <br>
-                <td>Start Time: {{ test.start }}</td>
-                <br>
-                <td>End Time: {{ test.end }}</td>
-                <br>
-                <td># Workers: {{ test.workers }}</td>
-            </div>
-        </div>
-
-        <div class="box_section">
-            <h2>Test Summary</h2>
-            <div>
-                <h3>System Metrics</h3>
-                {% for metric in metrics %}
-                <div>
-                    <td>Metric ID: {{ metric.id }}</td>
+        
+        <div style="margin-left:5%">
+            <div class="box_section col-lg-12 rounded bg-dark text-white" style="width:90%">
+                <h2>Test Configuration</h2>
+                <div class="box_section bg-light rounded text-body">
+                    <td><strong>Test ID:</strong> {{ test.id }}</td>
                     <br>
-                    <td>Time: {{ metric.time }}</td>
+                    <td><strong>Configuration:</strong> {{ test.config }}</td>
                     <br>
-                    <td>Metric Type: {{ metric.metric_type }}</td>
+                    <td><strong>Start Time:</strong> {{ test.start }}</td>
                     <br>
-                    <td>Value: {{ metric.metric_value }}</td>
+                    <td><strong>End Time:</strong> {{ test.end }}</td>
                     <br>
+                    <td><strong>Number of Workers:</strong> {{ test.workers }}</td>
                 </div>
-                {% endfor %}
             </div>
-            <div>
-                <h3>Requests</h3>
-                {% for request in requests %}
-                <div>
-                    <td>Request ID: {{ request.id }}</td>
-                    <br>
-                    <td>Time Sent: {{ request.time_sent }}</td>
-                    <br>
-                    <td>Request Type: {{ request.request_type }}</td>
-                    <br>
-                    <td>Request Length: {{ request.request_length }}</td>
-                    <br>
-                    <td>Response Type: {{ request.response_type }}</td>
-                    <br>
-                    <td>Response Length: {{ request.response_length }}</td>
-                    <br>
-                    <td>Duration: {{ request.duration }}</td>
-                    <br>
+            <div class="box_section col-lg-12 rounded bg-dark text-white" style="width:90%">
+                <h2>Test Summary</h2>
+                <div class="row" style="margin-left:4%">
+                    <div class="box_section bg-light col-lg-5 rounded  text-dark">
+                        <div >
+                            <h3>System Metrics</h3>
+                            {% for metric in metrics %}
+                            <div class="border-bottom border-secondary">
+                                <td><strong>Metric ID:</strong> {{ metric.id }}</td>
+                                <br>
+                                <td><strong>Time:</strong> {{ metric.time }}</td>
+                                <br>
+                                <td><strong>Metric Type:</strong> {{ metric.metric_type }}</td>
+                                <br>
+                                <td><strong>Value:</strong> {{ metric.metric_value }}</td>
+                                <br>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="box_section bg-light border-bottom col-lg-5 rounded text-dark">
+                        <div>
+                            <h3>Requests</h3>
+                            {% for request in requests %}
+                            <div class="border-bottom border-secondary">
+                                <td><strong>Request ID:</strong> {{ request.id }}</td>
+                                <br>
+                                <td><strong>Time Sent:</strong> {{ request.time_sent }}</td>
+                                <br>
+                                <td><strong>Request Type:</strong> {{ request.request_type }}</td>
+                                <br>
+                                <td><strong>Request Length:</strong> {{ request.request_length }}</td>
+                                <br>
+                                <td><strong>Response Type:</strong> {{ request.response_type }}</td>
+                                <br>
+                                <td><strong>Response Length:</strong> {{ request.response_length }}</td>
+                                <br>
+                                <td><strong>Duration:</strong> {{ request.duration }}</td>
+                                <br>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
-                {% endfor %}
             </div>
         </div>
 </div>
