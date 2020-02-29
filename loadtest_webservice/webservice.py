@@ -33,6 +33,7 @@ def view_test_id(test_id):
     test = Test.query.get(test_id)
     requests = Request.query.filter(Request.test_id == test_id).all()
     metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
+    
     return render_template('summary.html', 
                             test=test, 
                             requests=requests,

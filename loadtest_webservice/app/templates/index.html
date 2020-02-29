@@ -18,7 +18,7 @@
         {% for test in tests %}
             <tr>
                 <td scope="row">{{ test.id }}</td>
-                <td>{{ test.config }}</td>
+                <td id="{{test.id}}">{{ test.config }}</td>
                 <td>{{ test.start }}</td>
                 <td>{{ test.end }}</td>
                 <td>{{ test.workers }}</td>

@@ -16,6 +16,7 @@ nose2 = "*"
 flask-testing = "*"
 flask-marshmallow = "*"
 marshmallow-sqlalchemy = "*"
+requests = "*"
 
 [requires]
 python_version = "3.7"
