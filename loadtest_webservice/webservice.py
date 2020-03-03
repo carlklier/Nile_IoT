@@ -9,12 +9,12 @@ as displaying database information in a web interface.
 import logging
 from datetime import datetime
 from app import app, db
-from app.models import Test, Request, SystemMetric
+from app.models import Test, Request, SystemMetric, TestSchema, RequestSchema, SystemMetricSchema
 from flask import Flask, jsonify, render_template, url_for, request, redirect
 
 
 #########################
-# Request Pages section #
+# Template Populating Pages Section #
 #########################
 
 @app.route("/")
@@ -33,6 +33,7 @@ def view_test_id(test_id):
     test = Test.query.get(test_id)
     requests = Request.query.filter(Request.test_id == test_id).all()
     metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
+    
     return render_template('summary.html', 
                             test=test, 
                             requests=requests,
@@ -40,7 +41,7 @@ def view_test_id(test_id):
 
 
 #########################
-# API Endpoints section #
+# POST Request Endpoints Section #
 #########################
 
 @app.route('/api/v1/tests', methods=['POST'])
@@ -122,11 +123,6 @@ def metrics():
 
     return "System metric not added\n"
 
-@app.route('/api/v1/tests/<test_id>')
-def get_test(test_id):
-    test = db.session.query(Test).filter(Test.test_id == test_id)
-    return test
-
 @app.route('/api/v1/tests/<test_id>/finalize', methods=['POST'])
 def finalize_test(test_id):
     #Get data sent
@@ -141,6 +137,33 @@ def finalize_test(test_id):
     setattr(test, 'workers', data['workers'])
     #commit the data
     db.session.commit()
+
+#########################
+# GET Request Endpoints Section #
+
+# Uses the db id to find object to return #
+#########################
+
+@app.route('/api/v1/tests/<test_id>', methods=['GET'])
+def get_test(test_id):
+    test = Test.query.get(test_id)
+    test_schema = TestSchema()
+    output = test_schema.dump(test)
+    return jsonify(output)
+
+@app.route('/api/v1/metrics/<metric_id>', methods=['GET'])
+def get_metrics(metric_id):
+    metric = Test.query.get(metric_id)
+    Sysmetric_schema = SystemMetricSchema()
+    output = Sysmetric_schema.dump(metric)
+    return jsonify(output)
+
+@app.route('/api/v1/requests/<request_id>', methods=['GET'])
+def get_requests(request_id):
+    request = Test.query.get(request_id)
+    request_schema = RequestSchema()
+    output = request_schema.dump(request)
+    return jsonify(output)
 
 
 if __name__ == "__main__":

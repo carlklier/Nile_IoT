@@ -1,4 +1,4 @@
-from app import db
+from app import db, ma
 
 class Test(db.Model):
     __tablename__ = 'loadtest_tests'
@@ -25,6 +25,10 @@ class Test(db.Model):
             'end':self.end,
             'workers':self.workers
         }
+class TestSchema(ma.ModelSchema):
+    class Meta:
+        model = Test
+
 
 class Request(db.Model):
     __tablename__ = 'loadtest_requests'
@@ -56,6 +60,10 @@ class Request(db.Model):
             'duration': self.duration
         }
 
+class RequestSchema(ma.ModelSchema):
+    class Meta:
+        model = Request
+
 class SystemMetric(db.Model):
     __tablename__ = 'loadtest_metrics'
 
@@ -79,3 +87,7 @@ class SystemMetric(db.Model):
             'metric type': self.metric_type,
             'metric value': self.metric_value
         }
+
+class SystemMetricSchema(ma.ModelSchema):
+    class Meta:
+        model = SystemMetric
