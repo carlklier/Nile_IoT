@@ -12,8 +12,8 @@ import requests
 
 test_id = 1
 test_config = "Test POST Config"
-test_start = datetime.datetime.now()
-test_end = datetime.datetime.now()
+test_start = datetime.datetime.now().isoformat()
+test_end = datetime.datetime.now().isoformat()
 num_workers = 50000
 
 req_time = test_end
@@ -50,16 +50,17 @@ class TestEndpoint(unittest.TestCase):
     def test_post(self):
         count = Test.query.count()
         endpoint = 'http://localhost:5000/api/v1/tests'
-        test = Test(
-            config=test_config + str(count),
-            start=test_start,
-            end=test_end,
-            workers=num_workers)
-        test_schema = TestSchema()
-        output = test_schema.dump(test)
+        data = {
+            'config': (test_config + str(count)),
+            'start': test_start,
+            'end': test_end,
+            'workers': num_workers
+        }
 
-        print("test POST", output)
-        request = requests.post(url=endpoint, json=output)
+        print("test POST", data)
+        headers = {'content-type': 'application/json'}
+        endpoint='http://localhost:5000/api/v1/tests'
+        request = requests.post(endpoint, json=data)
 
         self.assertEqual(Test.query.count(), count + 1)
 
