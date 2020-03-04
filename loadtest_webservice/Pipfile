@@ -17,6 +17,8 @@ flask-testing = "*"
 flask-marshmallow = "*"
 marshmallow-sqlalchemy = "*"
 requests = "*"
+docker-compose = "*"
 
 [requires]
 python_version = "3.7"
+
