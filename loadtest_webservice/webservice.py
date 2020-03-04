@@ -62,7 +62,7 @@ def tests():
     try:
         db.session.add(new_test)
         db.session.commit()
-        return "Test configurations added\n"
+        return "Test configurations added with ID:" + str(new_test.id) + "\n"
     except:
         'There was an error adding the test data to the database.\n'
 
@@ -93,7 +93,7 @@ def requests():
     try:
         db.session.add(new_request)
         db.session.commit()
-        return "Locust request added\n"
+        return "Locust request added with ID:" + str(new_request.id) + "\n"
     except:
         'There was an error adding the locust request data to the database.\n'
 
@@ -117,7 +117,7 @@ def metrics():
     try:
         db.session.add(new_metric)
         db.session.commit()
-        return "System metric added\n"
+        return "System metric added with ID:" + str(new_metric.id) + "\n"
     except:
         'There was an error adding the system metric data to the database.\n'
 
