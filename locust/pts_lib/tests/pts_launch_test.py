@@ -1,6 +1,6 @@
 import sys
 import unittest
-from pts_lib import _is_slave
+from .. import _is_slave, _is_master
 
 class PTSLaunchTest(unittest.TestCase):
   def test_is_slave(self):
