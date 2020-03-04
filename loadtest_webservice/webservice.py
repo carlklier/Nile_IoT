@@ -37,6 +37,9 @@ def view_test_id(test_id):
                             test=test, 
                             requests=requests,
                             metrics = metrics)
+@app.route("/graphs/")
+def view_graphs():
+    return render_template('graph.html')
 
 
 #########################

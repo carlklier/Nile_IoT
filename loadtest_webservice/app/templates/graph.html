@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+
+
+<!-- Code here -->
+<!-- Start your project here-->  
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark special-color-dark">
+    <!-- Navbar brand -->
+    <a class="navbar-brand text-uppercase" href="#">Manage Test</a>
+
+    <!-- NavBar Items -->
+    <ul class="navbar-nav mr-auto">
+    </ul>
+    <!-- NavBar Items -->
+
+    <!-- Search form -->
+    <form class="form-inline">
+    <div class="md-form my-0">
+        <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
+    </div>
+    </form>
+    <!-- Search form -->
+</nav>
+<!-- Navbar -->
+<!--Main Layout-->
+<main>
+    <div class="container">
+        <div class="row pt-5">
+            <div class="col text-center">
+                <h2>Visualizing Test Results</h2>
+            </div>
+        </div>
+    </div>
+    <div class="btn-group" role="group" aria-label="Results Option" style="margin-left: 5%;">
+        <button type="button" class="btn btn-primary">Locust Results</button>
+        <button type="button" class="btn btn-primary">System Metrics</button>
+    </div>
+</main>
+<!--Main Layout-->
+
+<!-- End your project here-->
+
+
+{% endblock %}
