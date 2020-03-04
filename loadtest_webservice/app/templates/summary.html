@@ -30,7 +30,7 @@
                             <h3>System Metrics</h3>
                             {% for metric in metrics %}
                             <div class="border-bottom border-secondary">
-                                <td><strong>Metric ID:</strong> {{ metric.id }}</td>
+                                <td id="met{{metric.test_id}}"><strong>Metric ID:</strong> {{ metric.id }}</td>
                                 <br>
                                 <td><strong>Time:</strong> {{ metric.time }}</td>
                                 <br>
@@ -47,7 +47,7 @@
                             <h3>Requests</h3>
                             {% for request in requests %}
                             <div class="border-bottom border-secondary">
-                                <td><strong>Request ID:</strong> {{ request.id }}</td>
+                                <td id="req{{request.test_id}}"><strong>Request ID:</strong> {{ request.id }}</td>
                                 <br>
                                 <td><strong>Time Sent:</strong> {{ request.time_sent }}</td>
                                 <br>

@@ -33,6 +33,7 @@ def view_test_id(test_id):
     test = Test.query.get(test_id)
     requests = Request.query.filter(Request.test_id == test_id).all()
     metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
+    
     return render_template('summary.html', 
                             test=test, 
                             requests=requests,
@@ -141,7 +142,7 @@ def finalize_test(test_id):
     db.session.commit()
 
 #########################
-# GET Request Endpoints Section #
+# GET Request Endpoints ID Section #
 
 # Uses the db id to find object to return #
 #########################
@@ -154,17 +155,50 @@ def get_test(test_id):
     return jsonify(output)
 
 @app.route('/api/v1/metrics/<metric_id>', methods=['GET'])
-def get_metrics(metric_id):
+def get_metric(metric_id):
     metric = Test.query.get(metric_id)
-    Sysmetric_schema = SystemMetricSchema()
-    output = Sysmetric_schema.dump(metric)
+    metric_schema = SystemMetricSchema()
+    output = metric_schema.dump(metric)
     return jsonify(output)
 
 @app.route('/api/v1/requests/<request_id>', methods=['GET'])
-def get_requests(request_id):
+def get_request(request_id):
     request = Test.query.get(request_id)
     request_schema = RequestSchema()
     output = request_schema.dump(request)
+    return jsonify(output)
+
+#########################
+# GET Request Endpoints ALL Section #
+
+# Returns list of all objects of queried type #
+#########################
+
+@app.route('/api/v1/tests', methods=['GET'])
+def get_tests():
+    tests = Test.query.all()
+    output = []
+    for test in tests:
+        test_schema = TestSchema()
+        output.append(test_schema.dump(test))
+    return jsonify(output)
+
+@app.route('/api/v1/requests', methods=['GET'])
+def get_requests():
+    requests = Request.query.all()
+    output = []
+    for request in requests:
+        request_schema = RequestSchema()
+        output.append(request_schema.dump(request))
+    return jsonify(output)
+
+@app.route('/api/v1/metrics', methods=['GET'])
+def get_metrics():
+    metrics = SystemMetric.query.all()
+    output = []
+    for metric in metrics:
+        metric_schema = SystemMetricSchema()
+        output.append(metric_schema.dump(metric))
     return jsonify(output)
 
 
