@@ -191,7 +191,7 @@ def get_requests():
 
 @app.route('/api/v1/metrics', methods=['GET'])
 def get_metrics():
-    metrics = SystemMetricSchema.query.all()
+    metrics = SystemMetric.query.all()
     output = []
     for metric in metrics:
         metric_schema = SystemMetricSchema()
