@@ -67,7 +67,7 @@ def tests():
         db.session.commit()
         return "Added test with ID: " + str(new_test.id) + "\n"
     except:
-        return Response("{'a':'b'}", status=400, mimetype='application/json')
+        return Response("Failed to add test.", status=400, mimetype='application/json')
 
 
 @app.route('/api/v1/requests', methods=['POST'])
@@ -97,7 +97,7 @@ def requests():
         db.session.commit()
         return "Added request with ID: " + str(new_request.id) + "\n"
     except:
-        return Response("{'a':'b'}", status=400, mimetype='application/json')
+        return Response("Failed to add request.", status=400, mimetype='application/json')
 
 @app.route('/api/v1/metrics', methods=['POST'])
 def metrics():
@@ -119,7 +119,7 @@ def metrics():
         db.session.commit()
         return "Added metric with ID: " + str(new_metric.id) + "\n"
     except:
-        return Response("{'a':'b'}", status=400, mimetype='application/json')
+        return Response("Failed to add metric.", status=400, mimetype='application/json')
 
 @app.route('/api/v1/tests/<test_id>/finalize', methods=['POST'])
 def finalize_test(test_id):
