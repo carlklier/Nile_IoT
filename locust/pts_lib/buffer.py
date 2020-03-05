@@ -63,7 +63,7 @@ class CircularReadBuffer:
         result = self.buffer_data[self.cursor]
 
         self.cursor += 1
-        self.curosr %= len(self.buffer_data)
+        self.cursor %= len(self.buffer_data)
 
         return (True, result)
     
