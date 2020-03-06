@@ -40,8 +40,9 @@ def view_test_id(test_id):
                             metrics = metrics)
 @app.route("/graphs/")
 def view_graphs():
-    return render_template('graph.html')
-
+    tests = Test.query.all()
+    return render_template('graph.html',
+                            tests=tests)
 
 #########################
 # POST Request Endpoints Section #
