@@ -45,7 +45,7 @@ class Buffer:
         self._push(record)
 
     def _ensure_capacity(self):
-        while self.data >= self.capacity:
+        while len(self.data) >= self.capacity:
             if self.drop_next == OLDEST:
                 self.data.popleft()
             else:

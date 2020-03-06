@@ -23,9 +23,10 @@ class SteadyRateWorker(Worker):
         self.in_buffer = in_buffer
         self.out_buffer = out_buffer
         self.interval = interval
+        self.running = True
     
     def run(self):
-        while True:
+        while self.running:
             passed, record = self.in_buffer.read()
 
             print(f"Read with result ({passed}, {record})")
