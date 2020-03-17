@@ -17,6 +17,7 @@ flask-testing = "*"
 flask-marshmallow = "*"
 marshmallow-sqlalchemy = "*"
 requests = "*"
+coverage = "*"
 
 [requires]
 python_version = "3.7"

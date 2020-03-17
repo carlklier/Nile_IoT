@@ -3,3 +3,4 @@
 .pyc
 app/__pycache__/
 config.py
+/htmlcov/

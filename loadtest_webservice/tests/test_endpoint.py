@@ -45,7 +45,7 @@ class TestEndpoint(unittest.TestCase):
         return app
 
     def setUp(self):
-
+        db.drop_all()
         db.create_all()
         db.session.commit()
 
@@ -112,6 +112,43 @@ class TestEndpoint(unittest.TestCase):
         self.assertEqual(SystemMetric.query.count(), count + 1)
         self.assertEqual(request.text, 'Added metric with ID: ' + str(count + 1) + '\n')
 
+    def test_post_invalid(self):
+        endpoint = 'http://localhost:5000/api/v1/tests'
+        data = {
+            'config': test_config,
+            'start': '5:35 PM',
+            'end': test_end,
+            'workers': num_workers
+        }
+        request = requests.post(endpoint, json=data)
+        self.assertEqual(request.text, 'Failed to add test.')
+
+        endpoint = 'http://localhost:5000/api/v1/metrics'
+
+        # TODO: change this and schema to metric_type and metric_length
+        data = {
+            'test_id': Test.query.count(),
+            'time': met_time,
+            'metric type': met_type,
+            'metric value': "One hundred million dollars",
+        }
+        request = requests.post(endpoint, json=data)
+        self.assertEqual(request.text, 'Failed to add metric.')
+
+        endpoint = 'http://localhost:5000/api/v1/requests'
+        data = {
+            'test_id': Test.query.count(),
+            'time_sent': req_time,
+            'request_type': 5,
+            'request_length': req_length,
+            'response_type': res_type,
+            'response_length': res_length,
+            'duration': 500
+        }
+        request = requests.post(endpoint, json=data)
+        self.assertEqual(request.text, 'Failed to add request.')
+
+
     #########################
     # Test GET section #
     #########################
@@ -150,6 +187,7 @@ class TestEndpoint(unittest.TestCase):
         # self.assertEqual(request['response_type'], res_type)
         # self.assertEqual(request['response_length'], res_length)
         # self.assertEqual(request['duration'], duration)
+
 
 
 

@@ -13,6 +13,10 @@ from app.models import Test, Request, SystemMetric, TestSchema, RequestSchema, S
 from flask import Flask, jsonify, render_template, url_for, request, redirect, Response
 
 
+# TODO: Keep track of test ID of currently running test
+# store in variable and associate all incoming requests with that test
+# reject any new test startup if test ID is not None
+
 #########################
 # Template Populating Pages Section #
 #########################
@@ -140,7 +144,7 @@ def finalize_test(test_id):
         db.session.commit()
         return "Finalized test with ID: " + str(new_test.id) + "\n"
     except:
-        return Response("{'a':'b'}", status=400, mimetype='application/json')
+        return Response("Failed to finalize test.", status=400, mimetype='application/json')
 
 #########################
 # GET Request Endpoints ID Section #
@@ -202,6 +206,13 @@ def get_metrics():
         output.append(metric_schema.dump(metric))
     return jsonify(output)
 
+#########################
+# Shutdown route for testing #
+#########################
+
+@app.route('/shutdown', methods=['POST'])
+def shutdown():
+    app.shutdown()
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)
