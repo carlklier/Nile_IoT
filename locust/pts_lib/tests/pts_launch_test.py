@@ -5,7 +5,8 @@ import pts_lib
 from .. import _is_slave, _is_master
 from ..core import DataBuffer, TestManager
 from ..buffer import Buffer, CircularReadBuffer
-from ..workers import SteadyRateWorker
+from ..workers import SteadyRateWorker, _cleanup
+from gevent import sleep
 
 class PTSLaunchTest(unittest.TestCase):
   @patch('pts_lib.core.DataBuffer.__init__')
@@ -175,18 +176,29 @@ class SteadyRateWorkerTest(unittest.TestCase):
     self.assertEqual(len(srw.out_buffer.data), 0)
     self.assertEqual(srw.interval, 1)
 
-  def test_run(self):
-    print("Running test_run")
+  #def test_run(self):
+   # in_buf = Buffer()
+    #out_buf = Buffer()
+    #mockSteadyRateWorker = MagicMock(in_buffer=in_buf, out_buffer=out_buf)
+    #mock = PropertyMock(side_effect=[1,1,0])
+    #type(mockSteadyRateWorker).running = mock 
+    #mockSteadyRateWorker.in_buffer.write("test1")
+    #mockSteadyRateWorker.in_buffer.write("test2")
+    #self.assertEqual(len(mockSteadyRateWorker.in_buffer.data), 2)
+    #mockSteadyRateWorker.run()
+    #self.assertEqual(len(mockSteadyRateWorker.out_buffer.data), 2)
+
+  def test_run2(self):
+    print("running test_run2")
     in_buf = Buffer()
     out_buf = Buffer()
-    mockSteadyRateWorker = MagicMock(in_buffer=in_buf, out_buffer=out_buf)
-    mock = PropertyMock(side_effect=[1,1,0])
-    type(mockSteadyRateWorker).running = mock 
-    mockSteadyRateWorker.in_buffer.write("test1")
-    mockSteadyRateWorker.in_buffer.write("test2")
-    self.assertEqual(len(mockSteadyRateWorker.in_buffer.data), 2)
-    mockSteadyRateWorker.run()
-    #self.assertEqual(len(mockSteadyRateWorker.out_buffer.data), 2)
+    in_buf.write("test1")
+    in_buf.write("test2")
+    srw = SteadyRateWorker(in_buf, out_buf, 1)
+    srw.start()
+    sleep(2)
+    self.assertEqual(len(srw.out_buffer.data), 2)
+    _cleanup()
 
 if __name__ == '__main__':
     unittest.main()

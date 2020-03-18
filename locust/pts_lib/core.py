@@ -1,5 +1,5 @@
 import requests
-import time
+import datetime
 from locust import events
 
 class TestManager:
@@ -10,7 +10,7 @@ class TestManager:
       """
       self.hostname = hostname
 
-      self.start_time = time.time()
+      self.start_time = datetime.datetime.now().isoformat()
 
       self.start_test()
 
