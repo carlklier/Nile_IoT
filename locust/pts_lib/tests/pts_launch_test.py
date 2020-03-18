@@ -3,11 +3,11 @@ import unittest
 from unittest.mock import patch, MagicMock, PropertyMock
 
 from pts_lib import server_integration
-from ..server_integration import _is_slave, _is_master
-from ..server_integration.databuffer import DataBuffer
-from ..server_integration.testmanager import TestManager
-from ..dataflow.buffers import Buffer, CircularReadBuffer
-from ..dataflow.pushers import DeterministicPusher
+from pts_lib.server_integration import _is_slave, _is_master
+from pts_lib.server_integration.databuffer import DataBuffer
+from pts_lib.server_integration.testmanager import TestManager
+from pts_lib.dataflow.buffers import Buffer, CircularReadBuffer
+from pts_lib.dataflow.pushers import DeterministicPusher
 
 
 class PTSLaunchTest(unittest.TestCase):
