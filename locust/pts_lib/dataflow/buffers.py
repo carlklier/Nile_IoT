@@ -103,7 +103,7 @@ class Buffer(implements(Source, Sink)):
 
     def _ensure_capacity(self):
         """ Removes records until there is at least 1 capacity left """
-        while self.data >= self.capacity:
+        while len(self.data) >= self.capacity:
             if self.drop_next == OLDEST:
                 self.data.popleft()
             else:

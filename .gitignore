@@ -2,3 +2,6 @@
 .python-version
 __pycache__
 settings.json
+.coverage
+.workers.py.swp
+*.pyc

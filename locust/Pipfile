@@ -8,6 +8,7 @@ verify_ssl = true
 [packages]
 python-interface="^1.5.3"
 locustio = "*"
+coverage = "*"
 
 [requires]
 python_version = "3.7"
