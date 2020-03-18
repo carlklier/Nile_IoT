@@ -1,6 +1,5 @@
 import requests
 import datetime
-import json
 
 data = {
   'config': 'Sample Configuration',
@@ -9,6 +8,6 @@ data = {
   'workers': 3}
 
 print("DATA: " + str(data))
-endpoint='http://localhost:5000/api/v1/tests'
+endpoint = 'http://localhost:5000/api/v1/tests'
 request = requests.post(endpoint, json=data)
 print(request.text)
