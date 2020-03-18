@@ -10,8 +10,12 @@ import logging
 from datetime import datetime
 from app import app, db
 from app.models import Test, Request, SystemMetric, TestSchema, RequestSchema, SystemMetricSchema
-from flask import Flask, jsonify, render_template, url_for, request, redirect
+from flask import Flask, jsonify, render_template, url_for, request, redirect, Response
 
+
+# TODO: Keep track of test ID of currently running test
+# store in variable and associate all incoming requests with that test
+# reject any new test startup if test ID is not None
 
 #########################
 # Template Populating Pages Section #
@@ -38,7 +42,11 @@ def view_test_id(test_id):
                             test=test, 
                             requests=requests,
                             metrics = metrics)
-
+@app.route("/graphs/")
+def view_graphs():
+    tests = Test.query.all()
+    return render_template('graph.html',
+                            tests=tests)
 
 #########################
 # POST Request Endpoints Section #
@@ -62,11 +70,10 @@ def tests():
     try:
         db.session.add(new_test)
         db.session.commit()
-        return "Test configurations added\n"
+        return "Added test with ID: " + str(new_test.id) + "\n"
     except:
-        'There was an error adding the test data to the database.\n'
+        return Response("Failed to add test.", status=400, mimetype='application/json')
 
-    return 'Test configurations not added\n'
 
 @app.route('/api/v1/requests', methods=['POST'])
 def requests():
@@ -93,11 +100,9 @@ def requests():
     try:
         db.session.add(new_request)
         db.session.commit()
-        return "Locust request added\n"
+        return "Added request with ID: " + str(new_request.id) + "\n"
     except:
-        'There was an error adding the locust request data to the database.\n'
-
-    return 'Locust request not added\n'
+        return Response("Failed to add request.", status=400, mimetype='application/json')
 
 @app.route('/api/v1/metrics', methods=['POST'])
 def metrics():
@@ -105,8 +110,8 @@ def metrics():
     data = request.get_json()
     test_id = data['test_id']
     metric_time = data['time']
-    metric_type = data['metric_type']
-    metric_value = data['metric_value']
+    metric_type = data['metric type']
+    metric_value = data['metric value']
 
     new_metric = SystemMetric(
             test_id = test_id,
@@ -117,11 +122,9 @@ def metrics():
     try:
         db.session.add(new_metric)
         db.session.commit()
-        return "System metric added\n"
+        return "Added metric with ID: " + str(new_metric.id) + "\n"
     except:
-        'There was an error adding the system metric data to the database.\n'
-
-    return "System metric not added\n"
+        return Response("Failed to add metric.", status=400, mimetype='application/json')
 
 @app.route('/api/v1/tests/<test_id>/finalize', methods=['POST'])
 def finalize_test(test_id):
@@ -136,10 +139,15 @@ def finalize_test(test_id):
     setattr(test, 'end', data['end'])
     setattr(test, 'workers', data['workers'])
     #commit the data
-    db.session.commit()
+    try:
+        db.session.add(test)
+        db.session.commit()
+        return "Finalized test with ID: " + str(new_test.id) + "\n"
+    except:
+        return Response("Failed to finalize test.", status=400, mimetype='application/json')
 
 #########################
-# GET Request Endpoints Section #
+# GET Request Endpoints ID Section #
 
 # Uses the db id to find object to return #
 #########################
@@ -152,19 +160,59 @@ def get_test(test_id):
     return jsonify(output)
 
 @app.route('/api/v1/metrics/<metric_id>', methods=['GET'])
-def get_metrics(metric_id):
-    metric = Test.query.get(metric_id)
-    Sysmetric_schema = SystemMetricSchema()
-    output = Sysmetric_schema.dump(metric)
+def get_metric(metric_id):
+    metric = SystemMetric.query.get(metric_id)
+    metric_schema = SystemMetricSchema()
+    output = metric_schema.dump(metric)
     return jsonify(output)
 
 @app.route('/api/v1/requests/<request_id>', methods=['GET'])
-def get_requests(request_id):
-    request = Test.query.get(request_id)
+def get_request(request_id):
+    request = Request.query.get(request_id)
     request_schema = RequestSchema()
     output = request_schema.dump(request)
     return jsonify(output)
 
+#########################
+# GET Request Endpoints ALL Section #
+
+# Returns list of all objects of queried type #
+#########################
+
+@app.route('/api/v1/tests', methods=['GET'])
+def get_tests():
+    tests = Test.query.all()
+    output = []
+    for test in tests:
+        test_schema = TestSchema()
+        output.append(test_schema.dump(test))
+    return jsonify(output)
+
+@app.route('/api/v1/requests', methods=['GET'])
+def get_requests():
+    requests = Request.query.all()
+    output = []
+    for request in requests:
+        request_schema = RequestSchema()
+        output.append(request_schema.dump(request))
+    return jsonify(output)
+
+@app.route('/api/v1/metrics', methods=['GET'])
+def get_metrics():
+    metrics = SystemMetric.query.all()
+    output = []
+    for metric in metrics:
+        metric_schema = SystemMetricSchema()
+        output.append(metric_schema.dump(metric))
+    return jsonify(output)
+
+#########################
+# Shutdown route for testing #
+#########################
+
+@app.route('/shutdown', methods=['POST'])
+def shutdown():
+    app.shutdown()
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)

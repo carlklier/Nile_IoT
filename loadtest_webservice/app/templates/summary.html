@@ -4,63 +4,70 @@
 {% endblock %}
 
 {% block body %}
-<div class="p-3 mb-2 bg-secondary overflow-hidden">
+<nav class="navbar navbar-expand-lg navbar-dark special-color-dark">
+    <!-- Navbar brand -->
+    <a class="navbar-brand text-uppercase" href="#">Loadtest Manager</a>
+</nav>
+<div class="p-3 mb-2 overflow-hidden">
+
         <h1>View Test {{ test.id }} Summary</h1>
         
-        <div style="margin-left:5%">
-            <div class="box_section col-lg-12 rounded bg-dark text-white" style="width:90%">
-                <h2>Test Configuration</h2>
-                <div class="box_section bg-light rounded text-body">
-                    <td><strong>Test ID:</strong> {{ test.id }}</td>
-                    <br>
-                    <td><strong>Configuration:</strong> {{ test.config }}</td>
-                    <br>
-                    <td><strong>Start Time:</strong> {{ test.start }}</td>
-                    <br>
-                    <td><strong>End Time:</strong> {{ test.end }}</td>
-                    <br>
-                    <td><strong>Number of Workers:</strong> {{ test.workers }}</td>
+        <div class="container">
+        <div class="row">
+            <div class="box_section col-lg-3 dark-text z-depth-2" style="width:90%;max-height:400px">
+                <h5 class="text-uppercase text-center">Test Configuration</h5>
+                <div class="main-text box_section">
+                    <div class="dark-text">Test ID</div>
+                    <div class="text-group">{{ test.id }}</div>
+                    <div class="dark-text">Configuration</div> 
+                    <div class="text-group">{{ test.config }}</div>
+                    <div class="dark-text">Start Time</div>
+                    <div class="text-group">{{ test.start }}</div>
+                    <div class="dark-text">End Time</div>
+                    <div class="text-group">{{ test.end }}</div>
+                    <div class="dark-text">Number of Workers</div>
+                    <div>{{ test.workers }}</div>
                 </div>
             </div>
-            <div class="box_section col-lg-12 rounded bg-dark text-white" style="width:90%">
-                <h2>Test Summary</h2>
+            <div class="box_section col-lg-8 mdb-color lighten-5 z-depth-2" style="width:90%;float:right">
+                <h5 class="text-uppercase text-center">Test Summary</h5>
                 <div class="row" style="margin-left:4%">
-                    <div class="box_section bg-light col-lg-5 rounded  text-dark">
-                        <div >
-                            <h3>System Metrics</h3>
+                    <div class="box_section col-lg-5 text-dark">
+                        <div>
+                            <h4 class="text-center border-bottom border-light">System Metrics</h4>
                             {% for metric in metrics %}
-                            <div class="border-bottom border-secondary">
-                                <td id="met{{metric.test_id}}"><strong>Metric ID:</strong> {{ metric.id }}</td>
-                                <br>
-                                <td><strong>Time:</strong> {{ metric.time }}</td>
-                                <br>
-                                <td><strong>Metric Type:</strong> {{ metric.metric_type }}</td>
-                                <br>
-                                <td><strong>Value:</strong> {{ metric.metric_value }}</td>
-                                <br>
+                            <div class="border-bottom border-light main-text">
+                                <div class="dark-text">Metric ID</div>
+                                <div id="met{{metric.test_id}}" class="text-group">{{ metric.id }}</div>
+                                <div class="dark-text">Configuration</div> 
+                                <div class="text-group">{{ metric.metric_type }}</div>
+                                <div class="dark-text">Start Time</div>
+                                <div class="text-group">{{ metric.metric_value }}</div>
+                                <div class="dark-text">End Time</div>
+                                <div class="text-group">{{ metric.time }}</div>
                             </div>
                             {% endfor %}
                         </div>
                     </div>
-                    <div class="box_section bg-light border-bottom col-lg-5 rounded text-dark">
+                    <div class="box_section border-bottom col-lg-5 text-dark">
                         <div>
-                            <h3>Requests</h3>
+                            <h4 class="text-center border-bottom border-light">Requests</h4>
                             {% for request in requests %}
-                            <div class="border-bottom border-secondary">
-                                <td id="req{{request.test_id}}"><strong>Request ID:</strong> {{ request.id }}</td>
-                                <br>
-                                <td><strong>Time Sent:</strong> {{ request.time_sent }}</td>
-                                <br>
-                                <td><strong>Request Type:</strong> {{ request.request_type }}</td>
-                                <br>
-                                <td><strong>Request Length:</strong> {{ request.request_length }}</td>
-                                <br>
-                                <td><strong>Response Type:</strong> {{ request.response_type }}</td>
-                                <br>
-                                <td><strong>Response Length:</strong> {{ request.response_length }}</td>
-                                <br>
-                                <td><strong>Duration:</strong> {{ request.duration }}</td>
-                                <br>
+                            <div class="border-bottom border-light main-text">
+                                <div  class="dark-text">Request ID</div>
+                                <div id="req{{request.test_id}}" class="text-group">{{ request.id }}</div>
+                                <div class="dark-text">Time Sent</div> 
+                                <div class="text-group">{{ request.time_sent }}</div>
+                                <div class="dark-text">Request Type</div> 
+                                <div class="text-group">{{ request.request_type }}</div>
+                                <div class="dark-text">Request Length</div>
+                                <div class="text-group">{{ request.request_length }}</div>
+                                <div class="dark-text">Response Type</div>
+                                <div class="text-group">{{ request.response_type }}</div>
+                                <div class="dark-text">Response Length</div>
+                                <div class="text-group">{{ request.response_length }}</div>
+                                <div class="dark-text">Duration</div>
+                                <div class="text-group">{{ request.duration }}</div>
                             </div>
                             {% endfor %}
                         </div>
@@ -68,5 +75,6 @@
                 </div>
             </div>
         </div>
+    </div>
 </div>
 {% endblock %}

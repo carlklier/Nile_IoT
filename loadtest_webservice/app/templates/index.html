@@ -4,26 +4,85 @@
 {% endblock %}
 
 {% block body %}
-<div  class="content p-3 mb-2 bg-secondary">
-    <h1>View Tests</h1>
+<script>
+    console.log("start");
+    var $test_elements = $('.test-element'); 
+    var addclass = '.selected';
+    var $cols = $('.test-element').click(function(e) {
+        $cols.removeClass(addclass);
+        $(this).addClass(addclass);
+        console.log("clicked");
+    });
 
-    <table class="table">
-        <tr class="thead-dark">
-            <th scope="col">Test ID</th>
-            <th scope="col">Config</th>
-            <th scope="col">Start Time</th>
-            <th scope="col">End Time</th>
-            <th scope="col">Workers</th>
-        </tr>
-        {% for test in tests %}
-            <tr>
-                <td scope="row">{{ test.id }}</td>
-                <td id="{{test.id}}">{{ test.config }}</td>
-                <td>{{ test.start }}</td>
-                <td>{{ test.end }}</td>
-                <td>{{ test.workers }}</td>
-            </tr>
-        {% endfor %}
-    </table>
+</script>
+<nav class="navbar navbar-expand-lg navbar-dark special-color-dark">
+    <!-- Navbar brand -->
+    <a class="navbar-brand text-uppercase" href="#">Loadtest Manager</a>
+</nav>
+
+<div  class="content p-3 mb-2 overflow-hidden">
+    <h1>View Tests</h1>
+    <br>
+    <div class="dropdown row">
+        <div class="main-text" style="padding-top:2%;margin-left:5%;margin-right:2%">Sort by:</div>
+        
+        <button class="btn btn-primary btn-small dropdown-toggle px-3" type="button" data-toggle="dropdown"
+        aria-haspopup="true" aria-expanded="false">Start Time</button>
+        <div class="dropdown-menu">
+            <a class="dropdown-item" href="#">Start Time</a>
+            <a class="dropdown-item" href="#">End Time</a>
+            <a class="dropdown-item" href="#">ID</a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8 col-md-6">
+            <div class="row">
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th scope="col">Test ID</th>
+                            <th scope="col">Config</th>
+                            <th scope="col">Start Time</th>
+                            <th scope="col">End Time</th>
+                            <th scope="col">Workers</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for test in tests %}
+                                <tr class="test-element">
+                                    <th scope="row">{{ test.id }}</th>
+                                    <td id="{{test.id}}">{{ test.config }}</td>
+                                    <td>{{ test.start }}</td>
+                                    <td>{{ test.end }}</td>
+                                    <td>{{ test.workers }}</td>
+                                </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="row">
+                <div class="text-center btn-center">
+                    <button class="arrow-btn btn-primary z-depth-2"><i class="fa fa-arrow-circle-left"></i></button>
+                    
+                    <button class="btn-middle btn-primary text-uppercase z-depth-2">Visualize Tests</button>
+
+                    <button class="arrow-btn btn-primary z-depth-2"><i class="fa fa-arrow-circle-right"></i></button>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="box_section dark-text z-depth-2 text-center small-box">
+                
+                <h5 class="text-uppercase text-center" style="padding-top:10%;">Select Test</h5>
+                <br>
+                <div style="width:100%;margin:auto">
+                    <button type="button" class="btn btn-primary" style="width:250px">View Test Summary</button>
+                    <br>
+                    <button type="button" class="btn btn-primary"style="width:250px">View Test Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
