@@ -34,15 +34,15 @@ class DataPusher(Worker):
     def run(self):
         while True:
             records = list(self.source.read(self.read_quantity()))
-            print(f"pts_lib: read records {records}")
+            # print(f"pts_lib: read records {records}")
 
             while records:
-                print(f"pts_lib: sending records")
+                # print(f"pts_lib: sending records")
                 records = self.sink.write(records)
-                print(f"pts_lib: records for retry {records}")
+                # print(f"pts_lib: records for retry {records}")
                 sleep(self.next_retry_delay())
 
-            print("Waiting for next cycle")
+            # print("Waiting for next cycle")
             sleep(self.next_cycle_delay())
 
     def read_quantity(self):

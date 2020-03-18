@@ -24,11 +24,12 @@ class CircularReadBuffer(implements(Source)):
         self.cursor = 0
 
     def read(self, num=1):
-        for i in range(num):
-            yield self.buffer_data[self.cursor]
+        if self.buffer_data:
+            for i in range(num):
+                yield self.buffer_data[self.cursor]
 
-            self.cursor += 1
-            self.cursor %= len(self.buffer_data)
+                self.cursor += 1
+                self.cursor %= len(self.buffer_data)
 
 
 OLDEST = 'oldest'
@@ -86,9 +87,7 @@ class Buffer(implements(Source, Sink)):
                 else:
                     yield self._pop_newest()
             else:
-                raise StopIteration
-
-        raise StopIteration
+                return
 
     def write(self, records):
         for record in records:

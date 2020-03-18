@@ -30,17 +30,17 @@ class DataBuffer:
         self.test_id = 1
 
     def on_request_data(self, **kwargs):
-        print(f'PTS: Appended Request to Buffer, Data={kwargs}')
+        # print(f'PTS: Appended Request to Buffer, Data={kwargs}')
         self.buffer.append(kwargs)
         if len(self.buffer) > 20:
             self._upload_buffer()
 
     def on_quitting(self):
-        print('PTS: Handling Test Shutdown')
+        # print('PTS: Handling Test Shutdown')
         self._upload_buffer()
 
     def _upload_buffer(self):
         # TODO use self.data_endpoint to send data to server
-        print('PTS: Uploading Buffer to Server')
-        print(f'PTS: Buffer={self.buffer}')
+        # print('PTS: Uploading Buffer to Server')
+        # print(f'PTS: Buffer={self.buffer}')
         self.buffer = list()

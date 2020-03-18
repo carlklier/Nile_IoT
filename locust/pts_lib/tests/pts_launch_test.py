@@ -1,23 +1,25 @@
 import sys
 import unittest
 from unittest.mock import patch, MagicMock, PropertyMock
-import pts_lib
-from .. import _is_slave, _is_master
-from ..core import DataBuffer, TestManager
-from ..buffer import Buffer, CircularReadBuffer
-from ..workers import SteadyRateWorker
+
+from pts_lib import server_integration
+from ..server_integration import _is_slave, _is_master
+from ..server_integration.databuffer import DataBuffer
+from ..server_integration.testmanager import TestManager
+from ..dataflow.buffers import Buffer, CircularReadBuffer
+from ..dataflow.pushers import DeterministicPusher
 
 
 class PTSLaunchTest(unittest.TestCase):
 
-    @patch('pts_lib.core.DataBuffer.__init__')
-    @patch('pts_lib.core.TestManager.__init__')
-    def test_launch_pts(self, mock_tm, mock_db):
+    @patch('pts_lib.server_integration.databuffer.DataBuffer.__init__')
+    @patch('pts_lib.server_integration.testmanager.TestManager.__init__')
+    def test_launch(self, mock_tm, mock_db):
         saved_argv = sys.argv
         try:
             mock_tm.return_value = None
             sys.argv = ['--master']
-            pts_lib.launch_pts("hostname")
+            server_integration.launch("hostname")
             mock_tm.assert_called_with("hostname")
         finally:
             sys.argv = saved_argv
@@ -26,13 +28,13 @@ class PTSLaunchTest(unittest.TestCase):
         try:
             mock_db.return_value = None
             sys.argv = ['--slave']
-            pts_lib.launch_pts("hostname")
+            server_integration.launch("hostname")
             mock_db.assert_called_with("hostname")
         finally:
             sys.argv = saved_argv
 
         with self.assertRaises(RuntimeError):
-            pts_lib.launch_pts("hostname")
+            server_integration.launch("hostname")
 
     def test_is_slave(self):
         saved_argv = sys.argv
@@ -103,42 +105,35 @@ class BufferTest(unittest.TestCase):
 
     def test_read(self):
         buf = Buffer(yield_next="oldest", capacity=3)
-        status1, value1 = buf.read()
-        self.assertFalse(status1)
-        self.assertEqual(value1, None)
+        values1 = list(buf.read())
+        self.assertEqual(values1, [])
 
         buf.data.append("1")
         buf.data.append("2")
         buf.data.append("3")
 
-        status2, value2 = buf.read()
-        self.assertEqual(status2, True)
-        self.assertEqual(value2, "1")
+        values2 = list(buf.read())
+        self.assertEqual(values2, ["1"])
 
         buf.yield_next = "newest"
-        status3, value3 = buf.read()
-        self.assertEqual(status3, True)
-        self.assertEqual(value3, "3")
+        values3 = list(buf.read())
+        self.assertEqual(values3, ["3"])
 
     def test_write(self):
         # Test drop_next = oldest
         buf = Buffer(capacity=3)
-        buf.write("test1")
-        buf.write("test2")
-        buf.write("test3")
+        buf.write(["test1", "test2", "test3"])
         self.assertEqual(len(buf.data), 3)
-        buf.write("test4")
+        buf.write(["test4"])
         self.assertEqual(len(buf.data), 3)
         self.assertEqual(buf.data[0], "test2")
         self.assertEqual(buf.data[2], "test4")
 
         # Test drop_next = newest
         buf = Buffer(drop_next="newest", capacity=3)
-        buf.write("test1")
-        buf.write("test2")
-        buf.write("test3")
+        buf.write(["test1", "test2", "test3"])
         self.assertEqual(len(buf.data), 3)
-        buf.write("test4")
+        buf.write(["test4"])
         self.assertEqual(len(buf.data), 3)
         self.assertEqual(buf.data[0], "test1")
         self.assertEqual(buf.data[1], "test2")
@@ -153,47 +148,41 @@ class CircularReadBufferTest(unittest.TestCase):
 
     def test_read(self):
         buf = CircularReadBuffer(buffer_data=[])
-        status, value = buf.read()
-        self.assertEqual(status, False)
-        self.assertEqual(value, None)
+        values1 = list(buf.read())
+        self.assertEqual(values1, [])
 
         buf = CircularReadBuffer(buffer_data=["test1", "test2", "test3"])
-        status, value = buf.read()
+        values2 = list(buf.read())
         self.assertEqual(buf.cursor, 1)
-        self.assertEqual(status, True)
-        self.assertEqual(value, "test1")
+        self.assertEqual(values2, ["test1"])
 
-        buf.read()
-        buf.read()
+        list(buf.read())
+        list(buf.read())
         self.assertEqual(buf.cursor, 0)
 
-    def test_write(self):
-        buf = CircularReadBuffer(buffer_data=[])
-        with self.assertRaises(RuntimeError):
-            buf.write("test1")
 
-
-class SteadyRateWorkerTest(unittest.TestCase):
+class DeterministicPusherTest(unittest.TestCase):
     def test_init(self):
         in_buf = Buffer()
         out_buf = Buffer()
-        srw = SteadyRateWorker(in_buf, out_buf, 1)
-        self.assertEqual(len(srw.in_buffer.data), 0)
-        self.assertEqual(len(srw.out_buffer.data), 0)
-        self.assertEqual(srw.interval, 1)
+        srw = DeterministicPusher(in_buf, out_buf, 1, 0.1, 1)
+        self.assertEqual(len(srw.source.data), 0)
+        self.assertEqual(len(srw.sink.data), 0)
+        self.assertEqual(srw.cycle_delay, 1)
 
     def test_run(self):
         print("Running test_run")
         in_buf = Buffer()
         out_buf = Buffer()
-        mockSteadyRateWorker = MagicMock(in_buffer=in_buf, out_buffer=out_buf)
+        mockDeterministicPusher = MagicMock(in_buffer=in_buf,
+                                            out_buffer=out_buf)
         mock = PropertyMock(side_effect=[1, 1, 0])
-        type(mockSteadyRateWorker).running = mock
-        mockSteadyRateWorker.in_buffer.write("test1")
-        mockSteadyRateWorker.in_buffer.write("test2")
-        self.assertEqual(len(mockSteadyRateWorker.in_buffer.data), 2)
-        mockSteadyRateWorker.run()
-        # self.assertEqual(len(mockSteadyRateWorker.out_buffer.data), 2)
+        type(mockDeterministicPusher).running = mock
+        mockDeterministicPusher.in_buffer.write(["test1"])
+        mockDeterministicPusher.in_buffer.write(["test2"])
+        self.assertEqual(len(mockDeterministicPusher.in_buffer.data), 2)
+        mockDeterministicPusher.run()
+        # self.assertEqual(len(mockDeterministicPusher.out_buffer.data), 2)
 
 
 if __name__ == '__main__':
