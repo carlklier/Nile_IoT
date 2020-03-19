@@ -11,6 +11,7 @@ from datetime import datetime
 from app import app, db
 from app.models import Test, Request, SystemMetric, TestSchema, RequestSchema, SystemMetricSchema
 from flask import Flask, jsonify, render_template, url_for, request, redirect, Response
+from livereload import Server
 
 
 # TODO: Keep track of test ID of currently running test
@@ -28,20 +29,49 @@ def landing():
 @app.route("/tests/")
 def view_tests():
     tests = Test.query.all()
-    #for test in tests:
-    #    test.start = datetime.fromtimestamp(test.start).strftime('%Y-%m-%d %H:%M:%S')
-    return render_template('index.html', tests=tests)
+    if len(tests) > 0:
+        output = []
+        for test in tests:
+            test_schema = TestSchema()
+            test_json = test_schema.dump(test)
+            test_json['start'] = test.start.strftime('%H:%M:%S %m-%d-%Y')
+            output.append(test_json)
+
+    return render_template('index.html', tests=output)
 
 @app.route("/tests/<test_id>/")
 def view_test_id(test_id):
+
+    # Get test
     test = Test.query.get(test_id)
+    test_schema = TestSchema()
+    test_json = test_schema.dump(test)
+    test_json['start'] = test.start.strftime('%H:%M:%S %m-%d-%Y')
+    
+    # Get request summary
+    # Loop adds up durations to get the average, and keeps track
+    # of the current longest request duration
     requests = Request.query.filter(Request.test_id == test_id).all()
+    if len(requests) > 0:
+        avg_duration = 0
+        longest = requests[0]
+        for request in requests:
+            avg_duration += request.duration
+            longest = longest if longest.duration > request.duration else request
+            request_schema = RequestSchema()
+            request_json = request_schema.dump(request)
+            request_json['time_sent']= request.time_sent.strftime('%H:%M:%S %m-%d-%Y')
+        avg_duration /= len(requests)
+
+    # Get metric summary
     metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
     
     return render_template('summary.html', 
-                            test=test, 
-                            requests=requests,
-                            metrics = metrics)
+                            test=test_json, 
+                            num_req = len(requests),
+                            req_avg = avg_duration,
+                            longest=longest,
+                            num_met = len(metrics))
 @app.route("/graphs/")
 def view_graphs():
     tests = Test.query.all()
@@ -58,12 +88,11 @@ def tests():
     data = request.get_json()
     test_config = data['config']
     test_start = data['start']
-    test_end = data['end']
     test_workers = data['workers']
     new_test = Test(
             config=test_config,
             start=test_start,
-            end=test_end,
+            end=datetime.min,
             workers=test_workers)
 
     print(str(new_test.serialize()))
@@ -215,4 +244,6 @@ def shutdown():
     app.shutdown()
 
 if __name__ == "__main__":
+    # server = Server(app.wsgi_app)
+    # server.serve(port=5000)
     app.run(host='0.0.0.0', debug=True)

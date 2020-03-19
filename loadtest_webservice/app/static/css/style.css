@@ -52,7 +52,9 @@ table {
 }
 
 .selected {
-    background-color: rgb(145, 147, 175) !important;
+    background-color: rgb(145, 147, 175);
+
+    font-weight: 600 !important;
 }
 
 .arrow-btn {
@@ -63,9 +65,9 @@ table {
     cursor: pointer; /* Mouse pointer on hover */
     height: 45px;
     margin-left: 5%;
-  }
+}
 
-  .btn-middle {
+.btn-middle {
     border: none; /* Remove borders */
     color: white; /* White text */
     padding: 0px 20px; /* Some padding */
@@ -74,10 +76,20 @@ table {
     width:250px;
     margin-left: 5%;
     vertical-align: top;
-  }
+}
 
-  .btn-center {
+.btn-center {
     margin:0 auto;
     margin-top:2%;
     width:600px
-  }
+}
+
+.drop-pair {
+    display: flex;
+    flex-direction: row;
+}
+.drop-lead {
+    padding-top:2%;
+    margin-left:5%;
+    margin-right:2%
+}

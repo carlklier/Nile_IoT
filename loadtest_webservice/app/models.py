@@ -40,7 +40,7 @@ class Request(db.Model):
     request_length = db.Column(db.Integer)
     response_type = db.Column(db.String())
     response_length = db.Column(db.Integer)
-    duration = db.Column(db.TIMESTAMP)
+    duration = db.Column(db.Float)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -71,7 +71,7 @@ class SystemMetric(db.Model):
     test_id = db.Column(db.Integer)
     time = db.Column(db.TIMESTAMP)
     metric_type = db.Column(db.String())
-    metric_value = db.Column(db.BigInteger)
+    metric_value = db.Column(db.Float)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
