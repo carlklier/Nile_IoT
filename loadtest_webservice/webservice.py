@@ -13,10 +13,12 @@ from app.models import Test, Request, SystemMetric, TestSchema, RequestSchema, S
 from flask import Flask, jsonify, render_template, url_for, request, redirect, Response
 from livereload import Server
 
-
-# TODO: Keep track of test ID of currently running test
-# store in variable and associate all incoming requests with that test
-# reject any new test startup if test ID is not None
+# Keep track of current test. Only one test can run
+# at a time.
+last_test = db.session.query(Test).order_by(Test.id.desc()).first()
+if last_test.end != datetime.min:
+    CURRENT_TEST = None
+else: CURRENT_TEST = last_test.id
 
 #########################
 # Template Populating Pages Section #
@@ -29,8 +31,8 @@ def landing():
 @app.route("/tests/")
 def view_tests():
     tests = Test.query.all()
+    output = []
     if len(tests) > 0:
-        output = []
         for test in tests:
             test_schema = TestSchema()
             test_json = test_schema.dump(test)
@@ -52,8 +54,9 @@ def view_test_id(test_id):
     # Loop adds up durations to get the average, and keeps track
     # of the current longest request duration
     requests = Request.query.filter(Request.test_id == test_id).all()
+    avg_duration = 0
+    longest = None
     if len(requests) > 0:
-        avg_duration = 0
         longest = requests[0]
         for request in requests:
             avg_duration += request.duration
@@ -85,6 +88,10 @@ def view_graphs():
 @app.route('/api/v1/tests', methods=['POST'])
 def tests():
     print("route begin: ", request.get_json())
+    global CURRENT_TEST
+    if CURRENT_TEST != None:
+        return Response("Can only run one test at a time.", status=400, mimetype='application/json')
+    
     data = request.get_json()
     test_config = data['config']
     test_start = data['start']
@@ -99,7 +106,8 @@ def tests():
     try:
         db.session.add(new_test)
         db.session.commit()
-        return "Added test with ID: " + str(new_test.id) + "\n"
+        CURRENT_TEST = new_test.id
+        return "Added test with ID: " + str(CURRENT_TEST) + "\n"
     except:
         return Response("Failed to add test.", status=400, mimetype='application/json')
 
@@ -107,8 +115,12 @@ def tests():
 @app.route('/api/v1/requests', methods=['POST'])
 def requests():
     print("route begin: ", request.get_json())
+
+    global CURRENT_TEST
+    if CURRENT_TEST == None:
+        return Response("Can't submit request while no tests running.", status=400, mimetype='application/json')
+
     data = request.get_json()
-    test_id = data['test_id']
     request_time = data['time_sent']
     request_type = data['request_type']
     request_length = data['request_length']
@@ -117,7 +129,7 @@ def requests():
     request_duration = data['duration']
 
     new_request = Request(
-            test_id = test_id,
+            test_id = CURRENT_TEST,
             time_sent = request_time,
             request_type = request_type,
             request_length = request_length,
@@ -136,42 +148,50 @@ def requests():
 @app.route('/api/v1/metrics', methods=['POST'])
 def metrics():
     print("route begin: ", request.get_json())
+
+
+    global CURRENT_TEST
+    if CURRENT_TEST == None:
+        return Response("Can't submit metric while no tests running.", status=400, mimetype='application/json')
+
     data = request.get_json()
-    test_id = data['test_id']
     metric_time = data['time']
-    metric_type = data['metric type']
-    metric_value = data['metric value']
+    metric_type = data['metric_type']
+    metric_value = data['metric_value']
 
     new_metric = SystemMetric(
-            test_id = test_id,
+            test_id = CURRENT_TEST,
             time = metric_time, 
             metric_type = metric_type,
             metric_value = metric_value)
 
+    print("commit metric: ", new_metric)
     try:
         db.session.add(new_metric)
         db.session.commit()
         return "Added metric with ID: " + str(new_metric.id) + "\n"
-    except:
-        return Response("Failed to add metric.", status=400, mimetype='application/json')
+    except Exception as e:
+        return Response("Failed to add metric: " + str(e), status=400, mimetype='application/json')
 
-@app.route('/api/v1/tests/<test_id>/finalize', methods=['POST'])
-def finalize_test(test_id):
+@app.route('/api/v1/tests/finalize', methods=['POST'])
+def finalize_test():
+    global CURRENT_TEST
+    
     #Get data sent
     data = request.get_json()
     #Get the test id
-    test = db.session.query(Test).filter(Test.test_id == test_id)
+    test = db.session.query(Test).order_by(Test.id.desc()).first()
     #update the attributes of that test
     db.session.flush()
-    setattr(test, 'config', data['config'])
-    setattr(test, 'start', data['start'])
     setattr(test, 'end', data['end'])
-    setattr(test, 'workers', data['workers'])
-    #commit the data
+
+    prev_test = CURRENT_TEST
+    CURRENT_TEST = None
+    
     try:
         db.session.add(test)
         db.session.commit()
-        return "Finalized test with ID: " + str(new_test.id) + "\n"
+        return "Finalized test with ID: " + str(prev_test) + "\n"
     except:
         return Response("Failed to finalize test.", status=400, mimetype='application/json')
 

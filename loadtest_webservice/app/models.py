@@ -84,8 +84,8 @@ class SystemMetric(db.Model):
             'id': self.id,
             'test_id': self.test_id,
             'time': self.time,
-            'metric type': self.metric_type,
-            'metric value': self.metric_value
+            'metric_type': self.metric_type,
+            'metric_value': self.metric_value
         }
 
 class SystemMetricSchema(ma.ModelSchema):

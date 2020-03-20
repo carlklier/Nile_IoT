@@ -7,6 +7,4 @@ Setup up Postgres database for webservice
 3. Migrate the tables
     - python manage.py db init
 4. When changing the models, migrate the db with these terminal commands
-    - python manage.py db init
-    - python manage.py db migrate
-    - python manage.py db upgrade
+    - python manage.py db init; python manage.py db migrate; python manage.py db upgrade

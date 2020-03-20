@@ -22,8 +22,7 @@ req_type = "request type"
 req_length = 200
 res_type = "response type"
 res_length = 300
-# TODO: change duration to float
-duration = datetime.datetime.now().isoformat()
+duration = 500
 
 met_time = test_end
 met_type = "metric type"
@@ -63,7 +62,6 @@ class TestEndpoint(unittest.TestCase):
         data = {
             'config': (test_config + str(count)),
             'start': test_start,
-            'end': test_end,
             'workers': num_workers
         }
 
@@ -102,8 +100,8 @@ class TestEndpoint(unittest.TestCase):
         data = {
             'test_id': Test.query.count(),
             'time': met_time,
-            'metric type': met_type,
-            'metric value': met_val,
+            'metric_type': met_type,
+            'metric_value': met_val,
         }
 
         print("request POST", data)
@@ -111,6 +109,17 @@ class TestEndpoint(unittest.TestCase):
         
         self.assertEqual(SystemMetric.query.count(), count + 1)
         self.assertEqual(request.text, 'Added metric with ID: ' + str(count + 1) + '\n')
+
+    def test_post_finalize(self):
+        endpoint = 'http://localhost:5000/api/v1/tests/finalize'
+        data = {
+            'end': test_end
+        }
+
+        print("test POST", data)
+        request = requests.post(endpoint, json=data)
+
+        self.assertEqual(Test.query.first().end, test_end)
 
     def test_post_invalid(self):
         endpoint = 'http://localhost:5000/api/v1/tests'
@@ -123,14 +132,26 @@ class TestEndpoint(unittest.TestCase):
         request = requests.post(endpoint, json=data)
         self.assertEqual(request.text, 'Failed to add test.')
 
+        # Add valid test to test invalid metrics and requests
+        count = Test.query.count()
+        endpoint = 'http://localhost:5000/api/v1/tests'
+        data = {
+            'config': (test_config + str(count)),
+            'start': test_start,
+            'workers': num_workers
+        }
+
+        print("test POST", data)
+        request = requests.post(endpoint, json=data)
+
         endpoint = 'http://localhost:5000/api/v1/metrics'
 
         # TODO: change this and schema to metric_type and metric_length
         data = {
             'test_id': Test.query.count(),
             'time': met_time,
-            'metric type': met_type,
-            'metric value': "One hundred million dollars",
+            'metric_type': met_type,
+            'metric_value': "One hundred million dollars",
         }
         request = requests.post(endpoint, json=data)
         self.assertEqual(request.text, 'Failed to add metric.')
