@@ -86,15 +86,26 @@
         // Modify the table HTML to match the current sorting
         // of the test list
         function iterate(test, index) { 
-            console.log(test)
             index += 1
-            
-            if (test.end === '0001-01-01T00:00:00') test.end = "In Progress"
 
+            // Extra validation needed for end, must display if
+            // this is current test, otherwise show end time
+            var end = document.getElementById(index + '-end')
+            var endText = test.end
+
+            if (test.end === '0001-01-01T00:00:00') {
+                endText = "In Progress"
+                end.style.fontWeight = '600'
+                end.style.color = 'dark-grey'
+            } else
+                end.style.fontWeight = ''
+
+            // Set the values based on the current test index
             document.getElementById(index + '-id').innerHTML = test.id
+            document.getElementById(index + '-id').style.fontWeight = '600'
             document.getElementById(index + '-cfg').innerHTML = test.config
             document.getElementById(index + '-start').innerHTML = test.start
-            document.getElementById(index + '-end').innerHTML = test.end
+            document.getElementById(index + '-end').innerHTML = endText
             document.getElementById(index + '-workers').innerHTML = test.workers
         }
 
@@ -204,21 +215,21 @@
                 <table class="table table-hover table-sm">
                     <thead>
                         <tr>
-                            <th scope="col">Test ID</th>
-                            <th scope="col">Config</th>
-                            <th scope="col">Start Time</th>
-                            <th scope="col">End Time</th>
-                            <th scope="col">Workers</th>
+                            <th scope="col" class="text-center dark-text">Test ID</th>
+                            <th scope="col" class="text-center dark-text">Config</th>
+                            <th scope="col" class="text-center dark-text">Start Time</th>
+                            <th scope="col" class="text-center dark-text">End Time</th>
+                            <th scope="col" class="text-center dark-text">Workers</th>
                         </tr>
                     </thead>
                     <tbody id="table">
                         {% for test in tests %}
                                 <tr id="{{ loop.index }}-idx" class="table-select">
                                     <th id="{{ loop.index }}-id" scope="row">{{ test.id }}</th>
-                                    <td id="{{ loop.index }}-cfg">{{ test.config }}</td>
-                                    <td id="{{ loop.index }}-start">{{ test.start }}</td>
-                                    <td id="{{ loop.index }}-end">{{ test.end }}</td>
-                                    <td id="{{ loop.index }}-workers">{{ test.workers }}</td>
+                                    <td id="{{ loop.index }}-cfg" class="main-text">{{ test.config }}</td>
+                                    <td id="{{ loop.index }}-start" class="main-text">{{ test.start }}</td>
+                                    <td id="{{ loop.index }}-end" class="main-text">{{ test.end }}</td>
+                                    <td id="{{ loop.index }}-workers" class="main-text">{{ test.workers }}</td>
                                 </tr>
                         {% endfor %}
                     </tbody>
