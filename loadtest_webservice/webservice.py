@@ -30,8 +30,12 @@ def landing():
 
 @app.route("/tests/")
 def view_tests():
-    tests = Test.query.all()
+
+    # Get list of tests, most recent first
+    tests = db.session.query(Test).order_by(Test.id.desc()).all()
     output = []
+
+    # Convert tests to JSON and make datetimes readable
     if len(tests) > 0:
         for test in tests:
             test_schema = TestSchema()
@@ -177,13 +181,12 @@ def metrics():
 def finalize_test():
     global CURRENT_TEST
     
-    #Get data sent
     data = request.get_json()
-    #Get the test id
     test = db.session.query(Test).order_by(Test.id.desc()).first()
-    #update the attributes of that test
-    db.session.flush()
-    setattr(test, 'end', data['end'])
+
+    # Give the test an end time and reset 
+    # the current test
+    test.end = data['end']
 
     prev_test = CURRENT_TEST
     CURRENT_TEST = None
@@ -191,6 +194,7 @@ def finalize_test():
     try:
         db.session.add(test)
         db.session.commit()
+        db.session.flush()
         return "Finalized test with ID: " + str(prev_test) + "\n"
     except:
         return Response("Failed to finalize test.", status=400, mimetype='application/json')
