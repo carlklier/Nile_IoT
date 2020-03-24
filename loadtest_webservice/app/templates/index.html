@@ -65,7 +65,7 @@
             } else if ($sortBy === "workers") {
                 list.sort((a, b) => b.workers - a.workers);
             } else if ($sortBy === "id") {
-                list.sort((a, b) => a.id - b.id);
+                list.sort((a, b) => b.id - a.id);
             }
 
             list.forEach(iterate)

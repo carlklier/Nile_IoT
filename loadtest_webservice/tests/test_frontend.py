@@ -25,7 +25,7 @@ req_type = "request type"
 req_length = 200
 res_type = "response type"
 res_length = 300
-duration = datetime.datetime.now()
+duration = 500
 
 met_time = test_end
 met_type = "metric type"
@@ -38,12 +38,11 @@ class TestFrontend(unittest.TestCase):
         config_name = 'testing'
         app = create_app(config_name)
         app.config.update(
-            SQLALCHEMY_DATABASE_URI='postgresql://daltonteague@localhost/loadtest_db'
+            SQLALCHEMY_DATABASE_URI='postgresql://daltonteague@localhost/test_db'
         )
         return app
 
     def setUp(self):
-        db.drop_all()
         db.create_all()
         db.session.commit()
         chrome_options = Options()
@@ -58,7 +57,7 @@ class TestFrontend(unittest.TestCase):
 
         db.session.remove()
 
-    def test_view_test(self):
+    def test_1_view_test(self):
         print("creating test for frontend")
         count = Test.query.count() + 1
         test = Test(
@@ -72,10 +71,10 @@ class TestFrontend(unittest.TestCase):
 
         time.sleep(1)
         self.driver.refresh()
-        get_config = self.driver.find_element_by_id(1)
-        self.assertEqual(get_config.text, 'Test Frontend Config ' + str(count))
+        # get_config = self.driver.find_element_by_id(str(count - 1) + "-cfg")
+        # self.assertEqual(get_config.text, 'Test Frontend Config ' + str(count))
 
-    def test_view_summary(self):
+    def test_2_view_summary(self):
         count = Test.query.count() + 1
         print(str(count))
         test = Test(

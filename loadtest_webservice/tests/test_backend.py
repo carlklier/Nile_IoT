@@ -30,14 +30,13 @@ class TestDatabase(unittest.TestCase):
         config_name = 'testing'
         app = create_app(config_name)
         app.config.update(
-            SQLALCHEMY_DATABASE_URI='postgresql://daltonteague@localhost/loadtest_db'
+            SQLALCHEMY_DATABASE_URI='postgresql://daltonteague@localhost/testing'
         )
         return app
 
     def setUp(self):
 
         db.create_all()
-        db.session.commit()
 
     def tearDown(self):
 

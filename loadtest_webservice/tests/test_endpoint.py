@@ -1,3 +1,6 @@
+import sys
+
+import flask_testing
 import unittest
 import socket
 
@@ -10,6 +13,9 @@ import datetime
 import requests
 import json
 
+test_endpoint = 'http://localhost:5000/api/v1/tests'
+met_endpoint = 'http://localhost:5000/api/v1/metrics'
+req_endpoint = 'http://localhost:5000/api/v1/requests'
 
 test_id = 1
 test_config = "Test POST Config"
@@ -39,14 +45,14 @@ class TestEndpoint(unittest.TestCase):
         config_name = 'testing'
         app = create_app(config_name)
         app.config.update(
-            SQLALCHEMY_DATABASE_URI='postgresql://daltonteague@localhost/loadtest_db'
+            SQLALCHEMY_DATABASE_URI='postgresql://daltonteague@localhost/test_db'
         )
         return app
 
     def setUp(self):
-        db.drop_all()
+        unittest.TestLoader.sortTestMethodsUsing = None
         db.create_all()
-        db.session.commit()
+        
 
     def tearDown(self):
 
@@ -56,27 +62,88 @@ class TestEndpoint(unittest.TestCase):
     # Test POST section #
     #########################
 
-    def test_post_test(self):
+    def test_1_post_test(self):
+        endpoint = test_endpoint
+
         count = Test.query.count()
-        endpoint = 'http://localhost:5000/api/v1/tests'
         data = {
             'config': (test_config + str(count)),
             'start': test_start,
             'workers': num_workers
         }
 
-        print("test POST", data)
+        print("POST TEST ", data)
+        request = requests.post(endpoint, json=data)
+
+        print("request is " + str(request.text))
+        self.assertEqual(Test.query.count(), count + 1)
+
+    def test_2_post_request(self):
+        count = Request.query.count()
+        endpoint = req_endpoint
+        data = {
+            'time_sent': req_time,
+            'request_type': req_type,
+            'request_length': req_length,
+            'response_type': res_type,
+            'response_length': res_length,
+            'duration': duration
+        }
+
+        print("POST request ", data)
         request = requests.post(endpoint, json=data)
         
-        self.assertEqual(Test.query.count(), count + 1)
-        print("request is " + str(request.text))
-        self.assertEqual(request.text, "Added test with ID: " + str(count + 1) + '\n')
+        self.assertEqual(Request.query.count(), count + 1)
+        self.assertEqual(request.text, 'Added request with ID: ' + str(count + 1) + '\n')
+        
 
-    def test_post_request(self):
-        count = Request.query.count()
-        endpoint = 'http://localhost:5000/api/v1/requests'
+    def test_3_post_metric(self):
+        count = SystemMetric.query.count()
+        endpoint = met_endpoint
+
         data = {
-            'test_id': Test.query.count(),
+            'time': met_time,
+            'metric_type': met_type,
+            'metric_value': met_val,
+        }
+
+        print("POST metric ", data)
+        request = requests.post(endpoint, json=data)
+        
+        self.assertEqual(request.text, 'Added metric with ID: ' + str(count + 1) + '\n')
+        self.assertEqual(SystemMetric.query.count(), count + 1)
+
+    def test_4_post_finalize(self):
+        endpoint = test_endpoint
+        data = {
+            'end': test_end
+        }
+
+        print("test finalize ", data)
+        request = requests.post(endpoint+"/finalize", json=data)
+
+        self.assertEqual(db.session.query(Test)
+                    .order_by(Test.id.desc()).first().end.isoformat(), test_end)
+        
+
+    def test_5_post_invalid(self):
+        print("POST invalid")
+        # Attempt to add metrics and requests while no
+        # tests are active
+        endpoint = met_endpoint
+
+        data = {
+            'time': met_time,
+            'metric_type': met_type,
+            'metric_value': met_val,
+        }
+
+        print("request POST", data)
+        request = requests.post(endpoint, json=data)
+        self.assertEqual(request.text, "Can't submit metric while no tests running.")
+
+        endpoint = req_endpoint
+        data = {
             'time_sent': req_time,
             'request_type': req_type,
             'request_length': req_length,
@@ -87,42 +154,10 @@ class TestEndpoint(unittest.TestCase):
 
         print("request POST", data)
         request = requests.post(endpoint, json=data)
-        
-        self.assertEqual(Request.query.count(), count + 1)
-        self.assertEqual(request.text, 'Added request with ID: ' + str(count + 1) + '\n')
-        
+        self.assertEqual(request.text, "Can't submit request while no tests running.")
 
-    def test_post_metric(self):
-        count = SystemMetric.query.count()
-        endpoint = 'http://localhost:5000/api/v1/metrics'
-
-        # TODO: change this and schema to metric_type and metric_length
-        data = {
-            'test_id': Test.query.count(),
-            'time': met_time,
-            'metric_type': met_type,
-            'metric_value': met_val,
-        }
-
-        print("request POST", data)
-        request = requests.post(endpoint, json=data)
-        
-        self.assertEqual(SystemMetric.query.count(), count + 1)
-        self.assertEqual(request.text, 'Added metric with ID: ' + str(count + 1) + '\n')
-
-    def test_post_finalize(self):
-        endpoint = 'http://localhost:5000/api/v1/tests/finalize'
-        data = {
-            'end': test_end
-        }
-
-        print("test POST", data)
-        request = requests.post(endpoint, json=data)
-
-        self.assertEqual(Test.query.first().end, test_end)
-
-    def test_post_invalid(self):
-        endpoint = 'http://localhost:5000/api/v1/tests'
+        # Add invalid test
+        endpoint = test_endpoint
         data = {
             'config': test_config,
             'start': '5:35 PM',
@@ -134,7 +169,6 @@ class TestEndpoint(unittest.TestCase):
 
         # Add valid test to test invalid metrics and requests
         count = Test.query.count()
-        endpoint = 'http://localhost:5000/api/v1/tests'
         data = {
             'config': (test_config + str(count)),
             'start': test_start,
@@ -144,9 +178,12 @@ class TestEndpoint(unittest.TestCase):
         print("test POST", data)
         request = requests.post(endpoint, json=data)
 
-        endpoint = 'http://localhost:5000/api/v1/metrics'
+        # Attempt to add test while a test is running
+        request = requests.post(endpoint, json=data)
+        self.assertEqual(request.text, 'Can only run one test at a time.')
 
-        # TODO: change this and schema to metric_type and metric_length
+        endpoint = met_endpoint
+
         data = {
             'test_id': Test.query.count(),
             'time': met_time,
@@ -156,10 +193,10 @@ class TestEndpoint(unittest.TestCase):
         request = requests.post(endpoint, json=data)
         self.assertEqual(request.text, 'Failed to add metric.')
 
-        endpoint = 'http://localhost:5000/api/v1/requests'
+        endpoint = req_endpoint
         data = {
             'test_id': Test.query.count(),
-            'time_sent': req_time,
+            'time_sent': '5 oclock',
             'request_type': 5,
             'request_length': req_length,
             'response_type': res_type,
@@ -169,18 +206,37 @@ class TestEndpoint(unittest.TestCase):
         request = requests.post(endpoint, json=data)
         self.assertEqual(request.text, 'Failed to add request.')
 
+        # Fail to finalize test
+        endpoint = test_endpoint
+        data = {
+            'end': 'late at night'
+        }
+
+        print("test POST", data)
+        request = requests.post(endpoint+"/finalize", json=data)
+        self.assertEqual(request.text, 'Failed to finalize test.')
+
+        # Finish and finalize test
+        data = {
+            'end': test_end
+        }
+
+        print("test POST", data)
+        request = requests.post(endpoint+"/finalize", json=data)
+
+
 
     #########################
     # Test GET section #
     #########################
     
-    def test_get_all(self):
+    def test_6_get_all(self):
+        print("GET ALL")
 
         # Assert get returns number of objects matching database
         # TODO: check the fields of objects returned
         endpoint = 'http://localhost:5000/api/v1/tests'
         tests = json.loads(requests.get(endpoint).content)
-        print("GET ALL TESTS: " + str(tests))
 
         self.assertEqual(len(tests), Test.query.count())
 
@@ -194,20 +250,44 @@ class TestEndpoint(unittest.TestCase):
 
         self.assertEqual(len(metrics), SystemMetric.query.count())
 
-    def test_get_request_id(self):
-        loc_requests = Request.query.all()
-        # request_id = loc_requests[0]
+    def test_7_get_request_id(self):
+        print("GET request ID")
+        request_id = db.session.query(Request).order_by(Request.id.desc()).first().id
 
-        # endpoint = 'http://localhost:5000/api/v1/requests/' + str(request_id)
-        # request = json.loads(requests.get(endpoint).content)
-        # print("get request by id: " + str(request))
+        endpoint = 'http://localhost:5000/api/v1/requests/' + str(request_id)
+        request = json.loads(requests.get(endpoint).content)
+        print("get request by id: " + str(request))
 
-        # self.assertEqual(request['time_sent'], req_time)
-        # self.assertEqual(request['request_type'], req_type)
-        # self.assertEqual(request['request_length'], req_length)
-        # self.assertEqual(request['response_type'], res_type)
-        # self.assertEqual(request['response_length'], res_length)
-        # self.assertEqual(request['duration'], duration)
+        self.assertEqual(request['time_sent'], req_time)
+        self.assertEqual(request['request_type'], req_type)
+        self.assertEqual(request['request_length'], req_length)
+        self.assertEqual(request['response_type'], res_type)
+        self.assertEqual(request['response_length'], res_length)
+        self.assertEqual(request['duration'], duration)
+
+    def test_8_get_metric_id(self):
+        print("GET metric ID")
+        metric_id = db.session.query(SystemMetric).order_by(SystemMetric.id.desc()).first().id
+
+        endpoint = 'http://localhost:5000/api/v1/metrics/' + str(metric_id)
+        request = json.loads(requests.get(endpoint).content)
+        print("get request by id: " + str(request))
+
+        self.assertEqual(request['time'], req_time)
+        self.assertEqual(request['metric_type'], met_type)
+        self.assertEqual(request['metric_value'], met_val)
+
+    def test_9_get_test_id(self):
+        print("GET metric ID")
+        test_id = db.session.query(Test).order_by(Test.id.desc()).first().id
+
+        endpoint = 'http://localhost:5000/api/v1/tests/' + str(test_id)
+        request = json.loads(requests.get(endpoint).content)
+        print("get request by id: " + str(request))
+
+        self.assertEqual(request['start'], test_start)
+        self.assertEqual(request['end'], test_end)
+        self.assertEqual(request['workers'], num_workers)
 
 
 

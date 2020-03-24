@@ -176,8 +176,8 @@ def metrics():
         db.session.add(new_metric)
         db.session.commit()
         return "Added metric with ID: " + str(new_metric.id) + "\n"
-    except Exception as e:
-        return Response("Failed to add metric: " + str(e), status=400, mimetype='application/json')
+    except:
+        return Response("Failed to add metric.", status=400, mimetype='application/json')
 
 @app.route('/api/v1/tests/finalize', methods=['POST'])
 def finalize_test():
@@ -261,15 +261,7 @@ def get_metrics():
         output.append(metric_schema.dump(metric))
     return jsonify(output)
 
-#########################
-# Shutdown route for testing #
-#########################
-
-@app.route('/shutdown', methods=['POST'])
-def shutdown():
-    app.shutdown()
-
 if __name__ == "__main__":
     # server = Server(app.wsgi_app)
     # server.serve(port=5000)
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0')
