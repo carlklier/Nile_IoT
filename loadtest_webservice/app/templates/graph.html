@@ -6,13 +6,22 @@
 {% block body %}
 
 <!-- Scripts -->
+<script src="../../node_modules/chart.js/dist/Chart.js"></script>
 <script>
-function hideFunction() {
+function showLocustFunction() {
   var x = document.getElementById("test-group");
+  var y = document.getElementById("test-group-2");
   if (x.style.display === "none") {
     x.style.display = "block";
-  } else {
-    x.style.display = "none";
+    y.style.display = "none";
+  }
+}
+function showSystemMetricsFunction() {
+  var x = document.getElementById("test-group-2");
+  var y = document.getElementById("test-group");
+  if (x.style.display === "none") {
+    x.style.display = "block";
+    y.style.display = "none";
   }
 }
 </script>
@@ -48,11 +57,12 @@ function hideFunction() {
         </div>
         <div class="row">
             <div class="btn-group" role="group" aria-label="Results Option">
-                <button type="button" class="btn btn-primary" onclick="hideFunction()">Locust Results</button>
-                <button type="button" class="btn btn-primary">System Metrics</button>
+                <button type="button" class="btn btn-primary" onclick="showLocustFunction()">Locust Results</button>
+                <button type="button" class="btn btn-primary" onclick="showSystemMetricsFunction()">System Metrics</button>
             </div>
         </div>
         <div class="row pt-3">
+
             <div class="col-6">
 
               <div class="row-6">
@@ -80,6 +90,11 @@ function hideFunction() {
                         <li class="list-group-item text-center">C</li>
                         <li class="list-group-item text-center">D</li>
                         <li class="list-group-item text-center">E</li>
+                    </ul>
+                    <ul class="list-group" id="test-group-2" style="display: none;">
+                        <li class="list-group-item text-center">{{ test.id }}</li>
+                        <li class="list-group-item text-center">A2</li>
+                        <li class="list-group-item text-center">B3</li>
                     </ul>
                     {% endfor %}
                 </div>

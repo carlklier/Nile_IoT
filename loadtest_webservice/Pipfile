@@ -19,6 +19,7 @@ marshmallow-sqlalchemy = "*"
 requests = "*"
 docker-compose = "*"
 coverage = "*"
+livereload = "*"
 
 [requires]
 python_version = "3.7"
