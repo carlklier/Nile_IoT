@@ -1,14 +1,6 @@
 import sys
 import unittest
 from unittest.mock import patch, MagicMock, PropertyMock
-<<<<<<< HEAD
-import pts_lib
-from .. import _is_slave, _is_master
-from ..core import DataBuffer, TestManager
-from ..buffer import Buffer, CircularReadBuffer
-from ..workers import SteadyRateWorker, _cleanup
-from gevent import sleep
-=======
 
 from pts_lib import server_integration
 from pts_lib.server_integration import _is_slave, _is_master
@@ -16,8 +8,6 @@ from pts_lib.server_integration.databuffer import DataBuffer
 from pts_lib.server_integration.testmanager import TestManager
 from pts_lib.dataflow.buffers import Buffer, CircularReadBuffer
 from pts_lib.dataflow.pushers import DeterministicPusher
-
->>>>>>> 79cd8259ee7b665de9bdfaffacd6a2fdea99d3b9
 
 class PTSLaunchTest(unittest.TestCase):
 
@@ -150,66 +140,6 @@ class BufferTest(unittest.TestCase):
 
 
 class CircularReadBufferTest(unittest.TestCase):
-<<<<<<< HEAD
-  def test_init(self):
-    buf = CircularReadBuffer(buffer_data=["test1", "test2", "test3"])
-    self.assertEqual(buf.buffer_data, ["test1", "test2", "test3"])
-    self.assertEqual(buf.cursor, 0)
-
-  def test_read(self):
-    buf = CircularReadBuffer(buffer_data=[])
-    status, value = buf.read()
-    self.assertEqual(status, False)
-    self.assertEqual(value, None)
-
-    buf = CircularReadBuffer(buffer_data=["test1", "test2", "test3"])
-    status, value = buf.read()
-    self.assertEqual(buf.cursor, 1)
-    self.assertEqual(status, True)
-    self.assertEqual(value, "test1")
-
-    buf.read()
-    buf.read()
-    self.assertEqual(buf.cursor, 0)
-
-  def test_write(self):
-    buf = CircularReadBuffer(buffer_data=[])
-    with self.assertRaises(RuntimeError):
-      buf.write("test1")
-
-class SteadyRateWorkerTest(unittest.TestCase):
-  def test_init(self):
-    in_buf = Buffer()
-    out_buf = Buffer()
-    srw = SteadyRateWorker(in_buf, out_buf, 1)
-    self.assertEqual(len(srw.in_buffer.data), 0)
-    self.assertEqual(len(srw.out_buffer.data), 0)
-    self.assertEqual(srw.interval, 1)
-
-  #def test_run(self):
-   # in_buf = Buffer()
-    #out_buf = Buffer()
-    #mockSteadyRateWorker = MagicMock(in_buffer=in_buf, out_buffer=out_buf)
-    #mock = PropertyMock(side_effect=[1,1,0])
-    #type(mockSteadyRateWorker).running = mock 
-    #mockSteadyRateWorker.in_buffer.write("test1")
-    #mockSteadyRateWorker.in_buffer.write("test2")
-    #self.assertEqual(len(mockSteadyRateWorker.in_buffer.data), 2)
-    #mockSteadyRateWorker.run()
-    #self.assertEqual(len(mockSteadyRateWorker.out_buffer.data), 2)
-
-  def test_run2(self):
-    print("running test_run2")
-    in_buf = Buffer()
-    out_buf = Buffer()
-    in_buf.write("test1")
-    in_buf.write("test2")
-    srw = SteadyRateWorker(in_buf, out_buf, 1)
-    srw.start()
-    sleep(2)
-    self.assertEqual(len(srw.out_buffer.data), 2)
-    _cleanup()
-=======
     def test_init(self):
         buf = CircularReadBuffer(buffer_data=["test1", "test2", "test3"])
         self.assertEqual(buf.buffer_data, ["test1", "test2", "test3"])
@@ -252,8 +182,6 @@ class DeterministicPusherTest(unittest.TestCase):
         self.assertEqual(len(mockDeterministicPusher.in_buffer.data), 2)
         mockDeterministicPusher.run()
         # self.assertEqual(len(mockDeterministicPusher.out_buffer.data), 2)
-
->>>>>>> 79cd8259ee7b665de9bdfaffacd6a2fdea99d3b9
 
 if __name__ == '__main__':
     unittest.main()
