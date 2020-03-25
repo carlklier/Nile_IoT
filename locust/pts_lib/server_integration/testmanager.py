@@ -1,7 +1,7 @@
 """
 """
-# import requests
-import time
+import requests
+import datetime
 from locust import events
 
 
@@ -17,54 +17,33 @@ class TestManager:
         """
         self.hostname = hostname
 
-        self.start_time = time.time()
+        self.start_time = datetime.datetime.now().isoformat()
 
-        self.start_test()
+        self.start_test(kwargs['slave_count'])
 
         events.quitting += self.finalize_test
 
-    def start_test(self):
-        self.test_id = 1
-        # TODO finish the work-in-progress server interaction code
-#        start_endpoint = f'{self.hostname}/api/v1/tests'
-#
-#        headers = {
-#            'content-type': 'application/json'
-#        }
-#
-#        body = {
-#            'config': 'Sample Configuration',
-#            'start': self.start_time,
-#            'workers': 3
-#       # TODO use sys.argv to determine the number of slaves expected
-#        }
-#
-#        response = requests.post(start_endpoint, data=data, headers=headers)
-#
-#        if response.status_code != 200:
-#            raise RuntimeError('Could not create test')
-#        else:
-#            self.test_id = response.json()['id']
+    def start_test(self, slave_count):
+      data = {
+        'config': 'Sample Config',
+        'start': self.start_time,
+        'workers': slave_count}
+
+      start_endpoint = f'http://{self.hostname}/api/v1/tests'
+      request = requests.post(start_endpoint, json=data)
+      print(request.text)
+      if response.status_code != 200:
+          raise RuntimeError('Could not create test')
 
     def finalize_test(self):
+
+      self.end_time = datetime.datetime.now().isoformat()
+      data = {
+        'end': self.end_time}
+      finalize_endpoint = f'{self.hostname}/api/v1/tests/finalize'
+      request = requests.post(endpoint, json=data)
+      print(request.text)
+      if response.status_code != 200:
+          raise RuntimeError('Could not finalize test')
+      else:
         print('PTS: Test Finalized')
-        # TODO finish the work-in-progress server interaction code
-#        end_time = time.time()
-#
-#        end_endpoint = f'{self.hostname}/api/v1/tests/{self.test_id}/finalize'
-#
-#        headers = {
-#            'content-type': 'application/json'
-#        }
-#
-#        body = {
-#            'id': self.test_id,
-#            'end': end_time
-#        }
-#
-#        response = requests.post(end_endpoint, data=data, headers=headers)
-#
-#        if response.status_code != 200:
-#            raise RuntimeError('Could not finalize test')
-#        else:
-#            print('PTS: Test Finalized')

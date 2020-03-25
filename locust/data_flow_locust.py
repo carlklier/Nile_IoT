@@ -6,7 +6,6 @@ from pts_lib.dataflow.pushers import DeterministicPusher
 
 launch("localhost")
 
-
 class DataFlowBehavior(TaskSet):
     def on_start(self):
         """
@@ -25,7 +24,6 @@ class DataFlowBehavior(TaskSet):
     @task
     def no_op(self):
         pass
-
 
 class DataFlowLocust(HttpLocust):
     task_set = DataFlowBehavior

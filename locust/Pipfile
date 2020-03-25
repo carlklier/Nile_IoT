@@ -6,9 +6,9 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-python-interface="^1.5.3"
 locustio = "*"
 coverage = "*"
+python-interface = "*"
 
 [requires]
 python_version = "3.7"

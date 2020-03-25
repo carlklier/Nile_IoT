@@ -1,4 +1,5 @@
 import sys
+import re
 from .databuffer import DataBuffer
 from .testmanager import TestManager
 
@@ -19,7 +20,15 @@ def launch(hostname, *args, **kwargs):
 
     if _is_master():
         print(f'PTS: Running as master, pts-server="{hostname}"')
-        TestManager(hostname, *args, **kwargs)
+
+        slave_count = 0
+        for arg in sys.argv:
+          print("Next argument through *argv :", arg)
+          slave_arg = re.search("--expect-slaves=(\d+)", arg)
+          if slave_arg:
+            slave_count = slave_arg.group(1)
+            
+        TestManager(hostname, *args, **kwargs, slave_count=slave_count)
     elif _is_slave():
         print(f'PTS: Running as slave, pts-server="{hostname}"')
         DataBuffer(hostname, *args, **kwargs)
