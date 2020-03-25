@@ -1,21 +1,21 @@
 from locust import HttpLocust, TaskSet, task, between
 
-from pts_lib import launch_pts
-from pts_lib.buffer import Buffer
-from pts_lib.workers import SteadyRateWorker
+from pts_lib.server_integration import launch
+from pts_lib.dataflow.buffers import Buffer, CircularReadBuffer
+from pts_lib.dataflow.pushers import DeterministicPusher
 
-launch_pts("localhost")
+launch("localhost")
+
 
 class DataFlowBehavior(TaskSet):
     def on_start(self):
-        """ on_start is called when a Locust start before any task is scheduled """
-        in_buffer = Buffer()
+        """
+        on_start is called when a Locust start before any task is scheduled
+        """
+        in_buffer = CircularReadBuffer(list(range(100)))
         out_buffer = Buffer()
 
-        for i in range(100):
-            in_buffer.write(i)
-
-        worker = SteadyRateWorker(in_buffer, out_buffer, 2)
+        worker = DeterministicPusher(in_buffer, out_buffer, 1, 0.1, 0.5)
         worker.start()
 
     def on_stop(self):
@@ -25,6 +25,7 @@ class DataFlowBehavior(TaskSet):
     @task
     def no_op(self):
         pass
+
 
 class DataFlowLocust(HttpLocust):
     task_set = DataFlowBehavior
