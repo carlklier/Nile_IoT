@@ -19,7 +19,7 @@ class PTSLaunchTest(unittest.TestCase):
             mock_tm.return_value = None
             sys.argv = ['--master']
             server_integration.launch("hostname")
-            mock_tm.assert_called_with("hostname")
+            mock_tm.assert_called_with("hostname", slave_count=0)
         finally:
             sys.argv = saved_argv
 
@@ -53,12 +53,16 @@ class PTSLaunchTest(unittest.TestCase):
 
 
 class TestManagerTest(unittest.TestCase):
-    def test_init(self):
-        tm = TestManager("localhost")
+    # should change this to mock start_test method instead
+    @patch('pts_lib.server_integration.testmanager.requests.post')
+    def test_init(self, mock_post):
+        mock_post.return_value.status_code = 200
+        tm = TestManager("localhost", slave_count=0)
         self.assertEqual(tm.hostname, "localhost")
+        self.assertEqual(tm.slave_count, 0)
         self.assertIsNotNone(tm.start_time)
-        self.assertIsNotNone(tm.test_id)
-        # not sure how to test start_test and finalize_test
+
+        # need to add tests to test start_test and finalize_test
 
 
 class DataBufferTest(unittest.TestCase):
@@ -73,12 +77,9 @@ class DataBufferTest(unittest.TestCase):
         data_buffer2 = DataBuffer("localhost", buffer_limit=30)
         self.assertEqual(data_buffer2.buffer_limit, 30)
 
-    def test_start_test(self):
-        data_buffer = DataBuffer("localhost")
-        data_buffer.start_test()
-        self.assertIsNotNone(data_buffer.test_id)
-
-    def test_on_request_data(self):
+    @patch('pts_lib.server_integration.databuffer.requests.post')
+    def test_on_request_data(self, mock_post):
+        mock_post.return_value.status_code = 200
         data_buffer = DataBuffer("localhost")
         for i in range(20):
             data_buffer.on_request_data(data="Data 1")
@@ -87,11 +88,13 @@ class DataBufferTest(unittest.TestCase):
         self.assertEqual(len(data_buffer.buffer), 0)
 
     def test_on_quitting(self):
-        data_buffer = DataBuffer("localhost")
-        data_buffer.on_request_data(data="Data 1")
-        data_buffer.on_quitting()
+        with patch('pts_lib.server_integration.databuffer.requests.post') as mock_post:
+          mock_post.return_value.status_code = 200
+          
+          data_buffer = DataBuffer("localhost")
+          data_buffer.on_request_data(data="Data 1")
+          data_buffer.on_quitting()
         self.assertEqual(len(data_buffer.buffer), 0)
-
 
 class BufferTest(unittest.TestCase):
     def test_init(self):

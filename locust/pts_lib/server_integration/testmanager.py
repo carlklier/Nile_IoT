@@ -18,20 +18,20 @@ class TestManager:
         self.hostname = hostname
 
         self.start_time = datetime.datetime.now().isoformat()
+        self.slave_count = kwargs['slave_count']
 
-        self.start_test(kwargs['slave_count'])
+        self.start_test()
 
         events.quitting += self.finalize_test
 
-    def start_test(self, slave_count):
+    def start_test(self):
       data = {
         'config': 'Sample Config',
         'start': self.start_time,
-        'workers': slave_count}
+        'workers': self.slave_count}
 
       start_endpoint = f'http://{self.hostname}/api/v1/tests'
-      request = requests.post(start_endpoint, json=data)
-      print(request.text)
+      response = requests.post(start_endpoint, json=data)
       if response.status_code != 200:
           raise RuntimeError('Could not create test')
 
@@ -41,8 +41,7 @@ class TestManager:
       data = {
         'end': self.end_time}
       finalize_endpoint = f'{self.hostname}/api/v1/tests/finalize'
-      request = requests.post(endpoint, json=data)
-      print(request.text)
+      response = requests.post(endpoint, json=data)
       if response.status_code != 200:
           raise RuntimeError('Could not finalize test')
       else:

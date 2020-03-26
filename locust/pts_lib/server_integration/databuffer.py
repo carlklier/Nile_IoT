@@ -1,6 +1,6 @@
 """
 """
-# import requests
+import requests
 from locust import events
 
 
@@ -37,7 +37,7 @@ class DataBuffer:
 
     def _upload_buffer(self):
       requests_endpoint = f'{self.hostname}/api/v1/requests'
-      while len(self.buffer) > 0:
+      for each in self.buffer:
         data = {
           'time_sent': '1',
           'request_type': 'request',
@@ -47,8 +47,8 @@ class DataBuffer:
           'duration': 3}
         # need to actually get this data from locust 
                     
-      response = requests.post(endpoint, json=data)
-      if response.status_code != 200:
-        raise RuntimeError('Could not finalize test')
+        response = requests.post(requests_endpoint, json=data)
+        if response.status_code != 200:
+          raise RuntimeError('Could not finalize test')
       print(f'PTS: Buffer of requests uploaded.')
       self.buffer = list()

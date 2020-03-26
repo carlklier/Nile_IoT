@@ -23,7 +23,6 @@ def launch(hostname, *args, **kwargs):
 
         slave_count = 0
         for arg in sys.argv:
-          print("Next argument through *argv :", arg)
           slave_arg = re.search("--expect-slaves=(\d+)", arg)
           if slave_arg:
             slave_count = slave_arg.group(1)
