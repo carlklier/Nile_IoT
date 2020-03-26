@@ -18,7 +18,10 @@ from livereload import Server
 last_test = db.session.query(Test).order_by(Test.id.desc()).first()
 if last_test.end != datetime.min:
     CURRENT_TEST = None
-else: CURRENT_TEST = last_test.id
+    PREV_END = last_test.end
+else: 
+    CURRENT_TEST = last_test.id
+    PREV_END = None
 
 #########################
 # Template Populating Pages Section #
@@ -122,11 +125,12 @@ def tests():
 def requests():
     print("route begin: ", request.get_json())
 
+    data = request.get_json()
+
     global CURRENT_TEST
-    if CURRENT_TEST == None:
+    if CURRENT_TEST == None and data['time_sent'] > PREV_END:
         return Response("Can't submit request while no tests running.", status=400, mimetype='application/json')
 
-    data = request.get_json()
     request_time = data['time_sent']
     request_type = data['request_type']
     request_length = data['request_length']
@@ -182,7 +186,7 @@ def metrics():
 @app.route('/api/v1/tests/finalize', methods=['POST'])
 def finalize_test():
     global CURRENT_TEST
-    
+    global PREV_TEST
     data = request.get_json()
     test = db.session.query(Test).order_by(Test.id.desc()).first()
 
@@ -191,6 +195,7 @@ def finalize_test():
     test.end = data['end']
 
     prev_test = CURRENT_TEST
+    PREV_END = test.end
     CURRENT_TEST = None
     
     try:
