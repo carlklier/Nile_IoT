@@ -75,7 +75,6 @@ class TestEndpoint(unittest.TestCase):
         print("POST TEST ", data)
         request = requests.post(endpoint, json=data)
 
-        print("request is " + str(request.text))
         self.assertEqual(Test.query.count(), count + 1)
 
     def test_2_post_request(self):
@@ -128,6 +127,7 @@ class TestEndpoint(unittest.TestCase):
 
     def test_5_post_invalid(self):
         print("POST invalid")
+
         # Attempt to add metrics and requests while no
         # tests are active
         endpoint = met_endpoint
