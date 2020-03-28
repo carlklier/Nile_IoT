@@ -1,6 +1,7 @@
 """
 """
 import requests
+import datetime
 from locust import events
 
 
@@ -21,13 +22,28 @@ class DataBuffer:
         self.data_endpoint = f'{hostname}/api/v1/requests'
         self.buffer = list()
 
-        events.request_success += self.on_request_data
-        events.request_failure += self.on_request_data
+        events.request_success += self.request_success
+        events.request_failure += self.request_failure
         events.quitting += self.on_quitting
 
-    def on_request_data(self, **kwargs):
+    def request_success(self, request_type, name, response_time, response_length, **kwargs):
+      self._on_request_data(request_type, name, response_time, response_length, 1, None)
+
+    def request_failure(self, request_type, name, response_time, response_length, exception, **kwargs)
+      self._on_request_data(request_type, name, response_time, response_length, 0, exception)
+
+    def _on_request_data(self, request_type, name, response_time, response_length, success, exception, **kwargs):
         # print(f'PTS: Appended Request to Buffer, Data={kwargs}')
-        self.buffer.append(kwargs)
+        data = {
+          'time_sent': datetime.datetime.now().isoformat()
+          'request_type': request_type,
+          'name': name,
+          'response_time': response_time,
+          'response_length': response_length,
+          'sucess': success,
+          'exception': exception}
+
+        self.buffer.append(data)
         if len(self.buffer) > 20:
             self._upload_buffer()
 
@@ -38,16 +54,8 @@ class DataBuffer:
     def _upload_buffer(self):
       requests_endpoint = f'{self.hostname}/api/v1/requests'
       for each in self.buffer:
-        data = {
-          'time_sent': '1',
-          'request_type': 'request',
-          'request_length': 5,
-          'response_type': 'response',
-          'response_length': 4,
-          'duration': 3}
-        # need to actually get this data from locust 
                     
-        response = requests.post(requests_endpoint, json=data)
+        response = requests.post(requests_endpoint, json=each)
         if response.status_code != 200:
           raise RuntimeError('Could not finalize test')
       print(f'PTS: Buffer of requests uploaded.')

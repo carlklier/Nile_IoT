@@ -19,6 +19,10 @@ class TestManager:
 
         self.start_time = datetime.datetime.now().isoformat()
         self.slave_count = kwargs['slave_count']
+        self.config_file = kwargs['config_file']
+
+        print("Slave_Count: " + kwargs['slave_count'])
+        print("Config_File: " + kwargs['config_file'])
 
         self.start_test()
 
@@ -26,7 +30,7 @@ class TestManager:
 
     def start_test(self):
       data = {
-        'config': 'Sample Config',
+        'config': self.config_file,
         'start': self.start_time,
         'workers': self.slave_count}
 
