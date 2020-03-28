@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+
+<!-- Scripts -->
+<script src="../../node_modules/chart.js/dist/Chart.js"></script>
+<script>
+function showLocustFunction() {
+  var x = document.getElementById("test-group");
+  var y = document.getElementById("test-group-2");
+  if (x.style.display === "none") {
+    x.style.display = "block";
+    y.style.display = "none";
+  }
+}
+function showSystemMetricsFunction() {
+  var x = document.getElementById("test-group-2");
+  var y = document.getElementById("test-group");
+  if (x.style.display === "none") {
+    x.style.display = "block";
+    y.style.display = "none";
+  }
+}
+</script>
+<!-- Scripts -->
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark special-color-dark">
+    <!-- Navbar brand -->
+    <a class="navbar-brand text-uppercase" href="#">Manage Test</a>
+
+    <!-- NavBar Items -->
+    <ul class="navbar-nav mr-auto">
+    </ul>
+    <!-- NavBar Items -->
+
+    <!-- Search form -->
+    <form class="form-inline">
+    <div class="md-form my-0">
+        <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
+    </div>
+    </form>
+    <!-- Search form -->
+</nav>
+<!-- Navbar -->
+
+<!--Main Layout-->
+<main>
+    <div class="container">
+        <div class="row pt-5">
+            <div class="col text-center">
+                <h2>Visualizing Test Results</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="btn-group" role="group" aria-label="Results Option">
+                <button type="button" class="btn btn-primary" onclick="showLocustFunction()">Locust Results</button>
+                <button type="button" class="btn btn-primary" onclick="showSystemMetricsFunction()">System Metrics</button>
+            </div>
+        </div>
+        <div class="row pt-3">
+
+            <div class="col-6">
+
+              <div class="row-6">
+
+                <label>Data Range:</label>
+                <div class="col-md-4">
+                    <label for="foo">From:</label>
+                    <input data-date-format="mm/dd/yyyy" id="datepickerFrom" name="foo">
+                </div>
+
+                <div class="col-md-4">
+                    <label for="foobar">To:</label>
+                    <input data-date-format="mm/dd/yyyy" id="datepickerTo" name="foobar">
+                </div>
+
+              </div>
+
+              <div class="row-5 pt-3">
+                <div class="col-md-6" style="height:300px;line-height:3em;overflow:auto;padding:5px;border-style: solid;">
+                    {% for test in tests %}
+                    <ul class="list-group" id="test-group">
+                        <li class="list-group-item text-center">{{ test.id }}</li>
+                        <li class="list-group-item text-center">A</li>
+                        <li class="list-group-item text-center">B</li>
+                        <li class="list-group-item text-center">C</li>
+                        <li class="list-group-item text-center">D</li>
+                        <li class="list-group-item text-center">E</li>
+                    </ul>
+                    <ul class="list-group" id="test-group-2" style="display: none;">
+                        <li class="list-group-item text-center">{{ test.id }}</li>
+                        <li class="list-group-item text-center">A2</li>
+                        <li class="list-group-item text-center">B3</li>
+                    </ul>
+                    {% endfor %}
+                </div>
+              </div>
+
+            </div>
+
+
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.1/js/bootstrap-datepicker.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script><script type="text/javascript">
+    $('#datepickerFrom').datepicker({
+        weekStart: 1,
+        daysOfWeekHighlighted: "6,0",
+        autoclose: true,
+        todayHighlight: true,
+        buttonText: "From date",
+    });
+    $('#datepickerFrom').datepicker("setDate", new Date());
+    $('#datepickerTo').datepicker({
+        weekStart: 1,
+        daysOfWeekHighlighted: "6,0",
+        autoclose: true,
+        todayHighlight: true,
+        buttonText: "To date",
+    });
+    $('#datepickerTo').datepicker("setDate", new Date());
+    </script>
+</main>
+<!--Main Layout-->
+
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+<nav class="navbar navbar-expand-lg navbar-dark special-color-dark">
+    <!-- Navbar brand -->
+    <a class="navbar-brand text-uppercase" href="#">Loadtest Manager</a>
+</nav>
+<div class="p-3 mb-2 overflow-hidden">
+
+        <h1>View Test {{ test.id }} Summary</h1>
+        
+        <div class="container">
+        <div class="row">
+            <div class="box_section col-lg-3 dark-text z-depth-2" style="width:90%;max-height:400px">
+                <h5 class="text-uppercase text-center">Test Configuration</h5>
+                <div class="main-text box_section">
+                    <div class="dark-text">Test ID</div>
+                    <div class="text-group">{{ test.id }}</div>
+                    <div class="dark-text">Configuration</div> 
+                    <div class="text-group">{{ test.config }}</div>
+                    <div class="dark-text">Start Time</div>
+                    <div class="text-group">{{ test.start }}</div>
+                    <div class="dark-text">End Time</div>
+                    <div class="text-group">{{ test.end }}</div>
+                    <div class="dark-text">Number of Workers</div>
+                    <div>{{ test.workers }}</div>
+                </div>
+            </div>
+            <div class="box_section col-lg-8 mdb-color lighten-5 z-depth-2" style="width:90%;float:right">
+                <h5 class="text-uppercase text-center">Test Summary</h5>
+                <div class="row" style="margin-left:4%">
+                    <div class="box_section col-lg-5 text-dark">
+                        <div>
+                            <h4 class="text-center border-bottom border-light">System Metrics</h4>
+                            <div class="border-bottom border-light main-text">
+                                <div class="dark-text">Number of Metrics</div>
+                                <div id="met1" class="text-group">{{ num_met }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="box_section border-bottom col-lg-5 text-dark">
+                        <div>
+                            <h4 class="text-center border-bottom border-light">Requests</h4>
+                            <div class="border-bottom border-light main-text">
+                                <div  class="dark-text">Number of Requests</div>
+                                <div id="req{{request.test_id}}" class="text-group">{{ num_req }}</div>
+                                <div class="dark-text">Average Request Duration</div> 
+                                <div class="text-group border-bottom border-light ">{{ req_avg }}</div>
+
+                                <br/>
+                                <h5>Longest Request</h5> 
+                                <br/>
+                                <div>
+                                    <div  class="dark-text">Request ID</div>
+                                    <div id="req{{request.test_id}}" class="text-group">{{ longest.id }}</div>
+                                    <div class="dark-text">Time Sent</div> 
+                                    <div class="text-group">{{ longest.time_sent }}</div>
+                                    <div class="dark-text">Request Type</div> 
+                                    <div class="text-group">{{ longest.request_type }}</div>
+                                    <div class="dark-text">Request Length</div>
+                                    <div class="text-group">{{ longest.request_length }}</div>
+                                    <div class="dark-text">Response Type</div>
+                                    <div class="text-group">{{ longest.response_type }}</div>
+                                    <div class="dark-text">Response Length</div>
+                                    <div class="text-group">{{ longest.response_length }}</div>
+                                    <div class="dark-text">Duration</div>
+                                    <div class="text-group">{{ longest.duration }}</div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
