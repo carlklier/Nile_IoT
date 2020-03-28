@@ -44,7 +44,7 @@ def view_tests():
             test_schema = TestSchema()
             test_json = test_schema.dump(test)
             test_json['start'] = test.start.strftime('%H:%M:%S %m-%d-%Y')
-            if test.end != datetime.min:
+            if test.end and (test.end != datetime.min):
                 test_json['end'] = test.end.strftime('%H:%M:%S %m-%d-%Y')
             output.append(test_json)
 
