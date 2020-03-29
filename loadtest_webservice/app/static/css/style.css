@@ -31,6 +31,15 @@ table {
     margin: 2%;
 }
 
+.box_section_inner {
+    display: flex;
+    background-color: white;
+    padding: 2%;
+    margin: 4%;
+    width: 100%;
+    height: 100%;
+}
+
 .small-box {
     height:250px;
     max-width: 350px;

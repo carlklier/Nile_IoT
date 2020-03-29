@@ -31,8 +31,8 @@
             </div>
             <div class="box_section col-lg-8 mdb-color lighten-5 z-depth-2" style="width:90%;float:right">
                 <h5 class="text-uppercase text-center">Test Summary</h5>
-                <div class="row" style="margin-left:4%">
-                    <div class="box_section col-lg-5 text-dark">
+                <div class="row">
+                    <div class="box_section_inner col-lg-5 text-dark">
                         <div>
                             <h4 class="text-center border-bottom border-light">System Metrics</h4>
                             <div class="border-bottom border-light main-text">
@@ -41,7 +41,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="box_section border-bottom col-lg-5 text-dark">
+                    <div class="box_section_inner border-bottom col-lg-5 text-dark">
                         <div>
                             <h4 class="text-center border-bottom border-light">Requests</h4>
                             <div class="border-bottom border-light main-text">
@@ -56,18 +56,22 @@
                                 <div>
                                     <div  class="dark-text">Request ID</div>
                                     <div id="req{{request.test_id}}" class="text-group">{{ longest.id }}</div>
-                                    <div class="dark-text">Time Sent</div> 
-                                    <div class="text-group">{{ longest.time_sent }}</div>
-                                    <div class="dark-text">Request Type</div> 
-                                    <div class="text-group">{{ longest.request_type }}</div>
+                                    <div class="dark-text">Request Timestamp</div> 
+                                    <div class="text-group">{{ longest.request_timestamp }}</div>
+                                    <div class="dark-text">Request Method</div> 
+                                    <div class="text-group">{{ longest.request_method }}</div>
                                     <div class="dark-text">Request Length</div>
                                     <div class="text-group">{{ longest.request_length }}</div>
-                                    <div class="dark-text">Response Type</div>
-                                    <div class="text-group">{{ longest.response_type }}</div>
                                     <div class="dark-text">Response Length</div>
                                     <div class="text-group">{{ longest.response_length }}</div>
-                                    <div class="dark-text">Duration</div>
-                                    <div class="text-group">{{ longest.duration }}</div>
+                                    <div class="dark-text">Response Time</div>
+                                    <div class="text-group">{{ longest.response_time }}</div>
+                                    <div class="dark-text">Status Code</div>
+                                    <div class="text-group">{{ longest.status_code }}</div>
+                                    <div class="dark-text">Success</div>
+                                    <div class="text-group">{{ longest.success }}</div>
+                                    <div class="dark-text">Exception</div>
+                                    <div class="text-group">{{ longest.exception }}</div>
                                 </div>
                                 
                             </div>
