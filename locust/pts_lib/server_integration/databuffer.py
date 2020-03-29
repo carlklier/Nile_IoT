@@ -27,21 +27,36 @@ class DataBuffer:
         events.quitting += self.on_quitting
 
     def request_success(self, request_type, name, response_time, response_length, **kwargs):
-      self._on_request_data(request_type, name, response_time, response_length, 1, None)
+      self._on_request_data(request_type, name, response_time, response_length, True, None)
 
     def request_failure(self, request_type, name, response_time, response_length, exception, **kwargs)
-      self._on_request_data(request_type, name, response_time, response_length, 0, exception)
+      self._on_request_data(request_type, name, response_time, response_length, False, exception)
 
     def _on_request_data(self, request_type, name, response_time, response_length, success, exception, **kwargs):
         # print(f'PTS: Appended Request to Buffer, Data={kwargs}')
         data = {
-          'time_sent': datetime.datetime.now().isoformat()
-          'request_type': request_type,
+          'request_method': request_type,
           'name': name,
           'response_time': response_time,
           'response_length': response_length,
           'sucess': success,
           'exception': exception}
+
+        if 'request_timestamp' in kwargs:
+          data['request_timestamp'] = kwargs['request_timestamp']
+        else:
+          request_time = datetime.datetime.now() - datetime.timedelta(milliseconds=response_time)
+          data['request_timestamp'] = request_time.isoformat()
+
+        if 'request_length' in kwargs:
+          data['request_length'] = kwargs['request_length']
+        else:
+          data['request_length'] = None
+
+        if 'status_code' in kwargs:
+          data['status_code'] = kwargs['status_code']
+        else:
+          data['status_code'] = None
 
         self.buffer.append(data)
         if len(self.buffer) > 20:
