@@ -30,6 +30,10 @@ def launch(hostname, *args, **kwargs):
             slave_count = slave_arg.group(1)
           if config_arg:
             config_file = sys.argv[i+1]
+    
+        if slave_count==0:
+          DataBuffer(hostname, *args, **kwargs)
+        
             
         TestManager(hostname, *args, **kwargs, slave_count=slave_count, config_file=config_file)
     elif _is_slave():
@@ -47,4 +51,4 @@ def _is_slave():
 
 def _is_master():
     """Determines whether this locustfile is being run as master"""
-    return "--master" in sys.argv
+    return "--slave" not in sys.argv

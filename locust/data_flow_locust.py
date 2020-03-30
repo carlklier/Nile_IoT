@@ -4,7 +4,7 @@ from pts_lib.server_integration import launch
 from pts_lib.dataflow.buffers import Buffer, CircularReadBuffer
 from pts_lib.dataflow.pushers import DeterministicPusher
 
-launch("localhost")
+launch("localhost:5000")
 
 class DataFlowBehavior(TaskSet):
     def on_start(self):

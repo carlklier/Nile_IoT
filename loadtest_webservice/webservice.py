@@ -131,9 +131,12 @@ def requests():
     print("route begin: ", request.get_json())
 
     data = request.get_json()
-
+    time_sent = datetime.strptime(data['request_timestamp'], "%Y-%m-%dT%H:%M:%S.%f")
     global CURRENT_TEST
-    if CURRENT_TEST == None and data['request_timestamp'] > PREV_END:
+    global PREV_END
+    print("WebService: PREV_END: " + str(PREV_END))
+    print("WebService: time_sent: " + data['request_timestamp'])
+    if CURRENT_TEST == None and time_sent > PREV_END:
         return Response("Can't submit request while no tests running.", 
                                     status=400, mimetype='application/json')
     
@@ -202,6 +205,7 @@ def metrics():
 def finalize_test():
     global CURRENT_TEST
     global PREV_TEST
+    global PREV_END
     data = request.get_json()
     test = db.session.query(Test).order_by(Test.id.desc()).first()
 
