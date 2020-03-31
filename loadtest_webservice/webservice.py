@@ -16,14 +16,17 @@ from livereload import Server
 # Keep track of current test. Only one test can run
 # at a time.
 CURRENT_TEST = None
+PREV_TEST = None
 if Test.query.count() > 0:
-    last_test = db.session.query(Test).order_by(Test.id.desc()).first()
-    if last_test.end != None:
-        CURRENT_TEST = None
-        PREV_END = last_test.end
+    most_recent = db.session.query(Test).order_by(Test.id.desc()).first()
+    # If most recent test has not been finalized, set it to CURRENT_TEST
+    if most_recent.end == None:
+        CURRENT_TEST = most_recent
+        PREV_TEST = None
+    # Otherwise set the currently running test to PREV_TEST
     else: 
-        CURRENT_TEST = last_test.id
-        PREV_END = None
+        CURRENT_TEST = None
+        PREV_TEST = most_recent
 
 #########################
 # Template Populating Pages Section #
@@ -102,7 +105,9 @@ def view_graphs():
 @app.route('/api/v1/tests', methods=['POST'])
 def tests():
     print("route begin: ", request.get_json())
+
     global CURRENT_TEST
+
     if CURRENT_TEST != None:
         return Response("Can only run one test at a time.", status=400, mimetype='application/json')
     
@@ -120,8 +125,8 @@ def tests():
     try:
         db.session.add(new_test)
         db.session.commit()
-        CURRENT_TEST = new_test.id
-        return "Added test with ID: " + str(CURRENT_TEST) + "\n"
+        CURRENT_TEST = new_test
+        return "Added test with ID: " + str(CURRENT_TEST.id) + "\n"
     except:
         return Response("Failed to add test.", status=400, mimetype='application/json')
 
@@ -130,15 +135,25 @@ def tests():
 def requests():
     print("route begin: ", request.get_json())
 
-    data = request.get_json()
-    time_sent = datetime.strptime(data['request_timestamp'], "%Y-%m-%dT%H:%M:%S.%f")
     global CURRENT_TEST
-    global PREV_END
-    print("WebService: PREV_END: " + str(PREV_END))
-    print("WebService: time_sent: " + data['request_timestamp'])
-    if CURRENT_TEST == None and time_sent > PREV_END:
-        return Response("Can't submit request while no tests running.", 
-                                    status=400, mimetype='application/json')
+    global PREV_TEST
+
+    data = request.get_json()
+    
+    test_id = CURRENT_TEST.id if CURRENT_TEST else PREV_TEST.id
+
+    # If a test has finished running
+    if PREV_TEST:
+        time_sent = datetime.strptime(data['request_timestamp'], "%Y-%m-%dT%H:%M:%S.%f")
+        # prev_time = datetime.strptime(PREV_TEST.end, "%Y-%m-%dT%H:%M:%S.%f")
+
+        # If no test is running and the request timestamp is after previous test
+        if CURRENT_TEST == None and time_sent > PREV_TEST.end:
+            return Response("Can't submit request while no tests running.", 
+                                        status=400, mimetype='application/json')
+        # If a test is running the request timestamp is from the previous test                                
+        elif time_sent <= PREV_TEST.end:
+            test_id = PREV_TEST.id
     
     name = data['name']
     request_timestamp = data['request_timestamp']
@@ -151,7 +166,7 @@ def requests():
     exception = data['exception']
 
     new_request = Request(
-        test_id = CURRENT_TEST,
+        test_id = test_id,
         name = name,
         request_timestamp = request_timestamp,
         request_method = request_method,
@@ -163,7 +178,6 @@ def requests():
         exception = exception
     )
 
-    print(str(new_request))
     try:
         db.session.add(new_request)
         db.session.commit()
@@ -203,25 +217,24 @@ def metrics():
 
 @app.route('/api/v1/tests/finalize', methods=['POST'])
 def finalize_test():
+    
     global CURRENT_TEST
     global PREV_TEST
-    global PREV_END
+
     data = request.get_json()
-    test = db.session.query(Test).order_by(Test.id.desc()).first()
 
     # Give the test an end time and reset 
     # the current test
-    test.end = data['end']
+    CURRENT_TEST.end = data['end']
 
-    prev_test = CURRENT_TEST
-    PREV_END = test.end
+    PREV_TEST = CURRENT_TEST
     CURRENT_TEST = None
     
     try:
-        db.session.add(test)
+        db.session.add(PREV_TEST)
         db.session.commit()
         db.session.flush()
-        return "Finalized test with ID: " + str(prev_test) + "\n"
+        return "Finalized test with ID: " + str(PREV_TEST.id) + "\n"
     except:
         return Response("Failed to finalize test.", status=400, mimetype='application/json')
 
