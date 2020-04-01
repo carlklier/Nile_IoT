@@ -9,6 +9,7 @@ from pts_lib.server_integration.testmanager import TestManager
 from pts_lib.dataflow.buffers import Buffer, CircularReadBuffer
 from pts_lib.dataflow.pushers import DeterministicPusher
 
+
 class PTSLaunchTest(unittest.TestCase):
 
     @patch('pts_lib.server_integration.databuffer.DataBuffer.__init__')
@@ -88,13 +89,15 @@ class DataBufferTest(unittest.TestCase):
         self.assertEqual(len(data_buffer.buffer), 0)
 
     def test_on_quitting(self):
-        with patch('pts_lib.server_integration.databuffer.requests.post') as mock_post:
-          mock_post.return_value.status_code = 200
-          
-          data_buffer = DataBuffer("localhost")
-          data_buffer.on_request_data(data="Data 1")
-          data_buffer.on_quitting()
+        post_path = 'pts_lib.server_integration.databuffer.requests.post'
+        with patch(post_path) as mock_post:
+            mock_post.return_value.status_code = 200
+
+            data_buffer = DataBuffer("localhost")
+            data_buffer.on_request_data(data="Data 1")
+            data_buffer.on_quitting()
         self.assertEqual(len(data_buffer.buffer), 0)
+
 
 class BufferTest(unittest.TestCase):
     def test_init(self):
@@ -185,6 +188,7 @@ class DeterministicPusherTest(unittest.TestCase):
         self.assertEqual(len(mockDeterministicPusher.in_buffer.data), 2)
         mockDeterministicPusher.run()
         # self.assertEqual(len(mockDeterministicPusher.out_buffer.data), 2)
+
 
 if __name__ == '__main__':
     unittest.main()

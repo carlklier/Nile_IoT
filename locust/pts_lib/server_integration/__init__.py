@@ -24,14 +24,16 @@ def launch(hostname, *args, **kwargs):
         slave_count = 0
         config_file = "locustfile.py"
         for i in range(len(sys.argv)):
-          slave_arg = re.search("--expect-slaves=(\d+)", sys.argv[i])
-          config_arg = re.search("^-f$", sys.argv[i]) or re.search("^--locustfile$", sys.argv[i])
-          if slave_arg:
-            slave_count = slave_arg.group(1)
-          if config_arg:
-            config_file = sys.argv[i+1]
-            
-        TestManager(hostname, *args, **kwargs, slave_count=slave_count, config_file=config_file)
+            slave_arg = re.search(r"--expect-slaves=(\d+)", sys.argv[i])
+            config_arg = re.search("^-f$", sys.argv[i]) \
+                or re.search("^--locustfile$", sys.argv[i])
+            if slave_arg:
+                slave_count = slave_arg.group(1)
+            if config_arg:
+                config_file = sys.argv[i+1]
+
+        TestManager(hostname, *args, **kwargs, slave_count=slave_count,
+                    config_file=config_file)
     elif _is_slave():
         print(f'PTS: Running as slave, pts-server="{hostname}"')
         DataBuffer(hostname, *args, **kwargs)

@@ -1,10 +1,15 @@
-from requests import request
+import time
+from requests import request, HTTPError
 from collections import ChainMap
 from interface import implements
+
+
+from locust import events
+
 from . import Sink
 
 
-class HttpClient(implements(Sink)):
+class HTTPClient(implements(Sink)):
     """
     An HTTPClient is a Sink that sends data
     written to it to the specified server
@@ -56,5 +61,38 @@ class HttpClient(implements(Sink)):
         if "url" not in record:
             raise ValueError("Must provide 'url'")
 
-        request(record["method"], record["url"], params=record["params"],
-                data=record["data"], headers=record["headers"])
+        time_sent = time.time()
+
+        response = request(record["method"], record["url"],
+                           params=record["params"], data=record["data"],
+                           headers=record["headers"])
+
+        response_time = time.time() - time_sent
+
+        if response.ok:
+            events.request_success.fire(
+                request_type=record["method"],
+                name=record["url"],
+                response_time=response_time,
+                response_length=len(response.content),
+            )
+        else:
+            try:
+                response.raise_for_status()
+
+                events.request_success.fire(
+                    request_type=record["method"],
+                    name=record["url"],
+                    response_time=response_time,
+                    response_length=len(response.content),
+                    exception=RuntimeError(
+                        f"Request failed with {response.content}")
+                )
+            except HTTPError as error:
+                events.request_success.fire(
+                    request_type=record["method"],
+                    name=record["url"],
+                    response_time=response_time,
+                    response_length=len(response.content),
+                    exception=error
+                )

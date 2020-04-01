@@ -29,24 +29,23 @@ class TestManager:
         events.quitting += self.finalize_test
 
     def start_test(self):
-      data = {
-        'config': self.config_file,
-        'start': self.start_time,
-        'workers': self.slave_count}
+        data = {
+          'config': self.config_file,
+          'start': self.start_time,
+          'workers': self.slave_count}
 
-      start_endpoint = f'http://{self.hostname}/api/v1/tests'
-      response = requests.post(start_endpoint, json=data)
-      if response.status_code != 200:
-          raise RuntimeError('Could not create test')
+        start_endpoint = f'http://{self.hostname}/api/v1/tests'
+        response = requests.post(start_endpoint, json=data)
+        if response.status_code != 200:
+            raise RuntimeError('Could not create test')
 
     def finalize_test(self):
-
-      self.end_time = datetime.datetime.now().isoformat()
-      data = {
-        'end': self.end_time}
-      finalize_endpoint = f'{self.hostname}/api/v1/tests/finalize'
-      response = requests.post(endpoint, json=data)
-      if response.status_code != 200:
-          raise RuntimeError('Could not finalize test')
-      else:
-        print('PTS: Test Finalized')
+        self.end_time = datetime.datetime.now().isoformat()
+        data = {
+          'end': self.end_time}
+        finalize_endpoint = f'{self.hostname}/api/v1/tests/finalize'
+        response = requests.post(finalize_endpoint, json=data)
+        if response.status_code != 200:
+            raise RuntimeError('Could not finalize test')
+        else:
+            print('PTS: Test Finalized')
