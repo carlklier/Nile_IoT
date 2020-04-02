@@ -93,7 +93,7 @@
             var end = document.getElementById(index + '-end')
             var endText = test.end
 
-            if (test.end === '0001-01-01T00:00:00') {
+            if (test.end === null) {
                 endText = "In Progress"
                 end.style.fontWeight = '600'
                 end.style.color = 'dark-grey'
@@ -170,7 +170,12 @@
             $tableRows.removeClass('selected');
 
             var info = document.getElementById("shown")
-            info.innerHTML = "Showing tests " + 
+            if (list.length === 0) {
+                info.innerHTML = "No tests available"
+                btn_prev.style.opacity = .5
+                btn_next.style.opacity = .5
+            } 
+            else info.innerHTML = "Showing tests " + 
                     (bottom + 1) + "-" + 
                     Math.min(top, list.length) + 
                     " of " + list.length

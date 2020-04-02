@@ -34,6 +34,7 @@ def launch(hostname, *args, **kwargs):
 
         TestManager(hostname, *args, **kwargs, slave_count=slave_count,
                     config_file=config_file)
+
     elif _is_slave():
         print(f'PTS: Running as slave, pts-server="{hostname}"')
         DataBuffer(hostname, *args, **kwargs)
@@ -49,4 +50,4 @@ def _is_slave():
 
 def _is_master():
     """Determines whether this locustfile is being run as master"""
-    return "--master" in sys.argv
+    return "--slave" not in sys.argv

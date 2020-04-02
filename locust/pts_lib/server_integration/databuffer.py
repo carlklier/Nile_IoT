@@ -16,10 +16,11 @@ class DataBuffer:
         Data is uploaded when the buffer_limit is reached,
         or the test completes
         """
+        print("PTS: Initializing Data Buffer")
         self.hostname = hostname
         self.buffer_limit = buffer_limit
 
-        self.data_endpoint = f'{hostname}/api/v1/requests'
+        self.data_endpoint = f'http://{hostname}/api/v1/requests'
         self.buffer = list()
 
         events.request_success += self.request_success
@@ -40,32 +41,52 @@ class DataBuffer:
 
     def _on_request_data(self, request_type, name, response_time,
                          response_length, success, exception, **kwargs):
-
-        # print(f'PTS: Appended Request to Buffer, Data={kwargs}')
+        print('PTS: Appending Request to Buffer')
         data = {
-          'time_sent': datetime.datetime.now().isoformat(),
-          'request_type': request_type,
+          'request_method': request_type,
           'name': name,
           'response_time': response_time,
           'response_length': response_length,
-          'sucess': success,
+          'success': success,
           'exception': exception}
+
+        if 'request_timestamp' in kwargs:
+            data['request_timestamp'] = kwargs['request_timestamp']
+        else:
+            request_time = datetime.datetime.now() \
+                           - datetime.timedelta(milliseconds=response_time)
+            data['request_timestamp'] = request_time.isoformat()
+
+        print("Request added with timestamp: " + data['request_timestamp'])
+
+        if 'request_length' in kwargs:
+            data['request_length'] = kwargs['request_length']
+        else:
+            data['request_length'] = None
+
+        if 'status_code' in kwargs:
+            data['status_code'] = kwargs['status_code']
+        else:
+            data['status_code'] = None
 
         self.buffer.append(data)
         if len(self.buffer) > 20:
             self._upload_buffer()
 
     def on_quitting(self):
-        # print('PTS: Handling Test Shutdown')
+        print('PTS: Handling Test Shutdown')
         self._upload_buffer()
 
     def _upload_buffer(self):
-        requests_endpoint = f'{self.hostname}/api/v1/requests'
+        print('PTS: Uploading Buffer')
+        requests_endpoint = f'http://{self.hostname}/api/v1/requests'
 
-        for each in self.buffer:
-            response = requests.post(requests_endpoint, json=each)
+        for req in self.buffer:
+            print(req)
+            response = requests.post(requests_endpoint, json=req)
             if response.status_code != 200:
-                raise RuntimeError('Could not finalize test')
+                raise RuntimeError(f'Could not upload buffer after test \
+                    shutdown {response}')
 
         print(f'PTS: Buffer of requests uploaded.')
         self.buffer = list()
