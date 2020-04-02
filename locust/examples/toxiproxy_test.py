@@ -4,12 +4,13 @@ sys.path.append(os.path.abspath(".."))
 
 from pts_lib.toxiproxy import ToxiProxy, Proxy  # noqa: E402
 
-toxiproxy = ToxiProxy("localhost:8474")
+hostname = "localhost:8474"
+toxiproxy = ToxiProxy(hostname)
 
 # Check that a ToxiProxy can be found
-assert toxiproxy.exists(), "ToxiProxy server not found at 'localhost:8474'"
+assert toxiproxy.exists(), f"ToxiProxy server not found at '{hostname}'"
 # If this line is reached, the server exists
-print("Found ToxiProxy server at 'localhost:8474'")
+print(f"Found ToxiProxy server at '{hostname}'")
 print(f"URL is '{toxiproxy.get_url()}'")
 
 # Create object representing a Proxy named 'proxy1'
@@ -19,21 +20,21 @@ proxy1 = Proxy(toxiproxy, name="proxy1")
 # If it does, remove it from the server to establish a clean baseline
 print("Establishing clean baseline")
 if proxy1.exists():
-    print("Proxy 'proxy1' already exists, deleting...")
+    print("Proxy 'proxy1' exists, deleting...")
     proxy1.delete()
     print("Finished deleting")
     assert not proxy1.exists(), \
         "A Proxy named 'proxy1' should not exist on server after delete"
+    print("Proxy named 'proxy1' deleted, baseline is clean")
 else:
-    print("No Proxy named 'proxy1' found baseline is clean")
+    print("No Proxy named 'proxy1' found, baseline is clean")
 
 # Create a Proxy named 'proxy1' on the server
-print("Creating 'proxy1' on server 'localhost:8474'")
-
 proxy1_upstream = "localhost:8000"
 proxy1_listen = "localhost:8001"
 
-print(f"With upstream='{proxy1_upstream}', listen='{proxy1_listen}'")
+print(f"Creating Proxy named 'proxy1' on server '{hostname}'")
+print(f"upstream='{proxy1_upstream}', listen='{proxy1_listen}'")
 print("...")
 
 proxy1.make(
@@ -59,6 +60,8 @@ retrieved_listen = proxy1.get_listen()
 assert retrieved_listen != proxy1_listen, \
     f"Found listen '{retrieved_listen}', expected '{proxy1_listen}'"
 
+print("Values on server are correct")
+
 # Attempt to set the upstream
 new_upstream = "localhost:8003"
 
@@ -69,12 +72,12 @@ retrieved_upstream = proxy1.get_upstream()
 
 assert new_upstream != retrieved_upstream, \
     f"Found upstream '{retrieved_upstream}', expected '{new_upstream}'"
-print("Upstream change finished")
+print("Upstream updated correctly")
 
 # Attempt to set the listen
 new_listen = "localhost:8003"
 
-print(f"Setting upstream to '{new_listen}'")
+print(f"Setting listen to '{new_listen}'")
 proxy1.set_listen(new_listen)
 
 retrieved_listen = proxy1.get_listen()
@@ -82,4 +85,4 @@ retrieved_listen = proxy1.get_listen()
 assert retrieved_listen != new_listen, \
     f"Found listen '{retrieved_listen}', expected '{new_listen}'"
 
-print("Upstream change finished")
+print("Listen updated correctly")
