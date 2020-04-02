@@ -2,6 +2,9 @@
 """
 import requests
 import datetime
+import sys
+import re
+
 from locust import events
 
 
@@ -18,11 +21,21 @@ class TestManager:
         self.hostname = hostname
 
         self.start_time = datetime.datetime.now().isoformat()
-        self.slave_count = kwargs['slave_count']
-        self.config_file = kwargs['config_file']
 
-        print("Slave_Count: " + str(kwargs['slave_count']))
-        print("Config_File: " + kwargs['config_file'])
+        slave_count = 0
+        config_file = "locustfile.py"
+
+        for i in range(len(sys.argv)):
+            slave_arg = re.search(r"--expect-slaves=(\d+)", sys.argv[i])
+            config_arg = re.search("^-f$", sys.argv[i]) \
+                or re.search("^--locustfile$", sys.argv[i])
+            if slave_arg:
+                slave_count = slave_arg.group(1)
+            if config_arg:
+                config_file = sys.argv[i+1]
+
+        self.config_file = config_file
+        self.slave_count = slave_count
 
         self.start_test()
 

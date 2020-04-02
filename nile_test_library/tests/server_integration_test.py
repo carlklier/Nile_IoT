@@ -18,7 +18,7 @@ class NileLaunchTest(unittest.TestCase):
             mock_tm.return_value = None
             sys.argv = ['--master']
             server_integration.launch("hostname")
-            mock_tm.assert_called_with("hostname", slave_count=0)
+            mock_tm.assert_called_with("hostname")
         finally:
             sys.argv = saved_argv
 
@@ -30,9 +30,6 @@ class NileLaunchTest(unittest.TestCase):
             mock_db.assert_called_with("hostname")
         finally:
             sys.argv = saved_argv
-
-        with self.assertRaises(RuntimeError):
-            server_integration.launch("hostname")
 
     def test_is_slave(self):
         saved_argv = sys.argv
@@ -77,13 +74,15 @@ class DataBufferTest(unittest.TestCase):
         self.assertEqual(data_buffer2.buffer_limit, 30)
 
     @patch('nile_test.server_integration.databuffer.requests.post')
-    def test_on_request_data(self, mock_post):
+    def test__on_request_data(self, mock_post):
         mock_post.return_value.status_code = 200
         data_buffer = DataBuffer("localhost")
+
         for i in range(20):
-            data_buffer.on_request_data(data="Data 1")
+            data_buffer._on_request_data("GET", "/", 0.1, 10, True, None)
+
         self.assertEqual(len(data_buffer.buffer), 20)
-        data_buffer.on_request_data(data="Data 1")
+        data_buffer._on_request_data("GET", "/", 0.1, 10, True, None)
         self.assertEqual(len(data_buffer.buffer), 0)
 
     def test_on_quitting(self):
@@ -92,7 +91,7 @@ class DataBufferTest(unittest.TestCase):
             mock_post.return_value.status_code = 200
 
             data_buffer = DataBuffer("localhost")
-            data_buffer.on_request_data(data="Data 1")
+            data_buffer._on_request_data("GET", "/", 0.1, 10, True, None)
             data_buffer.on_quitting()
         self.assertEqual(len(data_buffer.buffer), 0)
 

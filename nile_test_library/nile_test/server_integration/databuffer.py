@@ -41,7 +41,7 @@ class DataBuffer:
 
     def _on_request_data(self, request_type, name, response_time,
                          response_length, success, exception, **kwargs):
-        print('Nile: Appending Request to Buffer')
+
         data = {
           'request_method': request_type,
           'name': name,
@@ -57,7 +57,7 @@ class DataBuffer:
                            - datetime.timedelta(milliseconds=response_time)
             data['request_timestamp'] = request_time.isoformat()
 
-        print("Request added with timestamp: " + data['request_timestamp'])
+        print(data['request_timestamp'] + ": Request logged")
 
         if 'request_length' in kwargs:
             data['request_length'] = kwargs['request_length']
@@ -78,15 +78,14 @@ class DataBuffer:
         self._upload_buffer()
 
     def _upload_buffer(self):
-        print('Nile: Uploading Buffer')
+        # print('Nile: Uploading Buffer')
         requests_endpoint = f'http://{self.hostname}/api/v1/requests'
 
         for req in self.buffer:
-            print(req)
+            # print(req)
             response = requests.post(requests_endpoint, json=req)
             if response.status_code != 200:
                 raise RuntimeError(f'Could not upload buffer after test \
                     shutdown {response}')
 
-        print(f'Nile: Buffer of requests uploaded.')
         self.buffer = list()
