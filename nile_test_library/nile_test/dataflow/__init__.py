@@ -82,6 +82,13 @@ def _cleanup():
     _worker_group.kill()
 
 
+def _reset():
+    print("Nile: Resetting worker group")
+    global _worker_group
+    _worker_group.kill()
+    _worker_group = Group()
+
+
 # Binds the _cleanup function to quitting
 # This ensures that when locust quits the gevent is cleaned up
 events.quitting += _cleanup
