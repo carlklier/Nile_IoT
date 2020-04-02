@@ -12,7 +12,7 @@ class TestManager:
     def __init__(self, hostname, *args, **kwargs):
         """
         Creates and starts a TestManager that registers the test
-        with the PTS Server and attaches itself to locust
+        with the Nile Server and attaches itself to locust
         so that when locust closes it finalizes the test
         """
         self.hostname = hostname
@@ -42,13 +42,13 @@ class TestManager:
             raise RuntimeError(f'Could not create test: \
                 {response.status_code}')
 
-        print("PTS: New Test Started")
+        print("Nile: New Test Started")
 
     def finalize_test(self):
-        print("PTS: Finalizing Test")
+        print("Nile: Finalizing Test")
 
         self.end_time = datetime.datetime.now().isoformat()
-        print(f"PTS: Test finalized with end time: {self.end_time}")
+        print(f"Nile: Test finalized with end time: {self.end_time}")
         data = {
           'end': self.end_time}
         finalize_endpoint = f'http://{self.hostname}/api/v1/tests/finalize'
@@ -56,4 +56,4 @@ class TestManager:
         if response.status_code != 200:
             raise RuntimeError('Could not finalize test')
         else:
-            print('PTS: Test Finalized')
+            print('Nile: Test Finalized')

@@ -16,7 +16,7 @@ class DataBuffer:
         Data is uploaded when the buffer_limit is reached,
         or the test completes
         """
-        print("PTS: Initializing Data Buffer")
+        print("Nile: Initializing Data Buffer")
         self.hostname = hostname
         self.buffer_limit = buffer_limit
 
@@ -41,7 +41,7 @@ class DataBuffer:
 
     def _on_request_data(self, request_type, name, response_time,
                          response_length, success, exception, **kwargs):
-        print('PTS: Appending Request to Buffer')
+        print('Nile: Appending Request to Buffer')
         data = {
           'request_method': request_type,
           'name': name,
@@ -74,11 +74,11 @@ class DataBuffer:
             self._upload_buffer()
 
     def on_quitting(self):
-        print('PTS: Handling Test Shutdown')
+        print('Nile: Handling Test Shutdown')
         self._upload_buffer()
 
     def _upload_buffer(self):
-        print('PTS: Uploading Buffer')
+        print('Nile: Uploading Buffer')
         requests_endpoint = f'http://{self.hostname}/api/v1/requests'
 
         for req in self.buffer:
@@ -88,5 +88,5 @@ class DataBuffer:
                 raise RuntimeError(f'Could not upload buffer after test \
                     shutdown {response}')
 
-        print(f'PTS: Buffer of requests uploaded.')
+        print(f'Nile: Buffer of requests uploaded.')
         self.buffer = list()

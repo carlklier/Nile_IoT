@@ -4,9 +4,9 @@ sys.path.append(os.path.abspath(".."))
 
 from locust import HttpLocust, TaskSet, task, between  # noqa: E402
 
-from pts_lib.dataflow.buffers import CircularReadBuffer  # noqa: E402
-from pts_lib.dataflow.pushers import DeterministicPusher  # noqa: E402
-from pts_lib.dataflow.http_client import HTTPClient  # noqa: E402
+from nile_test.dataflow.buffers import CircularReadBuffer  # noqa: E402
+from nile_test.dataflow.pushers import DeterministicPusher  # noqa: E402
+from nile_test.dataflow.http_client import HTTPClient  # noqa: E402
 
 
 class DataFlowBehavior(TaskSet):

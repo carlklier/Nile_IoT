@@ -78,7 +78,7 @@ _worker_group = Group()
 # A function that kills the worker group
 # Should NOT be used by library consumers
 def _cleanup():
-    print("PTS: Performing Worker Cleanup")
+    print("Nile: Performing Worker Cleanup")
     _worker_group.kill()
 
 

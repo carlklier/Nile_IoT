@@ -1,6 +1,6 @@
 from locust import HttpLocust, TaskSet, task, between
 
-from pts_lib.server_integration import launch
+from nile_test.server_integration import launch
 
 launch("localhost:5000")
 

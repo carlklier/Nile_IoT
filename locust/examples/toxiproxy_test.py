@@ -2,7 +2,7 @@ import os
 import sys
 sys.path.append(os.path.abspath(".."))
 
-from pts_lib.toxiproxy import ToxiProxy, Proxy  # noqa: E402
+from nile_test.toxiproxy import ToxiProxy, Proxy  # noqa: E402
 
 hostname = "localhost:8474"
 toxiproxy = ToxiProxy(hostname)
