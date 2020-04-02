@@ -39,7 +39,8 @@ class TestManager:
         response = requests.post(start_endpoint, json=data)
 
         if response.status_code != 200:
-            raise RuntimeError(f'Could not create test: {response.status_code}')
+            raise RuntimeError(f'Could not create test: \
+                {response.status_code}')
 
         print("PTS: New Test Started")
 

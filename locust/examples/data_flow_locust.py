@@ -2,11 +2,11 @@ import os
 import sys
 sys.path.append(os.path.abspath(".."))
 
-from locust import HttpLocust, TaskSet, task, between
+from locust import HttpLocust, TaskSet, task, between  # noqa: E402
 
-from pts_lib.dataflow.buffers import CircularReadBuffer
-from pts_lib.dataflow.pushers import DeterministicPusher
-from pts_lib.dataflow.http_client import HTTPClient
+from pts_lib.dataflow.buffers import CircularReadBuffer  # noqa: E402
+from pts_lib.dataflow.pushers import DeterministicPusher  # noqa: E402
+from pts_lib.dataflow.http_client import HTTPClient  # noqa: E402
 
 
 class DataFlowBehavior(TaskSet):
