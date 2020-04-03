@@ -75,8 +75,9 @@ class SystemMetric(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     test_id = db.Column(db.Integer)
+    system_name = db.Column(db.String)
+    metric_name = db.Column(db.String())
     metric_timestamp = db.Column(db.TIMESTAMP)
-    metric_type = db.Column(db.String())
     metric_value = db.Column(db.Float)
 
     def __init__(self, **kwargs):
@@ -89,8 +90,9 @@ class SystemMetric(db.Model):
         return {
             'id': self.id,
             'test_id': self.test_id,
+            'system_name': self.system_name,
+            'metric_name': self.metric_type,
             'metric_timestamp': self.metric_timestamp,
-            'metric_type': self.metric_type,
             'metric_value': self.metric_value
         }
 
