@@ -13,6 +13,7 @@ migrate = Migrate(app, db)
 manager = Manager(app)
 manager.add_command('db', MigrateCommand)
 
+
 # Start the server and run test suite
 @manager.command
 def test():
@@ -26,15 +27,16 @@ def test_main(nocoverage=False):
     test_command = ['nose2', 'tests.test_endpoint']
     return start_test_server(test_command, not nocoverage)
 
+
 def start_test_server(test, coverage):
     import subprocess
     import requests
-    
+
     # Start the server in a subprocess with coverage
     coverage_prefix = ["coverage", "run", "-m", "--source", ".", ]
     server_command = coverage_prefix + ["manage", "run_test_server"]
     server = subprocess.Popen(server_command, stderr=subprocess.PIPE)
-    
+
     # Assert the server has started before continuing
     for line in server.stderr:
         if line.startswith(b' * Running on'):
@@ -55,6 +57,7 @@ def start_test_server(test, coverage):
         os.system("coverage report -m webservice.py")
     return server_return_code
 
+
 def run_command(command):
     """ We frequently inspect the return result of a command so this is just
         a utility function to do this. Generally we call this as:
@@ -62,6 +65,7 @@ def run_command(command):
     """
     result = os.system(command)
     return 0 if result == 0 else 1
+
 
 # Add shutdown function to the endpoint for testing
 def shutdown():

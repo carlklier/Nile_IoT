@@ -18,7 +18,7 @@ api = 'http://localhost:5000/api/v1'
 test_endpoint = f'{api}/tests'
 met_endpoint = f'{api}/metrics'
 req_endpoint = f'{api}/requests'
-db_uri = 'postgresql://daltonteague@localhost/test_db'
+db_uri = 'postgresql://daltonteague@localhost/loadtest_db'
 
 test_config = "Test POST Config"
 num_workers = 50000
@@ -119,7 +119,7 @@ class TestEndpoint(unittest.TestCase):
 
         count = Request.query.count()
 
-        request = add_request()
+        request = add_request(5)
 
         self.assertEqual(Request.query.count(), count + 1)
         self.assertEqual(
@@ -333,31 +333,35 @@ def add_test(time=None):
     return requests.post(endpoint, json=data)
 
 
-def add_request(time=None):
+def add_request(count=1, time=None):
 
     """
     Helper for making a request post
 
     Arguments
+        * count - can add any number of requests at once
         * time - can specify a timestamp for request being added
     """
-
+    requests = []
     endpoint = req_endpoint
 
-    data = {
-        'name': req_name,
-        'request_timestamp': time if time else now(),
-        'request_method': req_method,
-        'request_length': req_length,
-        'response_length': res_length,
-        'response_time': res_time,
-        'status_code': status,
-        'success': success,
-        'exception': None
-    }
+    while count > 0:
+        data = {
+            'name': req_name,
+            'request_timestamp': time if time else now(),
+            'request_method': req_method,
+            'request_length': req_length,
+            'response_length': res_length,
+            'response_time': res_time,
+            'status_code': status,
+            'success': success,
+            'exception': None
+        }
+        requests.add(data)
+        count -= 1
 
     print("request POST", data)
-    return requests.post(endpoint, json=data)
+    return requests.post(endpoint, json=requests)
 
 
 def add_metric(time=None):
