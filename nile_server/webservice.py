@@ -1,6 +1,6 @@
 """
 Loadtest Webservice API
-    
+
 This script handles API requests to the PostgreSQL database, as well
 as displaying database information in a web interface.
 
@@ -12,13 +12,14 @@ from app.models import Test, Request, SystemMetric, TestSchema, RequestSchema, S
 from flask import Flask, jsonify, render_template, url_for, request, redirect, Response
 from livereload import Server
 
+
 #########################
 # Initialize Current Test #
 #########################
 """
 The server keeps track of the currently running test. When started,
 it will initialize the current test if the most recent test has been
-finalized. Otherwise, it will set the previously run test. 
+finalized. Otherwise, it will set the previously run test.
 """
 CURRENT_TEST = None
 PREV_TEST = None
@@ -29,14 +30,14 @@ if Test.query.count() > 0:
         CURRENT_TEST = most_recent
         PREV_TEST = None
     # Otherwise set the currently running test to PREV_TEST
-    else: 
+    else:
         CURRENT_TEST = None
         PREV_TEST = most_recent
+
 
 #########################
 # Template Populating Pages Section #
 #########################
-
 
 @app.route("/")
 def landing():
@@ -77,7 +78,6 @@ def view_test_id(test_id):
         * test_id - the ID of the test being rendered
     """
 
-    # Get test if exists
     test = Test.query.get(test_id)
     if test is None:
         return redirect("/tests/")
@@ -90,6 +90,7 @@ def view_test_id(test_id):
     # Loop adds up durations to get the average, and keeps track
     # of the current longest request duration
     requests = Request.query.filter(Request.test_id == test_id).all()
+    
     avg_response_time = 0
     longest = None
     if len(requests) > 0:
@@ -107,7 +108,6 @@ def view_test_id(test_id):
 
         avg_response_time /= len(requests)
 
-    # Get metric summary
     metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
 
     return render_template(
@@ -128,10 +128,10 @@ def view_graphs():
         tests=tests
         )
 
+
 #########################
 # POST Request Endpoints Section #
 #########################
-
 
 @app.route('/api/v1/tests', methods=['POST'])
 def tests():
@@ -144,8 +144,8 @@ def tests():
 
     if CURRENT_TEST is not None:
         return Response(
-            "Can only run one test at a time.", 
-            status=400, 
+            "Can only run one test at a time.",
+            status=400,
             mimetype='application/json'
             )
 
@@ -175,10 +175,10 @@ def tests():
 @app.route('/api/v1/requests', methods=['POST'])
 def requests():
     """
-    Route to add new request. A request can only be added
-    if a test is currently running, or if it was made before
-    the last test finished. (Its timestamp is between the previous
-    test start and end time)
+    Route to add new requests. A group of requests can
+    only be added if a test is currently running, or if
+    it was made before the last test finished. (Its timestamp
+    is between the previous test start and end time)
     """
 
     global CURRENT_TEST
@@ -192,7 +192,7 @@ def requests():
     # Otherwise, it cannot be added.
     if PREV_TEST is not None:
         time_sent = datetime.strptime(
-            data['request_timestamp'],
+            data[0]['request_timestamp'],
             "%Y-%m-%dT%H:%M:%S.%f"
             )
 
@@ -202,43 +202,49 @@ def requests():
                     "Can't submit request while no tests running.",
                     status=400,
                     mimetype='application/json'
-                    )                        
+                    )
         elif time_sent <= PREV_TEST.end:
             test_id = PREV_TEST.id
 
-    name = data['name']
-    request_timestamp = data['request_timestamp']
-    request_method = data['request_method']
-    request_length = data['request_length']
-    response_length = data['response_length']
-    response_time = data['response_time']
-    status_code = data['status_code']
-    success = data['success']
-    exception = data['exception']
+    response = ''
 
-    new_request = Request(
-        test_id=test_id,
-        name=name,
-        request_timestamp=request_timestamp,
-        request_method=request_method,
-        request_length=request_length,
-        response_length=response_length,
-        response_time=response_time,
-        status_code=status_code,
-        success=success,
-        exception=exception
-        )
+    for req in data:
+        name = req['name']
+        request_timestamp = req['request_timestamp']
+        request_method = req['request_method']
+        request_length = req['request_length']
+        response_length = req['response_length']
+        response_time = req['response_time']
+        status_code = req['status_code']
+        success = req['success']
+        exception = req['exception']
 
-    try:
-        db.session.add(new_request)
-        db.session.commit()
-        return f"Added request with ID: {str(new_request.id)}\n"
-    except Exception as e:
-        return Response(
-            f"Failed to add request with exception:{e}",
-            status=400,
-            mimetype='application/json'
+        new_request = Request(
+            test_id=test_id,
+            name=name,
+            request_timestamp=request_timestamp,
+            request_method=request_method,
+            request_length=request_length,
+            response_length=response_length,
+            response_time=response_time,
+            status_code=status_code,
+            success=success,
+            exception=exception
             )
+
+        try:
+            db.session.add(new_request)
+            db.session.commit()
+            req_id = str(new_request.id)
+            response += f"Added request with ID: {req_id}\n"
+        except Exception as e:
+            return Response(
+                f"Failed to add request {req_id} with exception:{e}",
+                status=400,
+                mimetype='application/json'
+                )
+
+    return response
 
 
 @app.route('/api/v1/metrics', methods=['POST'])
@@ -318,12 +324,12 @@ def finalize_test():
             mimetype='application/json'
             )
 
+
 #########################
 # GET Request Endpoints ID Section #
 
 # Uses the db id to find object to return #
 #########################
-
 
 @app.route('/api/v1/tests/<test_id>', methods=['GET'])
 def get_test(test_id):
@@ -369,12 +375,12 @@ def get_request(request_id):
     output = request_schema.dump(request)
     return jsonify(output)
 
+
 #########################
 # GET Request Endpoints ALL Section #
 
 # Returns list of all objects of queried type #
 #########################
-
 
 @app.route('/api/v1/tests', methods=['GET'])
 def get_tests():
