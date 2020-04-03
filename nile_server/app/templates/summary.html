@@ -47,8 +47,16 @@
                             <div class="border-bottom border-light main-text">
                                 <div  class="dark-text">Number of Requests</div>
                                 <div id="req{{request.test_id}}" class="text-group">{{ num_req }}</div>
-                                <div class="dark-text">Average Request Duration</div> 
-                                <div class="text-group border-bottom border-light ">{{ req_avg }}</div>
+                                <div class="dark-text">Average Response Time</div> 
+                                <div class="text-group border-bottom border-light ">{{ avg_res_time }}</div>
+                                <div class="dark-text">Average Response Length</div> 
+                                <div class="text-group border-bottom border-light ">{{ avg_res_length }}</div>
+                                <div class="dark-text">Average Request Length</div> 
+                                <div class="text-group border-bottom border-light ">{{ avg_req_length }}</div>
+                                <div class="dark-text">Number of Successful Requests</div> 
+                                <div class="text-group border-bottom border-light ">{{ num_success }}</div>
+                                <div class="dark-text">Number of Exceptions</div> 
+                                <div class="text-group border-bottom border-light ">{{ num_exception }}</div>
 
                                 <br/>
                                 <h5>Longest Request</h5> 

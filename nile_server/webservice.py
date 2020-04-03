@@ -90,23 +90,43 @@ def view_test_id(test_id):
     # Loop adds up durations to get the average, and keeps track
     # of the current longest request duration
     requests = Request.query.filter(Request.test_id == test_id).all()
-    
+
+    # Summary statistics
     avg_response_time = 0
+    avg_request_length = 0
+    avg_response_length = 0
     longest = None
+    num_success = 0
+    num_exception = 0
+
     if len(requests) > 0:
         longest = requests[0]
 
         for req in requests:
-            avg_response_time += req.response_time
-            greater = longest.response_time > req.response_time
-            longest = longest if greater else request
+            if req.response_length:
+                avg_response_length += req.response_length
+            if req.request_length:
+                avg_request_length += req.request_length
+            if req.response_time:
+                avg_response_time += req.response_time
+                greater = longest.response_time > req.response_time
+                longest = longest if greater else req
+
+            if req.success is True:
+                num_success += 1
+            
+            if req.exception is not None:
+                num_exception += 1
+
             req_date = req.request_timestamp.strftime('%H:%M:%S %m-%d-%Y')
 
             request_schema = RequestSchema()
-            request_json = request_schema.dump(request)
+            request_json = request_schema.dump(req)
             request_json['request_timestamp'] = req_date
 
         avg_response_time /= len(requests)
+        avg_response_length /= len(requests)
+        avg_request_length /= len(requests)
 
     metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
 
@@ -114,9 +134,13 @@ def view_test_id(test_id):
         'summary.html',
         test=test_json,
         num_req=len(requests),
-        req_avg=avg_response_time,
+        num_met=len(metrics),
         longest=longest,
-        num_met=len(metrics)
+        num_success=num_success,
+        num_exception=num_exception,
+        avg_res_time=avg_response_time,
+        avg_res_length=avg_response_time,
+        avg_req_length=avg_request_length
         )
 
 
@@ -184,7 +208,7 @@ def requests():
     global CURRENT_TEST
     global PREV_TEST
 
-    data = request.get_json()
+    requests = request.get_json()
 
     test_id = CURRENT_TEST.id if CURRENT_TEST else PREV_TEST.id
 
@@ -192,7 +216,7 @@ def requests():
     # Otherwise, it cannot be added.
     if PREV_TEST is not None:
         time_sent = datetime.strptime(
-            data[0]['request_timestamp'],
+            requests[0]['request_timestamp'],
             "%Y-%m-%dT%H:%M:%S.%f"
             )
 
@@ -208,7 +232,7 @@ def requests():
 
     response = ''
 
-    for req in data:
+    for req in requests:
         name = req['name']
         request_timestamp = req['request_timestamp']
         request_method = req['request_method']
@@ -315,11 +339,10 @@ def finalize_test():
     try:
         db.session.add(PREV_TEST)
         db.session.commit()
-        db.session.flush()
         return f"Finalized test with ID: {PREV_TEST.id}\n"
     except Exception as e:
         return Response(
-            f"Failed to finalize with exception:{e}",
+            f"Failed to finalize with exception: {e}",
             status=400,
             mimetype='application/json'
             )

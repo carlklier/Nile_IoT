@@ -14,7 +14,7 @@ import datetime
 # Fields Setup #
 #########################
 
-db_uri = 'postgresql://daltonteague@localhost/test_db'
+db_uri = 'postgresql://daltonteague@localhost/loadtest_db'
 
 test_id = 1
 test_config = "Test Frontend Config "

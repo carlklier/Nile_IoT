@@ -18,7 +18,7 @@ api = 'http://localhost:5000/api/v1'
 test_endpoint = f'{api}/tests'
 met_endpoint = f'{api}/metrics'
 req_endpoint = f'{api}/requests'
-db_uri = 'postgresql://daltonteague@localhost/test_db'
+db_uri = 'postgresql://daltonteague@localhost/loadtest_db'
 
 test_config = "Test POST Config"
 num_workers = 50000
