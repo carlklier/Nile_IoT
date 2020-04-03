@@ -1,8 +1,8 @@
 from locust import HttpLocust, TaskSet, task, between
 
-from pts_lib.server_integration import launch
+from nile_test.integration import launch
 
-launch("localhost")
+launch("localhost:5000")
 
 
 class UserBehavior(TaskSet):

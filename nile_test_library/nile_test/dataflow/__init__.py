@@ -78,8 +78,15 @@ _worker_group = Group()
 # A function that kills the worker group
 # Should NOT be used by library consumers
 def _cleanup():
-    print("PTS: Performing Worker Cleanup")
+    print("Nile: Performing Worker Cleanup")
     _worker_group.kill()
+
+
+def _reset():
+    print("Nile: Resetting worker group")
+    global _worker_group
+    _worker_group.kill()
+    _worker_group = Group()
 
 
 # Binds the _cleanup function to quitting
