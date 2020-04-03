@@ -1,4 +1,4 @@
-""" 
+"""
 Loadtest Webservice API
     
 This script handles API requests to the PostgreSQL database, as well
@@ -6,21 +6,26 @@ as displaying database information in a web interface.
 
 """
 
-import logging
 from datetime import datetime
 from app import app, db
 from app.models import Test, Request, SystemMetric, TestSchema, RequestSchema, SystemMetricSchema
 from flask import Flask, jsonify, render_template, url_for, request, redirect, Response
 from livereload import Server
 
-# Keep track of current test. Only one test can run
-# at a time.
+#########################
+# Initialize Current Test #
+#########################
+"""
+The server keeps track of the currently running test. When started,
+it will initialize the current test if the most recent test has been
+finalized. Otherwise, it will set the previously run test. 
+"""
 CURRENT_TEST = None
 PREV_TEST = None
 if Test.query.count() > 0:
     most_recent = db.session.query(Test).order_by(Test.id.desc()).first()
     # If most recent test has not been finalized, set it to CURRENT_TEST
-    if most_recent.end == None:
+    if most_recent.end is None:
         CURRENT_TEST = most_recent
         PREV_TEST = None
     # Otherwise set the currently running test to PREV_TEST
@@ -32,12 +37,18 @@ if Test.query.count() > 0:
 # Template Populating Pages Section #
 #########################
 
+
 @app.route("/")
 def landing():
     return redirect("/tests/")
 
+
 @app.route("/tests/")
 def view_tests():
+    """
+    Retrieves the tests and reformats them as readable
+    JSON objects before rendering them to index.html.
+    """
 
     # Get list of tests, most recent first
     tests = db.session.query(Test).order_by(Test.id.desc()).all()
@@ -49,24 +60,32 @@ def view_tests():
             test_schema = TestSchema()
             test_json = test_schema.dump(test)
             test_json['start'] = test.start.strftime('%H:%M:%S %m-%d-%Y')
-            if test.end != None:
+            if test.end is not None:
                 test_json['end'] = test.end.strftime('%H:%M:%S %m-%d-%Y')
             output.append(test_json)
 
     return render_template('index.html', tests=output)
 
+
 @app.route("/tests/<test_id>/")
 def view_test_id(test_id):
+    """
+    Gets the specified test by ID, along with all requests
+    and metrics associated with it and renders to summary.html.
+
+    Arguments
+        * test_id - the ID of the test being rendered
+    """
 
     # Get test if exists
     test = Test.query.get(test_id)
-    if test == None:
+    if test is None:
         return redirect("/tests/")
 
     test_schema = TestSchema()
     test_json = test_schema.dump(test)
     test_json['start'] = test.start.strftime('%H:%M:%S %m-%d-%Y')
-    
+
     # Get request summary
     # Loop adds up durations to get the average, and keeps track
     # of the current longest request duration
@@ -75,86 +94,118 @@ def view_test_id(test_id):
     longest = None
     if len(requests) > 0:
         longest = requests[0]
-        for request in requests:
-            avg_response_time += request.response_time
-            longest = longest if longest.response_time > request.response_time else request
+
+        for req in requests:
+            avg_response_time += req.response_time
+            greater = longest.response_time > req.response_time
+            longest = longest if greater else request
+            req_date = req.request_timestamp.strftime('%H:%M:%S %m-%d-%Y')
+
             request_schema = RequestSchema()
             request_json = request_schema.dump(request)
-            request_json['request_timestamp']= request.request_timestamp.strftime('%H:%M:%S %m-%d-%Y')
+            request_json['request_timestamp'] = req_date
+
         avg_response_time /= len(requests)
 
     # Get metric summary
     metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
-    
-    return render_template('summary.html', 
-                            test=test_json, 
-                            num_req = len(requests),
-                            req_avg = avg_response_time,
-                            longest=longest,
-                            num_met = len(metrics))
+
+    return render_template(
+        'summary.html',
+        test=test_json,
+        num_req=len(requests),
+        req_avg=avg_response_time,
+        longest=longest,
+        num_met=len(metrics)
+        )
+
+
 @app.route("/graphs/")
 def view_graphs():
     tests = Test.query.all()
-    return render_template('graph.html',
-                            tests=tests)
+    return render_template(
+        'graph.html',
+        tests=tests
+        )
 
 #########################
 # POST Request Endpoints Section #
 #########################
 
+
 @app.route('/api/v1/tests', methods=['POST'])
 def tests():
-    print("route begin: ", request.get_json())
+    """
+    Route to add new test. If a test is not already running,
+    test data will be saved to the database.
+    """
 
     global CURRENT_TEST
 
-    if CURRENT_TEST != None:
-        return Response("Can only run one test at a time.", status=400, mimetype='application/json')
-    
+    if CURRENT_TEST is not None:
+        return Response(
+            "Can only run one test at a time.", 
+            status=400, 
+            mimetype='application/json'
+            )
+
     data = request.get_json()
     test_config = data['config']
     test_start = data['start']
     test_workers = data['workers']
     new_test = Test(
-        config = test_config,
-        start = test_start,
-        workers = test_workers
+        config=test_config,
+        start=test_start,
+        workers=test_workers
     )
 
-    print(str(new_test.serialize()))
     try:
         db.session.add(new_test)
         db.session.commit()
         CURRENT_TEST = new_test
         return "Added test with ID: " + str(CURRENT_TEST.id) + "\n"
-    except:
-        return Response("Failed to add test.", status=400, mimetype='application/json')
+    except Exception as e:
+        return Response(
+            f"Failed to add test with exception:{e}",
+            status=400,
+            mimetype='application/json'
+            )
 
 
 @app.route('/api/v1/requests', methods=['POST'])
 def requests():
-    print("route begin: ", request.get_json())
+    """
+    Route to add new request. A request can only be added
+    if a test is currently running, or if it was made before
+    the last test finished. (Its timestamp is between the previous
+    test start and end time)
+    """
 
     global CURRENT_TEST
     global PREV_TEST
 
     data = request.get_json()
-    
+
     test_id = CURRENT_TEST.id if CURRENT_TEST else PREV_TEST.id
 
-    # If a test has finished running
-    if PREV_TEST:
-        time_sent = datetime.strptime(data['request_timestamp'], "%Y-%m-%dT%H:%M:%S.%f")
-        # prev_time = datetime.strptime(PREV_TEST.end, "%Y-%m-%dT%H:%M:%S.%f")
+    # Assign this request to the correct test, if exists.
+    # Otherwise, it cannot be added.
+    if PREV_TEST is not None:
+        time_sent = datetime.strptime(
+            data['request_timestamp'],
+            "%Y-%m-%dT%H:%M:%S.%f"
+            )
 
-        # If no test is running and the request timestamp is after previous test
-        if CURRENT_TEST == None and time_sent > PREV_TEST.end:
-            return Response("Can't submit request while no tests running.", 
-                                        status=400, mimetype='application/json')
-        # If a test is running the request timestamp is from the previous test                                
+        if CURRENT_TEST is None:
+            if time_sent < PREV_TEST.start and time_sent > PREV_TEST.end:
+                return Response(
+                    "Can't submit request while no tests running.",
+                    status=400,
+                    mimetype='application/json'
+                    )                        
         elif time_sent <= PREV_TEST.end:
             test_id = PREV_TEST.id
-    
+
     name = data['name']
     request_timestamp = data['request_timestamp']
     request_method = data['request_method']
@@ -166,77 +217,106 @@ def requests():
     exception = data['exception']
 
     new_request = Request(
-        test_id = test_id,
-        name = name,
-        request_timestamp = request_timestamp,
-        request_method = request_method,
-        request_length = request_length,
-        response_length = response_length,
-        response_time = response_time,
-        status_code = status_code,
-        success = success,
-        exception = exception
-    )
+        test_id=test_id,
+        name=name,
+        request_timestamp=request_timestamp,
+        request_method=request_method,
+        request_length=request_length,
+        response_length=response_length,
+        response_time=response_time,
+        status_code=status_code,
+        success=success,
+        exception=exception
+        )
 
     try:
         db.session.add(new_request)
         db.session.commit()
-        return "Added request with ID: " + str(new_request.id) + "\n"
-    except:
-        return Response("Failed to add request.", 
-                                    status=400, mimetype='application/json')
+        return f"Added request with ID: {str(new_request.id)}\n"
+    except Exception as e:
+        return Response(
+            f"Failed to add request with exception:{e}",
+            status=400,
+            mimetype='application/json'
+            )
+
 
 @app.route('/api/v1/metrics', methods=['POST'])
 def metrics():
-    print("route begin: ", request.get_json())
-
+    """
+    Route to add new metric. A metric can only be added
+    if a test is currently running.
+    """
 
     global CURRENT_TEST
-    if CURRENT_TEST == None:
-        return Response("Can't submit metric while no tests running.", status=400, mimetype='application/json')
+    if CURRENT_TEST is None:
+        return Response(
+            "Can't submit metric while no tests running.",
+            status=400,
+            mimetype='application/json'
+            )
 
     data = request.get_json()
+    system_name = data['system_name']
+    metric_name = data['metric_name']
     metric_timestamp = data['metric_timestamp']
-    metric_type = data['metric_type']
     metric_value = data['metric_value']
 
     new_metric = SystemMetric(
-        test_id = CURRENT_TEST,
-        metric_timestamp = metric_timestamp, 
-        metric_type = metric_type,
-        metric_value = metric_value
-    )
+        test_id=CURRENT_TEST,
+        system_name=system_name,
+        metric_name=metric_name,
+        metric_timestamp=metric_timestamp, 
+        metric_value=metric_value
+        )
 
-    print("commit metric: ", new_metric)
     try:
         db.session.add(new_metric)
         db.session.commit()
-        return "Added metric with ID: " + str(new_metric.id) + "\n"
-    except:
-        return Response("Failed to add metric.", status=400, mimetype='application/json')
+        return f"Added metric with ID: {str(new_metric.id)}\n"
+    except Exception as e:
+        return Response(
+            f"Failed to add metric with exception:{e}",
+            status=400,
+            mimetype='application/json'
+            )
+
 
 @app.route('/api/v1/tests/finalize', methods=['POST'])
 def finalize_test():
-    
+    """
+    Route to add an end time to the currently running test
+    and set the current test as none and previous test as this
+    one.
+    """
+
     global CURRENT_TEST
     global PREV_TEST
 
-    data = request.get_json()
+    if CURRENT_TEST is None:
+        return Response(
+            "No test running.",
+            status=400,
+            mimetype='application/json'
+            )
 
-    # Give the test an end time and reset 
-    # the current test
+    data = request.get_json()
     CURRENT_TEST.end = data['end']
 
     PREV_TEST = CURRENT_TEST
     CURRENT_TEST = None
-    
+
     try:
         db.session.add(PREV_TEST)
         db.session.commit()
         db.session.flush()
-        return "Finalized test with ID: " + str(PREV_TEST.id) + "\n"
-    except:
-        return Response("Failed to finalize test.", status=400, mimetype='application/json')
+        return f"Finalized test with ID: {PREV_TEST.id}\n"
+    except Exception as e:
+        return Response(
+            f"Failed to finalize with exception:{e}",
+            status=400,
+            mimetype='application/json'
+            )
 
 #########################
 # GET Request Endpoints ID Section #
@@ -244,22 +324,46 @@ def finalize_test():
 # Uses the db id to find object to return #
 #########################
 
+
 @app.route('/api/v1/tests/<test_id>', methods=['GET'])
 def get_test(test_id):
+    """
+    Route to get test in JSON format by ID.
+
+    Arguments
+        * test_id - the ID of test to return
+    """
+
     test = Test.query.get(test_id)
     test_schema = TestSchema()
     output = test_schema.dump(test)
     return jsonify(output)
 
+
 @app.route('/api/v1/metrics/<metric_id>', methods=['GET'])
 def get_metric(metric_id):
+    """
+    Route to get metric in JSON format by ID.
+
+    Arguments
+        * metric_id - the ID of metric to return
+    """
+
     metric = SystemMetric.query.get(metric_id)
     metric_schema = SystemMetricSchema()
     output = metric_schema.dump(metric)
     return jsonify(output)
 
+
 @app.route('/api/v1/requests/<request_id>', methods=['GET'])
 def get_request(request_id):
+    """
+    Route to get request in JSON format by ID.
+
+    Arguments
+        * request_id - the ID of request to return
+    """
+
     request = Request.query.get(request_id)
     request_schema = RequestSchema()
     output = request_schema.dump(request)
@@ -271,8 +375,13 @@ def get_request(request_id):
 # Returns list of all objects of queried type #
 #########################
 
+
 @app.route('/api/v1/tests', methods=['GET'])
 def get_tests():
+    """
+    Route to get all tests in JSON format
+    """
+
     tests = Test.query.all()
     output = []
     for test in tests:
@@ -280,23 +389,34 @@ def get_tests():
         output.append(test_schema.dump(test))
     return jsonify(output)
 
+
 @app.route('/api/v1/requests', methods=['GET'])
 def get_requests():
+    """
+    Route to get all requests in JSON format
+    """
+
     requests = Request.query.all()
     output = []
-    for request in requests:
+    for req in requests:
         request_schema = RequestSchema()
-        output.append(request_schema.dump(request))
+        output.append(request_schema.dump(req))
     return jsonify(output)
+
 
 @app.route('/api/v1/metrics', methods=['GET'])
 def get_metrics():
+    """
+    Route to get all metrics in JSON format
+    """
+
     metrics = SystemMetric.query.all()
     output = []
     for metric in metrics:
         metric_schema = SystemMetricSchema()
         output.append(metric_schema.dump(metric))
     return jsonify(output)
+
 
 if __name__ == "__main__":
     # server = Server(app.wsgi_app)
