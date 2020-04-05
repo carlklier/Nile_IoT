@@ -18,7 +18,7 @@ api = 'http://localhost:5000/api/v1'
 test_endpoint = f'{api}/tests'
 met_endpoint = f'{api}/metrics'
 req_endpoint = f'{api}/requests'
-db_uri = 'postgresql://postgres:dbpw@localhost/loadtest_db'
+db_uri = 'postgresql://postgres:dbpw@localhost:5433/testing_db'
 
 test_config = "Test POST Config"
 num_workers = 50000
@@ -50,16 +50,16 @@ class TestEndpoint(unittest.TestCase):
     # Test Environment Setup #
     #########################
 
-#    def create_app(self):
+    def create_app(self):
 
-#        """ Start app and set database """
+        """ Start app and set database """
 
- #       config_name = 'testing'
- #       create = create_app(config_name)
- #       create.config.update(
- #           SQLALCHEMY_DATABASE_URI=db_uri
- #       )
- #       return app
+        config_name = 'testing'
+        create = create_app(config_name)
+        create.config.update(
+            SQLALCHEMY_DATABASE_URI=db_uri
+        )
+        return app
 
 #    def setUp(self):
 #        db.create_all()
@@ -77,8 +77,9 @@ class TestEndpoint(unittest.TestCase):
         Test adding requests, metrics and test end time when no test running,
         expected to fail
          """
-      
+   
         reset_db()
+        add_test()
         # In case a previous test is still open for some reason
         #test_finalize()
 
@@ -429,16 +430,11 @@ def reset_db():
   meta = db.metadata
   for table in reversed(meta.sorted_tables):
     print(f'Clearing table {table}')
-    #db.session.execute("TRUNCATE TABLE " + table.name + " RESTART IDENTITY")
-    if table.name == loadtest_tests:
-      #db.session.execute("INSERT INTO " + table.name + " VALUES ("test_config", {datetime.datetime.now().isoformat()}, {datetime.datetime.now().isoformat()}, 5)")
-      db.session.execute("INSERT INTO " + table.name + " VALUES (None, None, None, None)")
+    db.session.execute(table.delete())
     print(f'Cleared table {table}')
-    #db.session.execute('TRUNCATE TABLE ' + table.name)
-    #db.session.execute(table.delete())
+
   db.session.commit()
   
-
 
 if __name__ == '__main__':
     unittest.main()

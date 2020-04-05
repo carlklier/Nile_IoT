@@ -15,3 +15,13 @@ services:
       POSTGRES_DB: loadtest_db
     ports: #make db accessible locally
       - "127.0.0.1:5432:5432"
+  test_db:
+    image: postgres:9.6.17
+    volumes:
+      - postgres_data:/var/lib/postgresql/test_data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dbpw
+      POSTGRES_DB: testing_db
+    ports: #make db accessible locally
+      - "127.0.0.1:5433:5432"
