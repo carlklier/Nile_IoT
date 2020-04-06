@@ -81,7 +81,7 @@ class Proxy:
         # TODO: Use the api to get the listen address
         raise NotImplementedError
 
-    def create_toxic(self, *, name, t_type, stream, toxicity, attributes):
+    def create_toxic(self, name, t_type, stream, toxicity, attributes):
         toxic = Toxic(self, name)
 
         if toxic.exists():
@@ -114,7 +114,7 @@ class Toxic:
     def exists(self):
         return requests.get(self.get_url()).ok
 
-    def make(self, *, t_type, stream, toxicity, attributes):
+    def make(self, t_type, stream, toxicity, attributes):
         if self.exists():
             raise RuntimeError("Proxy already exists")
 
