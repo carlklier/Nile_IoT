@@ -57,8 +57,6 @@ class DataBuffer:
                            - datetime.timedelta(milliseconds=response_time)
             data['request_timestamp'] = request_time.isoformat()
 
-        print(data['request_timestamp'] + ": Request logged")
-
         if 'request_length' in kwargs:
             data['request_length'] = kwargs['request_length']
         else:
@@ -70,7 +68,7 @@ class DataBuffer:
             data['status_code'] = None
 
         self.buffer.append(data)
-        if len(self.buffer) > 20:
+        if len(self.buffer) > 19:
             self._upload_buffer()
 
     def on_quitting(self):
@@ -78,14 +76,12 @@ class DataBuffer:
         self._upload_buffer()
 
     def _upload_buffer(self):
-        # print('Nile: Uploading Buffer')
+        print('Nile: Uploading Buffer with size ' + str(len(self.buffer)))
         requests_endpoint = f'http://{self.hostname}/api/v1/requests'
 
-        for req in self.buffer:
-            # print(req)
-            response = requests.post(requests_endpoint, json=req)
-            if response.status_code != 200:
-                raise RuntimeError(f'Could not upload buffer after test \
-                    shutdown {response}')
+        response = requests.post(requests_endpoint, json=self.buffer)
+        if response.status_code != 200:
+            raise RuntimeError(f'Could not upload buffer after test \
+                shutdown {response}')
 
         self.buffer = list()
