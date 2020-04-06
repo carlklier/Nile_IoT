@@ -141,7 +141,9 @@ class Toxic:
             "stream": stream
         }
         url = self.get_url()
+        print(url)
         response = requests.post(url, json=json)
+        return response
 
     def get_stream(self):
         url = self.get_url()
