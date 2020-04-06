@@ -47,7 +47,7 @@ class Proxy:
     def exists(self):
         return requests.get(self.get_url()).ok
 
-    def make(self, *, upstream_address, listen_address):
+    def make(self, upstream_address, listen_address):
         if self.exists():
             raise RuntimeError("Proxy already exists")
 
