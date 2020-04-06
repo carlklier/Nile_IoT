@@ -1,5 +1,6 @@
 import sys
 from unittest.mock import patch
+import pytest
 
 from nile_test import integration
 from nile_test.integration import _is_slave, _is_master
@@ -32,7 +33,6 @@ def test_launch_master(argv_patch, mock_tm, mock_db):
     mock_tm.assert_called_with("hostname")
     mock_db.assert_not_called()
 
-
 @patch('sys.argv')
 def test_is_slave(argv_patch):
     sys.argv = ['--slave']
@@ -47,17 +47,33 @@ def test_is_master(argv_patch):
     assert _is_master()
 
 
-# should change this to mock start_test method instead
-@patch('nile_test.integration.testmanager.requests.post')
-def test_TestManager_init(mock_post):
-    mock_post.return_value.status_code = 200
-    tm = TestManager("localhost", slave_count=0)
+@patch('nile_test.integration.testmanager.TestManager.start_test')
+@patch('sys.argv', ['--expect-slaves=1', '-f', './locustfile.py'])
+def test_TestManager_init(argv_patch, start_test_patch):
+    tm = TestManager("localhost")
     assert tm.hostname == "localhost"
-    assert tm.slave_count == 0
+    assert tm.slave_count == 1
     assert tm.start_time is not None
+    assert tm.config_file == './locustfile.py'
+    assert start_test_patch.called()
 
-# need to add tests to test start_test and finalize_test
+@patch('nile_test.integration.testmanager.requests.post')
+def test_TestManager_start_test(mock_post):
+  tm = TestManager("localhost")
+  mock_post.return_value.status_code = 200
+  assert tm.start_test() == None
+  mock_post.return_value.status_code == 400
+  with pytest.raises(RuntimeError):
+    tm.start_test()
 
+@patch('nile_test.integration.testmanager.requests.post')
+def test_TestManager_finalize_test(mock_post):
+  tm = TestManager("localhost")
+  mock_post.return_value.status_code = 200
+  assert tm.finalize_test() == None
+  mock_post.return_value.status_code == 400
+  with pytest.raises(RuntimeError):
+    tm.finalize_test()
 
 def test_DataBuffer_init():
     data_buffer1 = DataBuffer("localhost")

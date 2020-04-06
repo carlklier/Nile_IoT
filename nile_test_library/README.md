@@ -20,5 +20,5 @@ python -m pytest
 
 If you do want coverage run:
 ```
-python -m pytest --cov=nile_test
+python -m pytest --cov-report term-missing --cov=nile_test
 ```
