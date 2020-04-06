@@ -57,7 +57,8 @@ class Proxy:
             "upstream": upstream_address,
             "enabled": True
         }
-        requests.post(self.get_url(), json=json)
+        print(self.toxiproxy.get_url() + '/proxies')
+        requests.post(self.toxiproxy.get_url() + '/proxies', json=json)
 
     def set_upstream(self, upstream_address):
         # TODO: Use the api to set the upstream
