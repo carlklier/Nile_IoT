@@ -165,6 +165,20 @@ class Toxic:
         toxicity = json.loads(response).get("toxicity")
         return toxicity
 
+    def set_attributes(self, attributes):
+        json = {
+            "attributes": attributes
+        }
+        url = self.get_url()
+        response = requests.post(url, json=json).text
+        return response
+
+    def get_attributes(self):
+        url = self.get_url()
+        response = requests.get(url).text
+        attributes = json.loads(response).get("attributes")
+        return attributes
+
     # TODO: Create Getters that retrieve info using the API
     # TODO: Create Setters that update the info using the API
 
@@ -191,3 +205,12 @@ print(toxic.get_stream())
 print(toxic.get_toxicity())
 print(toxic.set_toxicity(0.5))
 print(toxic.get_toxicity())
+
+attributes1 = {
+    "latency": 3000,
+    "jitter": 0
+}
+
+print(toxic.get_attributes())
+print(toxic.set_attributes(attributes1))
+print(toxic.get_attributes())
