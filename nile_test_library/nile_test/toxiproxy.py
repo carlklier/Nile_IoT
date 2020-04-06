@@ -1,4 +1,5 @@
 import requests
+import json
 
 
 class ToxiProxy:
@@ -72,7 +73,7 @@ class Proxy:
         # TODO: Use the api to get the upstream address
         url = self.get_url()
         response = requests.get(url).text
-        up = response
+        up = json.loads(response).get("upstream")
         return up
 
     def set_listen(self, listen_address):
