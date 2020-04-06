@@ -13,7 +13,7 @@ class ToxiProxy:
         """
         Checks whether the specified ToxiProxy server exists and is reachable
         """
-        url = self.get_url()
+        url = self.get_url() + "/proxies"
         return requests.get(url).ok
 
     def create_proxy(self, name, upstream_address, listen_address):
@@ -71,7 +71,7 @@ class Proxy:
     def get_upstream(self):
         # TODO: Use the api to get the upstream address
         url = self.get_url()
-        response = requests(url).text.upstream
+        response = requests(url).text
         return response
 
     def set_listen(self, listen_address):
