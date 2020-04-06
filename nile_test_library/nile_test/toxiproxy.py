@@ -71,7 +71,7 @@ class Proxy:
     def get_upstream(self):
         # TODO: Use the api to get the upstream address
         url = self.get_url()
-        response = requests(url).text
+        response = requests(url).text.upstream
         return response
 
     def set_listen(self, listen_address):
@@ -133,10 +133,10 @@ class Toxic:
     # TODO: Create Setters that update the info using the API
 
 
-print(1)
 toxiproxy = ToxiProxy("localhost:8474")
-toxiproxy.exists()
-print(2)
+print(toxiproxy.exists())
+
 proxy = toxiproxy.create_proxy("proxy1", "localhost:8000", "localhost:8001")
-proxy.set_upstream("localhost:8003")
-toxiproxy.exists()
+# proxy.set_upstream("localhost:8003")
+print(toxiproxy.exists())
+print(proxy.get_upstream())
