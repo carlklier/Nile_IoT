@@ -109,7 +109,8 @@ class Toxic:
         self.name = name
 
     def get_url(self):
-        return f"{self.proxy.get_url()}/toxics/{self.name}"
+        url = "{}/toxics/{}".format(self.proxy.get_url(), self.name)
+        return url
 
     def exists(self):
         return requests.get(self.get_url()).ok
