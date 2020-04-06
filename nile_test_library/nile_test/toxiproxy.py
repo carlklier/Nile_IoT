@@ -16,8 +16,7 @@ class ToxiProxy:
         url = self.get_url()
         return requests.get(url).ok
 
-
-    def create_proxy(self, *, name, upstream_address, listen_address):
+    def create_proxy(self, name, upstream_address, listen_address):
         proxy = Proxy(self, name)
         if proxy.exists():
             proxy.set_upstream(upstream_address)
