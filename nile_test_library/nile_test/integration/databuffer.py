@@ -68,7 +68,7 @@ class DataBuffer:
             data['status_code'] = None
 
         self.buffer.append(data)
-        if len(self.buffer) > 19:
+        if len(self.buffer) > 20:
             self._upload_buffer()
 
     def on_quitting(self):
