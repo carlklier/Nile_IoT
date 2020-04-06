@@ -6,7 +6,8 @@ class ToxiProxy:
         self.hostname = hostname
 
     def get_url(self):
-        return f"http://{self.hostname}"
+        url = "http://{}".format(self.hostname)
+        return url
 
     def exists(self):
         """
