@@ -142,7 +142,7 @@ class Toxic:
         }
         url = self.get_url()
         print(url)
-        response = requests.post(url, json=json)
+        response = requests.post(url, json=json).text
         return response
 
     def get_stream(self):
@@ -171,5 +171,5 @@ attributes = {
 toxic = proxy.create_toxic("toxic1", "latency", "downstream", 1, attributes)
 
 print(toxic.get_stream())
-print(toxic.set_stream('upstream'))
+print(toxic.set_stream("upstream"))
 print(toxic.get_stream())
