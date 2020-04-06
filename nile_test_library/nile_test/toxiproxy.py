@@ -12,11 +12,12 @@ class ToxiProxy:
         """
         Checks whether the specified ToxiProxy server exists and is reachable
         """
-        raise NotImplementedError
+        url = self.get_url()
+        return requests.get(url).ok
+
 
     def create_proxy(self, *, name, upstream_address, listen_address):
         proxy = Proxy(self, name)
-
         if proxy.exists():
             proxy.set_upstream(upstream_address)
             proxy.set_listen(listen_address)
@@ -58,18 +59,18 @@ class Proxy:
         requests.post(self.get_url(), json=json)
 
     def set_upstream(self, upstream_address):
-        raise NotImplementedError
-
         # TODO: Use the api to set the upstream
-        # json = {
-        #     "upstream": upstream_address
-        # }
-        # url = self.get_url()
-        # response = requests.post(url, json)
+        json = {
+          "upstream": upstream_address
+        }
+        url = self.get_url()
+        response = requests.post(url, json=json)
 
     def get_upstream(self):
         # TODO: Use the api to get the upstream address
-        raise NotImplementedError
+        url = self.get_url()
+        response = requests(url).text
+        return response
 
     def set_listen(self, listen_address):
         # TODO: Use the api to set the listener
@@ -127,3 +128,9 @@ class Toxic:
 
     # TODO: Create Getters that retrieve info using the API
     # TODO: Create Setters that update the info using the API
+
+toxiproxy = ToxiProxy("localhost:8474")
+toxiproxy.exists()
+proxy = toxiproxy.create_proxy("proxy1", "localhost:8000", "localhost:8001")
+proxy.set_upstream("localhost:8003")
+toxiproxy.exists()
