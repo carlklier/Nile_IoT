@@ -125,7 +125,7 @@ class Toxic:
                 "toxicity": toxicity,
                 "attributes": attributes}
 
-        url = f"{self.get_url()}/toxics"
+        url = "{}/toxics".format(self.get_url())
         requests.post(url, json=json)
 
     # TODO: Create Getters that retrieve info using the API
