@@ -167,3 +167,7 @@ attributes = {
 }
 
 toxic = proxy.create_toxic("toxic1", "latency", "downstream", 1, attributes)
+
+print(toxic.get_stream())
+print(toxic.set_stream('upstream'))
+print(toxic.get_stream())
