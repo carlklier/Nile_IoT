@@ -71,8 +71,9 @@ class Proxy:
     def get_upstream(self):
         # TODO: Use the api to get the upstream address
         url = self.get_url()
-        response = requests.get(url).text.upstream
-        return response
+        response = requests.get(url).text
+        up = response["upstream"]
+        return up
 
     def set_listen(self, listen_address):
         # TODO: Use the api to set the listener
