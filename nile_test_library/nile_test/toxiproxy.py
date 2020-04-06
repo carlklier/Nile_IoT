@@ -131,8 +131,11 @@ class Toxic:
     # TODO: Create Getters that retrieve info using the API
     # TODO: Create Setters that update the info using the API
 
+
+print(1)
 toxiproxy = ToxiProxy("localhost:8474")
 toxiproxy.exists()
+print(2)
 proxy = toxiproxy.create_proxy("proxy1", "localhost:8000", "localhost:8001")
 proxy.set_upstream("localhost:8003")
 toxiproxy.exists()
