@@ -151,6 +151,20 @@ class Toxic:
         stream = json.loads(response).get("stream")
         return stream
 
+    def set_toxicity(self, toxicity):
+        json = {
+            "toxicity": toxicity
+        }
+        url = self.get_url()
+        response = requests.post(url, json=json).text
+        return response
+
+    def get_toxicity(self):
+        url = self.get_url()
+        response = requests.get(url).text
+        toxicity = json.loads(response).get("toxicity")
+        return toxicity
+
     # TODO: Create Getters that retrieve info using the API
     # TODO: Create Setters that update the info using the API
 
@@ -173,3 +187,7 @@ toxic = proxy.create_toxic("toxic1", "latency", "downstream", 1, attributes)
 print(toxic.get_stream())
 print(toxic.set_stream("upstream"))
 print(toxic.get_stream())
+
+print(toxic.get_toxicity())
+print(toxic.set_toxicity())
+print(toxic.get_toxicity())
