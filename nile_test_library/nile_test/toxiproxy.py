@@ -189,5 +189,5 @@ print(toxic.set_stream("upstream"))
 print(toxic.get_stream())
 
 print(toxic.get_toxicity())
-print(toxic.set_toxicity())
+print(toxic.set_toxicity(0.5))
 print(toxic.get_toxicity())
