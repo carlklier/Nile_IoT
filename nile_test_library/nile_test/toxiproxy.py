@@ -41,7 +41,8 @@ class Proxy:
         self.name = name
 
     def get_url(self):
-        return f"{self.toxiproxy.get_url()}/proxies/{self.name}"
+        url = "{}/proxies/{}".format(self.toxiproxy.get_url(), self.name)
+        return url
 
     def exists(self):
         return requests.get(self.get_url()).ok
