@@ -1,5 +1,5 @@
 import sys
-from unittest.mock import patch
+import requests
 
 from nile_test import integration
 from nile_test.integration import _is_slave, _is_master
@@ -7,51 +7,48 @@ from nile_test.integration.databuffer import DataBuffer
 from nile_test.integration.testmanager import TestManager
 
 
-@patch('nile_test.integration.databuffer.DataBuffer.__init__')
-@patch('nile_test.integration.testmanager.TestManager.__init__')
-@patch('sys.argv')
-def test_launch_slave(argv_patch, mock_tm, mock_db):
+def test_launch_slave(mocker, monkeypatch):
+    mock_tm = mocker.patch.object(TestManager, '__init__')
+    mock_db = mocker.patch.object(DataBuffer, '__init__')
     mock_tm.return_value = None
     mock_db.return_value = None
+    monkeypatch.setattr(sys, "argv", ["--slave"])
 
-    sys.argv = ['--slave']
     integration.launch("hostname")
+
     mock_tm.assert_not_called()
     mock_db.assert_called_with("hostname")
 
 
-@patch('nile_test.integration.databuffer.DataBuffer.__init__')
-@patch('nile_test.integration.testmanager.TestManager.__init__')
-@patch('sys.argv')
-def test_launch_master(argv_patch, mock_tm, mock_db):
+def test_launch_master(mocker, monkeypatch):
+    mock_tm = mocker.patch.object(TestManager, '__init__')
+    mock_db = mocker.patch.object(DataBuffer, '__init__')
     mock_tm.return_value = None
     mock_db.return_value = None
+    monkeypatch.setattr(sys, "argv", ["--master"])
 
-    sys.argv = ['--master']
     integration.launch("hostname")
     mock_tm.assert_called_with("hostname")
     mock_db.assert_not_called()
 
 
-@patch('sys.argv')
-def test_is_slave(argv_patch):
-    sys.argv = ['--slave']
+def test_is_slave(monkeypatch):
+    monkeypatch.setattr(sys, "argv", ["--slave"])
     assert _is_slave()
     assert not _is_master()
 
 
-@patch('sys.argv')
-def test_is_master(argv_patch):
-    sys.argv = ['--master']
+def test_is_master(monkeypatch):
+    monkeypatch.setattr(sys, "argv", ["--master"])
     assert not _is_slave()
     assert _is_master()
 
 
-# should change this to mock start_test method instead
-@patch('nile_test.integration.testmanager.requests.post')
-def test_TestManager_init(mock_post):
+def test_TestManager_init(mocker):
+    mock_post = mocker.patch.object(requests, 'post')
     mock_post.return_value.status_code = 200
     tm = TestManager("localhost", slave_count=0)
+
     assert tm.hostname == "localhost"
     assert tm.slave_count == 0
     assert tm.start_time is not None
@@ -71,8 +68,8 @@ def test_DataBuffer_init():
     assert data_buffer2.buffer_limit == 30
 
 
-@patch('nile_test.integration.databuffer.requests.post')
-def test__on_request_data(mock_post):
+def test__on_request_data(mocker):
+    mock_post = mocker.patch.object(requests, 'post')
     mock_post.return_value.status_code = 200
     data_buffer = DataBuffer("localhost")
 
@@ -84,8 +81,8 @@ def test__on_request_data(mock_post):
     assert len(data_buffer.buffer) == 0
 
 
-@patch('nile_test.integration.databuffer.requests.post')
-def test_on_quitting(mock_post):
+def test_on_quitting(mocker):
+    mock_post = mocker.patch.object(requests, 'post')
     mock_post.return_value.status_code = 200
     data_buffer = DataBuffer("localhost")
     data_buffer._on_request_data("GET", "/", 0.1, 10, True, None)
