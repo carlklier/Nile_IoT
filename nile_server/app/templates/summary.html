@@ -4,9 +4,25 @@
 {% endblock %}
 
 {% block body %}
+<script type="text/javascript">
+    $(document).ready(function() {
+        /**
+        * Function called when user wants to delete a test
+        */
+        $('#delete').click(function(e) {
+            window.alert("Delete not implemented yet")
+        });
+    })
+</script>
+
 <nav class="navbar navbar-expand-lg navbar-dark special-color-dark">
     <!-- Navbar brand -->
     <a class="navbar-brand text-uppercase" href="#">Loadtest Manager</a>
+
+    <ul class="navbar-nav mr-auto">
+        <a class="dropdown-item text-light" href="http://localhost:5000/tests/">View Test List</a>
+        <a class="dropdown-item text-light" href="http://localhost:5000/graphs/">Vizualize Test Results</a>
+    </ul>
 </nav>
 <div class="p-3 mb-2 overflow-hidden">
 
@@ -14,7 +30,7 @@
         
         <div class="container">
         <div class="row">
-            <div class="box_section col-lg-3 dark-text z-depth-2" style="width:90%;max-height:400px">
+            <div class="box_section col-lg-3 dark-text z-depth-2" style="width:90%;max-height:470px">
                 <h5 class="text-uppercase text-center">Test Configuration</h5>
                 <div class="main-text box_section">
                     <div class="dark-text">Test ID</div>
@@ -26,13 +42,17 @@
                     <div class="dark-text">End Time</div>
                     <div class="text-group">{{ test.end }}</div>
                     <div class="dark-text">Number of Workers</div>
-                    <div>{{ test.workers }}</div>
+                    <div class="text-group">{{ test.workers }}</div>
+                    <br/>
+                    <div class="border-bottom border-light"></div>
+                    <br/>
+                    <button id="delete" type="button" class="btn-bottom btn-danger text-uppercase z-depth-2 delete">Delete Test</button>
                 </div>
             </div>
             <div class="box_section col-lg-8 mdb-color lighten-5 z-depth-2" style="width:90%;float:right">
                 <h5 class="text-uppercase text-center">Test Summary</h5>
                 <div class="row">
-                    <div class="box_section_inner col-lg-5 text-dark">
+                    <div class="box_section_inner border-bottom col-lg-5 text-dark">
                         <div>
                             <h4 class="text-center border-bottom border-light">System Metrics</h4>
                             <div class="border-bottom border-light main-text">

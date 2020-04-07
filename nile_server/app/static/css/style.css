@@ -112,6 +112,15 @@ table {
     width:600px
 }
 
+.btn-bottom {
+    margin:0 auto;
+    margin-top:5%;
+    height: 45px;
+    padding: 10px 20px;
+    display: flex;
+    flex-direction: column;
+}
+
 .drop-pair {
     display: flex;
     flex-direction: row;
