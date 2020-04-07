@@ -59,6 +59,13 @@ table {
     margin-top: 4px;
 }
 
+.list-text {
+    color: rgb(73, 73, 87);
+    font-weight: 400;
+    font-size: 13px;
+    line-height: 15px;
+}
+
 .text-group {
     padding-bottom: 6px;
 }
@@ -72,6 +79,10 @@ table {
     background-color: rgb(229, 230, 243);
 
     font-weight: 600 !important;
+}
+
+.active {
+    background-color: rgb(219, 219, 219) !important;
 }
 
 .arrow-btn {
@@ -101,6 +112,15 @@ table {
     width:600px
 }
 
+.btn-bottom {
+    margin:0 auto;
+    margin-top:5%;
+    height: 45px;
+    padding: 10px 20px;
+    display: flex;
+    flex-direction: column;
+}
+
 .drop-pair {
     display: flex;
     flex-direction: row;
@@ -109,4 +129,8 @@ table {
     padding-top:2%;
     margin-left:5%;
     margin-right:2%
+}
+
+.chart {
+    margin-left: 10%;
 }
