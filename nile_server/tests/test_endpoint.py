@@ -120,7 +120,7 @@ class TestEndpoint(unittest.TestCase):
         count = Request.query.count()
 
         request = add_request(5)
-
+        time.sleep(4)
         self.assertEqual(Request.query.count(), count + 1)
         self.assertEqual(
             request.text,
@@ -253,6 +253,8 @@ class TestEndpoint(unittest.TestCase):
 
         print("GET request ID")
 
+        add_request()
+
         request_id = db.session.query(
             Request
             ).order_by(
@@ -342,7 +344,7 @@ def add_request(count=1, time=None):
         * count - can add any number of requests at once
         * time - can specify a timestamp for request being added
     """
-    requests = []
+    reqs = []
     endpoint = req_endpoint
 
     while count > 0:
@@ -357,11 +359,11 @@ def add_request(count=1, time=None):
             'success': success,
             'exception': None
         }
-        requests.add(data)
+        reqs.append(data)
         count -= 1
 
     print("request POST", data)
-    return requests.post(endpoint, json=requests)
+    return requests.post(endpoint, json=reqs)
 
 
 def add_metric(time=None):

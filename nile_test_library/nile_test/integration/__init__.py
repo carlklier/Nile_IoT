@@ -25,10 +25,6 @@ def launch(hostname, *args, **kwargs):
         print(f'Nile: Running as slave, nile-server="{hostname}"')
         DataBuffer(hostname, *args, **kwargs)
 
-    else:
-        error_msg = "Failed to determine whether node is master or slave"
-        raise RuntimeError(error_msg)
-
 
 def _is_slave():
     """Determines whether this locustfile is being run as slave"""

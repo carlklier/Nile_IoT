@@ -24,7 +24,7 @@
 
         window.onload = function() {
             // Paginate
-            changePage(1);
+            changePage(1)
 
             // Initialize view test header
             document.getElementById("view-test").innerHTML = "Select Test"
@@ -32,6 +32,13 @@
             // Initialize unfinished test end time
             list.forEach(iterate)
         }
+
+        /**
+        * Highlight a selected a table row
+        */ 
+        $('#table-refresh').click(function(e) {
+            window.location.reload(false)
+        });
 
         /**
         * Highlight a selected a table row
@@ -192,11 +199,15 @@
 </script>
 <nav class="navbar navbar-expand-lg navbar-dark special-color-dark">
     <!-- Navbar brand -->
-    <a class="navbar-brand text-uppercase" href="#">Loadtest Manager</a>
+    <a class="navbar-brand text-white" href="#">Loadtest Manager</a>
+
+    <ul class="navbar-nav mr-auto">
+        <a class="dropdown-item text-light" href="http://localhost:5000/graphs/">Vizualize Test Results</a>
+    </ul>
 </nav>
 
 <div  class="content p-3 mb-2 overflow-hidden">
-    <h1>View Tests</h1>
+    <h1>View Test List</h1>
     <br>
     <div class="drop-pair">
         <div class="main-text drop-lead">Sort by:</div>
@@ -211,9 +222,10 @@
                 <a class="dropdown-item" id="id">ID</a>
             </div>
         </div>
+
+        <button id="table-refresh"  class="arrow-btn btn-primary z-depth-2" style="margin-top:0.5%"><i class="fa fa-refresh"></i></button>
+       
     </div>
-    
-    
     <div class="row">
         <div class="col-lg-8 col-md-6">
             <div class="row">
