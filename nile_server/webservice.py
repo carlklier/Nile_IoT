@@ -90,7 +90,7 @@ def view_test_id(test_id):
     # Loop adds up durations to get the average, and keeps track
     # of the current longest request duration
     requests = Request.query.filter(Request.test_id == test_id).all()
-
+    
     # Summary statistics
     avg_response_time = 0
     avg_request_length = 0
@@ -114,7 +114,7 @@ def view_test_id(test_id):
 
             if req.success is True:
                 num_success += 1
-            
+          
             if req.exception is not None:
                 num_exception += 1
 
@@ -146,10 +146,39 @@ def view_test_id(test_id):
 
 @app.route("/graphs/")
 def view_graphs():
-    tests = Test.query.all()
+    tests = db.session.query(Test).order_by(Test.id.desc()).all()
+    output = []
+
+    ## TODO: Create Test/Requests dict pair to send to frontend
+    ## to avoid heavy sorting for each visualization
+
+    # Convert tests to JSON and make datetimes readable
+    if len(tests) > 0:
+        for test in tests:
+            test_schema = TestSchema()
+            test_json = test_schema.dump(test)
+            test_json['start'] = test.start.strftime('%H:%M:%S %m-%d-%Y')
+            if test.end is not None:
+                test_json['end'] = test.end.strftime('%H:%M:%S %m-%d-%Y')
+            output.append(test_json)
+
+    requests = Request.query.all()
+    req_json = []
+
+    if len(requests) > 0:
+        for req in requests:
+
+            req_date = req.request_timestamp.strftime('%H:%M:%S %m-%d-%Y')
+
+            request_schema = RequestSchema()
+            request_json = request_schema.dump(req)
+            request_json['request_timestamp'] = req_date
+            req_json.append(request_json)
+
     return render_template(
         'graph.html',
-        tests=tests
+        tests=output,
+        requests=req_json
         )
 
 
