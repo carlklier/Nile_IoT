@@ -346,7 +346,8 @@ def finalize_test():
     """
     Route to add an end time to the currently running test
     and set the current test as none and previous test as this
-    one.
+    one. Must also make sure to use the database session the 
+    test was started with.
     """
 
     global CURRENT_TEST
@@ -366,8 +367,9 @@ def finalize_test():
     CURRENT_TEST = None
 
     try:
-        db.session.add(PREV_TEST)
-        db.session.commit()
+        test_session = db.object_session(PREV_TEST)
+        test_session.add(PREV_TEST)
+        test_session.commit()
         return f"Finalized test with ID: {PREV_TEST.id}\n"
     except Exception as e:
         return Response(
