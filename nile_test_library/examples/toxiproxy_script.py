@@ -31,7 +31,7 @@ else:
 
 # Create a Proxy named 'proxy1' on the server
 proxy1_upstream = "localhost:8000"
-proxy1_listen = "localhost:8001"
+proxy1_listen = "127.0.0.1:8001"
 
 print(f"Creating Proxy named 'proxy1' on server '{hostname}'")
 print(f"upstream='{proxy1_upstream}', listen='{proxy1_listen}'")
@@ -51,13 +51,13 @@ assert proxy1.exists(), \
 # Verify that the server knows the correct upstream value
 retrieved_upstream = proxy1.get_upstream()
 
-assert proxy1_upstream != retrieved_upstream, \
+assert proxy1_upstream == retrieved_upstream, \
     f"Found upstream '{retrieved_upstream}', expected '{proxy1_upstream}'"
 
 # Verify that the server knows the correct listen value
 retrieved_listen = proxy1.get_listen()
 
-assert retrieved_listen != proxy1_listen, \
+assert retrieved_listen == proxy1_listen, \
     f"Found listen '{retrieved_listen}', expected '{proxy1_listen}'"
 
 print("Values on server are correct")
@@ -70,19 +70,19 @@ proxy1.set_upstream(new_upstream)
 
 retrieved_upstream = proxy1.get_upstream()
 
-assert new_upstream != retrieved_upstream, \
+assert new_upstream == retrieved_upstream, \
     f"Found upstream '{retrieved_upstream}', expected '{new_upstream}'"
 print("Upstream updated correctly")
 
 # Attempt to set the listen
-new_listen = "localhost:8003"
+new_listen = "127.0.0.1:8003"
 
 print(f"Setting listen to '{new_listen}'")
 proxy1.set_listen(new_listen)
 
 retrieved_listen = proxy1.get_listen()
 
-assert retrieved_listen != new_listen, \
+assert retrieved_listen == new_listen, \
     f"Found listen '{retrieved_listen}', expected '{new_listen}'"
 
 print("Listen updated correctly")
