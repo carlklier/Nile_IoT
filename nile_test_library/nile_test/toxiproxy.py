@@ -93,12 +93,9 @@ class Proxy:
         toxic = Toxic(self, name)
 
         if toxic.exists():
-            toxic.set_type(t_type)
-            toxic.set_stream(stream)
-            toxic.set_toxicity(toxicity)
-            toxic.set_attributes(attributes)
-        else:
-            toxic.make(t_type, stream, toxicity, attributes)
+            toxic.delete()
+
+        toxic.make(t_type, stream, toxicity, attributes)
 
         return toxic
 
@@ -143,6 +140,13 @@ class Toxic:
         url = self.get_url()
         print(url)
         response = requests.post(url, json=json).text
+        return response
+
+    #DELETE /proxies/{proxy}/toxics/{toxic}
+
+    def delete(self):
+        url = self.get_url()
+        response = requests.delete(url)
         return response
 
     def get_stream(self):
@@ -214,3 +218,7 @@ attributes1 = {
 print(toxic.get_attributes())
 print(toxic.set_attributes(attributes1))
 print(toxic.get_attributes())
+
+print(111)
+print(toxic.delete())
+
