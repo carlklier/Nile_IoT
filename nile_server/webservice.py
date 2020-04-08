@@ -214,7 +214,7 @@ def tests():
         start=test_start,
         workers=test_workers
     )
-
+    
     try:
         db.session.add(new_test)
         db.session.commit()
@@ -241,6 +241,7 @@ def requests():
     global PREV_TEST
 
     requests = request.get_json()
+    time_sent = ""
 
     test_id = CURRENT_TEST.id if CURRENT_TEST else PREV_TEST.id
 
@@ -267,7 +268,7 @@ def requests():
 
     for req in requests:
         name = req['name']
-        request_timestamp = req['request_timestamp']
+        request_timestamp = time_sent
         request_method = req['request_method']
         request_length = req['request_length']
         response_length = req['response_length']
@@ -375,6 +376,8 @@ def finalize_test():
 
     try:
         test_session = db.object_session(PREV_TEST)
+        if test_session is None:
+            test_session = db.session
         test_session.add(PREV_TEST)
         test_session.commit()
         return f"Finalized test with ID: {PREV_TEST.id}\n"
