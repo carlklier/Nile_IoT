@@ -268,7 +268,7 @@ def requests():
 
     for req in requests:
         name = req['name']
-        request_timestamp = time_sent
+        request_timestamp = req['request_timestamp']
         request_method = req['request_method']
         request_length = req['request_length']
         response_length = req['response_length']
