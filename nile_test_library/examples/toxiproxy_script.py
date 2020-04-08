@@ -31,7 +31,7 @@ else:
 
 # Create a Proxy named 'proxy1' on the server
 proxy1_upstream = "localhost:8000"
-proxy1_listen = "localhost:8001"
+proxy1_listen = "127.0.0.1:8001"
 
 print(f"Creating Proxy named 'proxy1' on server '{hostname}'")
 print(f"upstream='{proxy1_upstream}', listen='{proxy1_listen}'")
