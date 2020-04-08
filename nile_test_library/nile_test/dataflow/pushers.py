@@ -69,7 +69,7 @@ class DeterministicPusher(DataPusher):
     that uses a fixed/constant value for each of its parameters
     """
 
-    def __init__(self, source, sink, *, quantity,
+    def __init__(self, source, sink, *, quantity=1,
                  retry_delay, cycle_delay):
         """
         Create a DeterministicPusher
@@ -102,7 +102,7 @@ class GammaPusher(DataPusher):
     that samples a gamma distribution for the retry_delay and cycle_delay
     """
 
-    def __init__(self, source, sink, *, quantity,
+    def __init__(self, source, sink, *, quantity=1,
                  retry_shape, retry_scale=1,
                  cycle_shape, cycle_scale=1):
         """
