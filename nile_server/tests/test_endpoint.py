@@ -18,7 +18,7 @@ api = 'http://localhost:5000/api/v1'
 test_endpoint = f'{api}/tests'
 met_endpoint = f'{api}/metrics'
 req_endpoint = f'{api}/requests'
-db_uri = 'postgresql://daltonteague@localhost/loadtest_db'
+db_uri = 'postgresql://postgres:dbpw@localhost:5433/testing_db'
 
 test_config = "Test POST Config"
 num_workers = 50000
@@ -61,11 +61,11 @@ class TestEndpoint(unittest.TestCase):
         )
         return app
 
-    def setUp(self):
-        db.create_all()
+#    def setUp(self):
+#        db.create_all()
 
-    def tearDown(self):
-        db.session.remove()
+#    def tearDown(self):
+        #db.session.remove()
 
     #########################
     # Test POST section #
@@ -77,21 +77,29 @@ class TestEndpoint(unittest.TestCase):
         Test adding requests, metrics and test end time when no test running,
         expected to fail
          """
-
+   
+        reset_db()
+        add_test()
         # In case a previous test is still open for some reason
-        test_finalize()
+        #test_finalize()
+
+        self.assertEqual(Test.query.count(), 0)
+        self.assertEqual(Request.query.count(), 0)
+        self.assertEqual(SystemMetric.query.count(), 0)
 
         request = add_request()
         self.assertEqual(
             request.text,
             "Can't submit request while no tests running."
             )
+        self.assertEqual(request.status, 400)
 
         request = add_metric()
         self.assertEqual(
             request.text,
             "Can't submit metric while no tests running."
             )
+        self.assertEqual(request.status, 400)
 
         request = test_finalize()
         self.assertEqual(
@@ -120,7 +128,7 @@ class TestEndpoint(unittest.TestCase):
         count = Request.query.count()
 
         request = add_request(5)
-
+        time.sleep(4)
         self.assertEqual(Request.query.count(), count + 1)
         self.assertEqual(
             request.text,
@@ -253,6 +261,8 @@ class TestEndpoint(unittest.TestCase):
 
         print("GET request ID")
 
+        add_request()
+
         request_id = db.session.query(
             Request
             ).order_by(
@@ -312,6 +322,7 @@ class TestEndpoint(unittest.TestCase):
 # Helper methods  #
 #########################
 
+
 def add_test(time=None):
 
     """
@@ -342,7 +353,8 @@ def add_request(count=1, time=None):
         * count - can add any number of requests at once
         * time - can specify a timestamp for request being added
     """
-    requests = []
+    
+    request_list = []
     endpoint = req_endpoint
 
     while count > 0:
@@ -357,11 +369,12 @@ def add_request(count=1, time=None):
             'success': success,
             'exception': None
         }
-        requests.add(data)
+        
+        request_list.append(data)
         count -= 1
 
     print("request POST", data)
-    return requests.post(endpoint, json=requests)
+    return requests.post(endpoint, json=request_list)
 
 
 def add_metric(time=None):
@@ -409,6 +422,18 @@ def now():
 
     return datetime.datetime.now().isoformat()
 
+def reset_db():
+  
+  """ Clears the database for the next test"""
+
+  meta = db.metadata
+  for table in reversed(meta.sorted_tables):
+    print(f'Clearing table {table}')
+    db.session.execute(table.delete())
+    print(f'Cleared table {table}')
+
+  db.session.commit()
+  
 
 if __name__ == '__main__':
     unittest.main()

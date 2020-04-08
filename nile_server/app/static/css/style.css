@@ -134,3 +134,8 @@ table {
 .chart {
     margin-left: 10%;
 }
+
+.btn-pair {
+    display: inline-block;
+    margin-left: 5%;
+}

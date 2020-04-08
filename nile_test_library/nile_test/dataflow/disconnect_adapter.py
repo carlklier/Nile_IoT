@@ -15,9 +15,10 @@ It has no concurrent behavior and is not a worker
 
 from interface import implements
 from gevent import sleep
+from numpy.random import gamma
 
 from . import Sink
-from .workers import Worker
+from . import Worker
 
 
 class DisconnectAdapter(Worker, implements(Sink)):
@@ -47,15 +48,16 @@ class DisconnectAdapter(Worker, implements(Sink)):
         Runs the process that schedules disconnects
         """
         while True:
-            time_until, duration = self.next_disconnect()
+            time_until, duration = self._next_disconnect()
 
-            sleep(time_until)
-            self.connected = False
-
-            sleep(duration)
+            # Be connected for time_until seconds
             self.connected = True
+            sleep(time_until)
+            # Be disconnected for duration seconds
+            self.connected = False
+            sleep(duration)
 
-    def next_disconnect(self):
+    def _next_disconnect(self):
         """
         Returns (time_until, duration)
 
@@ -66,9 +68,10 @@ class DisconnectAdapter(Worker, implements(Sink)):
 
     def write(self, records):
         if self.connected:
-            return self.inner.write(records)
+            self.inner.write(records)
+            return True
         else:
-            return records
+            return False
 
 
 class DeterministicDisconnectAdapter(DisconnectAdapter):
@@ -78,9 +81,38 @@ class DeterministicDisconnectAdapter(DisconnectAdapter):
     and then disconnected for the same amount of time
     """
 
-    def __init__(self, inner, connect_duration, disconnect_duration):
+    def __init__(self, inner, time_until, duration):
         """
         Creates a DeterministicDisconnectAdapter
+        using the given parameters
+
+        Arguments
+         * inner - the wrapped Sink
+         * time_until - the amount of time it spends connected
+            before it becomes disconnected
+         * duration - the amount of time it spends disconnected
+            before it becomes connected
+        """
+        DisconnectAdapter.__init__(self, inner)
+        self.time_until = time_until
+        self.duration = duration
+
+    def _next_disconnect(self):
+        return (self.time_until, self.duration)
+
+
+class GammaDisconnectAdapter(DisconnectAdapter):
+    """
+    A GammaDisconnectAdapter (GDA)
+    is a DisconnectAdapter that samples a Gamma Distribution
+    to determine when to be connected and when to be disconnected
+    """
+
+    def __init__(self, inner, *,
+                 time_until_shape, time_until_scale=1,
+                 duration_shape, duration_scale=1):
+        """
+        Creates a GammaDisconnectAdapter
         using the given parameters
 
         Arguments
@@ -91,39 +123,13 @@ class DeterministicDisconnectAdapter(DisconnectAdapter):
             before it becomes connected
         """
         DisconnectAdapter.__init__(self, inner)
-        self.connect_duration = connect_duration
-        self.disconnect_duration = disconnect_duration
+        self.time_until_shape = time_until_shape
+        self.time_until_scale = time_until_scale
+        self.duration_shape = duration_shape
+        self.duration_scale = duration_scale
 
-    def next_disconnect(self):
-        return (self.connect_duration, self.disconnect_duration)
+    def _next_disconnect(self):
+        time_until = gamma(self.time_until_shape, self.time_until_scale)
+        duration = gamma(self.duration_shape, self.duration_scale)
 
-
-class TransformAdapter(implements(Sink)):
-    """
-    A TransformAdapter wraps a Sink
-    When it receives a record it applies the transform,
-    and then sends the transformed record to the wrapped Sink
-    """
-
-    def __init__(self, inner):
-        """
-        Creates a new TransformAdapter
-        which wraps the provided Sink
-        """
-        self.inner = inner
-
-    def transform(self, record):
-        """
-        Transforms the record
-
-        Arguments:
-         * record - the value to transform
-
-        Returns the transformed value
-        """
-        raise RuntimeError("Unimplemented")
-
-    def write(self, records):
-        records = [self.transform(record) for record in records]
-
-        return self.inner.write_all(records)
+        return time_until, duration

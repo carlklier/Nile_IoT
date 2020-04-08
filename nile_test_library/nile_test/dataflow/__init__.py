@@ -44,7 +44,7 @@ class Source(Interface):
         Arguments
          * num - the maximum number of elements to read
 
-        Returns an iterable of values read
+        Returns a list of values read
         """
         pass
 
@@ -61,12 +61,16 @@ class Sink(Interface):
         Arguments:
          * records - an iterable of record values
 
-        Returns an iterable of all the values which could not be accepted
+        Returns True if all values could be written
+        Returns False if any value could not be written
 
-        Write should not return values which are not acceptable
+        This operation is atomic, either all or none of the records
+        are sent
+
+        Write should not fail on values which are never acceptable
         to the Sink, those should be ignored or raise an error.
-        Returning items which will always be rejected may cause
-        a consumer of the Sink to loop infinitely.
+        Returning false on items which will always be rejected may cause
+        a writer to the Sink to loop infinitely.
         """
         pass
 

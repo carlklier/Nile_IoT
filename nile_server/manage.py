@@ -88,7 +88,7 @@ def run_test_server():
     app.config['DEBUG'] = False
     app.config['TESTING'] = True
     # Don't use the production database but a temporary test database.
-    app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://daltonteague@localhost/test_db"
+    app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://daltonteague@localhost/testing_db"
     db.create_all()
     db.session.commit()
 

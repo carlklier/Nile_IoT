@@ -204,14 +204,17 @@ def tests():
 
     data = request.get_json()
     test_config = data['config']
-    test_start = data['start']
+    test_start = datetime.strptime(
+            data['start'],
+            "%Y-%m-%dT%H:%M:%S.%f"
+            )
     test_workers = data['workers']
     new_test = Test(
         config=test_config,
         start=test_start,
         workers=test_workers
     )
-
+    
     try:
         db.session.add(new_test)
         db.session.commit()
@@ -238,6 +241,7 @@ def requests():
     global PREV_TEST
 
     requests = request.get_json()
+    time_sent = ""
 
     test_id = CURRENT_TEST.id if CURRENT_TEST else PREV_TEST.id
 
@@ -248,6 +252,7 @@ def requests():
             requests[0]['request_timestamp'],
             "%Y-%m-%dT%H:%M:%S.%f"
             )
+        
 
         if CURRENT_TEST is None:
             if time_sent < PREV_TEST.start and time_sent > PREV_TEST.end:
@@ -346,7 +351,8 @@ def finalize_test():
     """
     Route to add an end time to the currently running test
     and set the current test as none and previous test as this
-    one.
+    one. Must also make sure to use the database session the 
+    test was started with.
     """
 
     global CURRENT_TEST
@@ -360,14 +366,20 @@ def finalize_test():
             )
 
     data = request.get_json()
-    CURRENT_TEST.end = data['end']
+    CURRENT_TEST.end = datetime.strptime(
+            data['end'],
+            "%Y-%m-%dT%H:%M:%S.%f"
+            )
 
     PREV_TEST = CURRENT_TEST
     CURRENT_TEST = None
 
     try:
-        db.session.add(PREV_TEST)
-        db.session.commit()
+        test_session = db.object_session(PREV_TEST)
+        if test_session is None:
+            test_session = db.session
+        test_session.add(PREV_TEST)
+        test_session.commit()
         return f"Finalized test with ID: {PREV_TEST.id}\n"
     except Exception as e:
         return Response(
