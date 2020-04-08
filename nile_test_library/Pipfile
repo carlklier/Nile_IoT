@@ -12,6 +12,7 @@ pytest-mock="*"
 locustio = "*"
 coverage = "*"
 python-interface = "*"
+numpy = "*"
 
 [requires]
 python_version = "3.7"

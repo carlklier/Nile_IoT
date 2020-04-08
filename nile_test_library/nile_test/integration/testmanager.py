@@ -35,6 +35,7 @@ class TestManager:
                 config_file = sys.argv[i+1]
 
         self.config_file = config_file
+        self.slave_count = slave_count
 
         if slave_count == 0:
             from .databuffer import DataBuffer
