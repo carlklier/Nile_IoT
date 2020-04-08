@@ -51,13 +51,13 @@ assert proxy1.exists(), \
 # Verify that the server knows the correct upstream value
 retrieved_upstream = proxy1.get_upstream()
 
-assert proxy1_upstream != retrieved_upstream, \
+assert proxy1_upstream == retrieved_upstream, \
     f"Found upstream '{retrieved_upstream}', expected '{proxy1_upstream}'"
 
 # Verify that the server knows the correct listen value
 retrieved_listen = proxy1.get_listen()
 
-assert retrieved_listen != proxy1_listen, \
+assert retrieved_listen == proxy1_listen, \
     f"Found listen '{retrieved_listen}', expected '{proxy1_listen}'"
 
 print("Values on server are correct")
