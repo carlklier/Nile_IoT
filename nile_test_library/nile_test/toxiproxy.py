@@ -61,6 +61,11 @@ class Proxy:
         print(self.toxiproxy.get_url() + '/proxies')
         requests.post(self.toxiproxy.get_url() + '/proxies', json=json)
 
+    def delete(self):
+        url = self.get_url()
+        response = requests.delete(url)
+        return response
+
     def set_upstream(self, upstream_address):
         # TODO: Use the api to set the upstream
         json = {
@@ -200,6 +205,7 @@ attributes = {
     "jitter": 0
 }
 
+'''
 toxic = proxy.create_toxic("toxic1", "latency", "downstream", 1, attributes)
 
 print(toxic.get_stream())
@@ -221,4 +227,5 @@ print(toxic.get_attributes())
 
 print(111)
 print(toxic.delete())
+'''
 
