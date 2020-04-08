@@ -7,14 +7,14 @@ class ToxiProxy:
         self.hostname = hostname
 
     def get_url(self):
-        url = "http://{}".format(self.hostname)
+        url = f"http://{self.hostname}"
         return url
 
     def exists(self):
         """
         Checks whether the specified ToxiProxy server exists and is reachable
         """
-        url = self.get_url() + "/proxies"
+        url = f"{self.get_url()}/proxies"
         return requests.get(url).ok
 
     def create_proxy(self, name, upstream_address, listen_address):
@@ -42,7 +42,7 @@ class Proxy:
         self.name = name
 
     def get_url(self):
-        url = "{}/proxies/{}".format(self.toxiproxy.get_url(), self.name)
+        url = f"{self.toxiproxy.get_url()}/proxies/{self.name}"
         return url
 
     def exists(self):
@@ -58,7 +58,6 @@ class Proxy:
             "upstream": upstream_address,
             "enabled": True
         }
-        #print(self.toxiproxy.get_url() + '/proxies')
         requests.post(self.toxiproxy.get_url() + '/proxies', json=json)
 
     def delete(self):
@@ -72,7 +71,7 @@ class Proxy:
           "upstream": upstream_address
         }
         url = self.get_url()
-        response = requests.post(url, json=json)
+        requests.post(url, json=json)
 
     def get_upstream(self):
         # TODO: Use the api to get the upstream address
@@ -86,7 +85,7 @@ class Proxy:
             "listen": listen_address
         }
         url = self.get_url()
-        response = requests.post(url, json=json)
+        requests.post(url, json=json)
 
     def get_listen(self):
         url = self.get_url()
@@ -143,13 +142,11 @@ class Toxic:
             "stream": stream
         }
         url = self.get_url()
-        #print(url)
         response = requests.post(url, json=json).text
         return response
 
-    #DELETE /proxies/{proxy}/toxics/{toxic}
-
     def delete(self):
+        # DELETE /proxies/{proxy}/toxics/{toxic}
         url = self.get_url()
         response = requests.delete(url)
         return response
@@ -187,45 +184,3 @@ class Toxic:
         response = requests.get(url).text
         attributes = json.loads(response).get("attributes")
         return attributes
-
-    # TODO: Create Getters that retrieve info using the API
-    # TODO: Create Setters that update the info using the API
-
-'''
-toxiproxy = ToxiProxy("localhost:8474")
-print(toxiproxy.exists())
-
-proxy = toxiproxy.create_proxy("proxy1", "localhost:8000", "localhost:8001")
-# proxy.set_upstream("localhost:8003")
-print(proxy.get_upstream())
-
-
-attributes = {
-    "latency": 2000,
-    "jitter": 0
-}
-
-
-toxic = proxy.create_toxic("toxic1", "latency", "downstream", 1, attributes)
-
-print(toxic.get_stream())
-print(toxic.set_stream("upstream"))
-print(toxic.get_stream())
-
-print(toxic.get_toxicity())
-print(toxic.set_toxicity(0.5))
-print(toxic.get_toxicity())
-
-attributes1 = {
-    "latency": 3000,
-    "jitter": 0
-}
-
-print(toxic.get_attributes())
-print(toxic.set_attributes(attributes1))
-print(toxic.get_attributes())
-
-print(111)
-print(toxic.delete())
-'''
-
