@@ -204,7 +204,10 @@ def tests():
 
     data = request.get_json()
     test_config = data['config']
-    test_start = data['start']
+    test_start = datetime.strptime(
+            data['start'],
+            "%Y-%m-%dT%H:%M:%S.%f"
+            )
     test_workers = data['workers']
     new_test = Test(
         config=test_config,
@@ -248,6 +251,7 @@ def requests():
             requests[0]['request_timestamp'],
             "%Y-%m-%dT%H:%M:%S.%f"
             )
+        
 
         if CURRENT_TEST is None:
             if time_sent < PREV_TEST.start and time_sent > PREV_TEST.end:
@@ -361,7 +365,10 @@ def finalize_test():
             )
 
     data = request.get_json()
-    CURRENT_TEST.end = data['end']
+    CURRENT_TEST.end = datetime.strptime(
+            data['end'],
+            "%Y-%m-%dT%H:%M:%S.%f"
+            )
 
     PREV_TEST = CURRENT_TEST
     CURRENT_TEST = None
