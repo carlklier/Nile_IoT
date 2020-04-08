@@ -30,31 +30,24 @@ function showSystemMetricsFunction() {
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark special-color-dark">
     <!-- Navbar brand -->
-    <a class="navbar-brand text-uppercase" href="#">Manage Test</a>
+    <a class="navbar-brand text-uppercase" href="#">Loadtest Manager</a>
 
     <!-- NavBar Items -->
     <ul class="navbar-nav mr-auto">
+        <a class="dropdown-item text-light" href="http://localhost:5000/tests/">View Test List</a>
     </ul>
     <!-- NavBar Items -->
 
-    <!-- Search form -->
-    <form class="form-inline">
-    <div class="md-form my-0">
-        <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
-    </div>
-    </form>
-    <!-- Search form -->
 </nav>
 <!-- Navbar -->
 
 <!--Main Layout-->
 <main>
+    <div class="content p-3 mb-2 overflow-hidden">
+        <h1>Visualize Test Results</h1>
+    </div>
+    
     <div class="container">
-        <div class="row pt-5">
-            <div class="col text-center">
-                <h2>Visualizing Test Results</h2>
-            </div>
-        </div>
         <div class="row">
             <div class="btn-group" role="group" aria-label="Results Option">
                 <button type="button" class="btn btn-primary" onclick="showLocustFunction()">Locust Results</button>
@@ -63,11 +56,11 @@ function showSystemMetricsFunction() {
         </div>
         <div class="row pt-3">
 
-            <div class="col-6">
+            <div class="col-3">
 
               <div class="row-6">
 
-                <label>Data Range:</label>
+                <label class="dark-text">Find Tests:</label>
                 <div class="col-md-4">
                     <label for="foo">From:</label>
                     <input data-date-format="mm/dd/yyyy" id="datepickerFrom" name="foo">
@@ -81,20 +74,20 @@ function showSystemMetricsFunction() {
               </div>
 
               <div class="row-5 pt-3">
-                <div class="col-md-6" style="height:300px;line-height:3em;overflow:auto;padding:5px;border-style: solid;">
+                <div style="height:300px; width:300px;line-height:3em;overflow:auto;padding:5px;border-style: solid;border-color: rgb(220, 222, 231);border-width: 2px;">
                     {% for test in tests %}
                     <ul class="list-group" id="test-group">
-                        <li class="list-group-item text-center">{{ test.id }}</li>
-                        <li class="list-group-item text-center">A</li>
-                        <li class="list-group-item text-center">B</li>
-                        <li class="list-group-item text-center">C</li>
-                        <li class="list-group-item text-center">D</li>
-                        <li class="list-group-item text-center">E</li>
-                    </ul>
-                    <ul class="list-group" id="test-group-2" style="display: none;">
-                        <li class="list-group-item text-center">{{ test.id }}</li>
-                        <li class="list-group-item text-center">A2</li>
-                        <li class="list-group-item text-center">B3</li>
+                        <li class="list-group-item list-select" id="{{ test.id }}">
+                            <div class="list-text dark-text">Test {{ test.id }}</div>
+                            <div class="list-text">
+                                <a class="dark-text">Configuration: </a>
+                                {{ test.config }}
+                            </div>
+                            <div class="list-text">
+                                <a class="dark-text">Completed: </a>
+                                {{ test.start }}
+                            </div>
+                        </li>
                     </ul>
                     {% endfor %}
                 </div>
@@ -102,28 +95,133 @@ function showSystemMetricsFunction() {
 
             </div>
 
+            <div class="col-md-7 chart">
+                <canvas id="chart" width="10" height="9"></canvas>
+            </div>
+            
 
         </div>
     </div>
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.1/js/bootstrap-datepicker.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script><script type="text/javascript">
-    $('#datepickerFrom').datepicker({
-        weekStart: 1,
-        daysOfWeekHighlighted: "6,0",
-        autoclose: true,
-        todayHighlight: true,
-        buttonText: "From date",
-    });
-    $('#datepickerFrom').datepicker("setDate", new Date());
-    $('#datepickerTo').datepicker({
-        weekStart: 1,
-        daysOfWeekHighlighted: "6,0",
-        autoclose: true,
-        todayHighlight: true,
-        buttonText: "To date",
-    });
-    $('#datepickerTo').datepicker("setDate", new Date());
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    
+    <script type="text/javascript">
+
+        
+        // Get list of tests from Flask as JSON
+        var tests = {{ tests|tojson }};
+        var requests = {{ requests|tojson }};
+        var $listRows = $('.list-select'); 
+        var $selectedTest = ""
+        var $responseTimes = []
+        var $timestamps = []
+        var ctx = document.getElementById('chart').getContext('2d');
+
+
+        window.onload = function() {
+            if (tests.length > 0) createChart(tests[0].id)
+        }
+        
+        $('#datepickerFrom').datepicker({
+            weekStart: 1,
+            daysOfWeekHighlighted: "6,0",
+            autoclose: true,
+            todayHighlight: true,
+            buttonText: "From date",
+        });
+        $('#datepickerFrom').datepicker("setDate", new Date());
+        $('#datepickerTo').datepicker({
+            weekStart: 1,
+            daysOfWeekHighlighted: "6,0",
+            autoclose: true,
+            todayHighlight: true,
+            buttonText: "To date",
+        });
+        $('#datepickerTo').datepicker("setDate", new Date());
+
+        /**
+        * Highlight a selected a table row
+        */ 
+        $('.list-select').click(function(e) {
+            $listRows.removeClass('active');
+            $(this).addClass('active');
+            $selectedTest = tests[this.id]
+            console.log($selectedTest)
+
+            createChart(this.id)
+
+        });
+
+        function createChart(id) {
+
+            var $responseTimes = []
+            var $timestamps = []
+            
+            if (chart) chart.destroy();
+            var ctx = document.getElementById('chart').getContext('2d');
+        
+            var chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: $timestamps,
+                    datasets: [{
+                        label: "Response Time",
+                        data: $responseTimes,
+                        backgroundColor: [
+                            'rgba(2, 99, 255, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(100, 99, 255, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        xAxes: [{
+                            ticks: {
+                                callback: function(t, i) {
+                                    if (!(i % 4)) return t;
+                                }
+                            }
+                        }]
+                    }
+                }
+            });
+
+
+            for(var i = 0; i < requests.length; i++) {
+                if (requests[i].test_id == id) {
+                    $responseTimes.push(requests[i].response_time)
+                    $timestamps.push(requests[i].request_timestamp)
+                    chart.config.data.labels.push(requests[i].request_timestamp);
+                    chart.config.data.datasets[0].data.push(requests[i].response_time);
+                }
+            }
+            console.log($responseTimes)
+            console.log($timestamps)
+
+            chart.update()
+        }
+
+        // example of how to remove data point from end of dataset.
+        function popData() {
+            chart.data.labels.pop();
+            chart.data.datasets[0].data.pop();
+            chart.update();
+        }
     </script>
 </main>
 <!--Main Layout-->
