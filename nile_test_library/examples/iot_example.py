@@ -25,10 +25,11 @@ class StatsWorker(Worker):
         import time
         while True:
             time.sleep(1)
-            print(f"Nile: \
-                    {list(self.device1.data)} -> {self.connect1.connected} -> \
-                    {list(self.device2.data)} -> {self.connect2.connected} -> \
-                    Server")
+            print(f"Nile: Stats Update")
+            print(f"device1 = {list(self.device1.data)}")
+            print(f"connect1 = {self.connect1.connected}")
+            print(f"device2 = {list(self.device2.data)}")
+            print(f"connect2 = {self.connect2.connected}")
 
 
 class DataFlowBehavior(TaskSet):
@@ -37,7 +38,7 @@ class DataFlowBehavior(TaskSet):
         on_start is called when a Locust start before any task is scheduled
         """
         # Base Sources/Sinks
-        data = [{"data": "1"}, {"data": "2"}, {"data": "3"}]
+        data = [{"data": str(num)} for num in range(1024)]
         test_data = CircularReadBuffer(data)
         device1 = Buffer()
         device2 = Buffer()
@@ -50,23 +51,25 @@ class DataFlowBehavior(TaskSet):
         # Device Link
         link_connect = GammaDisconnectAdapter(device2,
                                               time_until_shape=2,
-                                              duration_shape=2)
+                                              duration_shape=1)
         link_worker = GammaPusher(device1, link_connect,
                                   quantity=16,
-                                  retry_shape=0.00001, cycle_shape=1)
+                                  retry_shape=0.00001, cycle_shape=0.5)
 
         # Server Upload
         upload_connect = GammaDisconnectAdapter(server,
                                                 time_until_shape=2,
-                                                duration_shape=2)
+                                                duration_shape=1)
         upload_worker = GammaPusher(device2, upload_connect,
                                     quantity=32,
-                                    retry_shape=0.00001, cycle_shape=1)
+                                    retry_shape=0.00001, cycle_shape=0.5)
 
         # Run Workers
         gen_worker.start()
         link_worker.start()
         upload_worker.start()
+        link_connect.start()
+        upload_connect.start()
 
         stats = StatsWorker(device1, link_connect, device2, upload_connect)
         stats.start()
