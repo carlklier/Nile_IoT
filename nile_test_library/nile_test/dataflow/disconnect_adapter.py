@@ -68,9 +68,10 @@ class DisconnectAdapter(Worker, implements(Sink)):
 
     def write(self, records):
         if self.connected:
-            return self.inner.write(records)
+            self.inner.write(records)
+            return True
         else:
-            return records
+            return False
 
 
 class DeterministicDisconnectAdapter(DisconnectAdapter):

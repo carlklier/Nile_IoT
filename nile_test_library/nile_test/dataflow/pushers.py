@@ -35,10 +35,11 @@ class DataPusher(Worker):
 
     def run(self):
         while True:
-            records = list(self.source.read(self.read_quantity()))
+            records = self.source.read(self.read_quantity())
+            transmitted = False
 
-            while records:
-                records = self.sink.write(records)
+            while not transmitted:
+                transmitted = self.sink.write(records)
                 sleep(self.next_retry_delay())
 
             sleep(self.next_cycle_delay())
