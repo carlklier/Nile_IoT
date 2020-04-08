@@ -58,7 +58,7 @@ class Proxy:
             "upstream": upstream_address,
             "enabled": True
         }
-        print(self.toxiproxy.get_url() + '/proxies')
+        #print(self.toxiproxy.get_url() + '/proxies')
         requests.post(self.toxiproxy.get_url() + '/proxies', json=json)
 
     def delete(self):
@@ -143,7 +143,7 @@ class Toxic:
             "stream": stream
         }
         url = self.get_url()
-        print(url)
+        #print(url)
         response = requests.post(url, json=json).text
         return response
 
@@ -191,7 +191,7 @@ class Toxic:
     # TODO: Create Getters that retrieve info using the API
     # TODO: Create Setters that update the info using the API
 
-
+'''
 toxiproxy = ToxiProxy("localhost:8474")
 print(toxiproxy.exists())
 
@@ -205,7 +205,7 @@ attributes = {
     "jitter": 0
 }
 
-'''
+
 toxic = proxy.create_toxic("toxic1", "latency", "downstream", 1, attributes)
 
 print(toxic.get_stream())
