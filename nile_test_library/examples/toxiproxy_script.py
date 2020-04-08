@@ -75,7 +75,7 @@ assert new_upstream == retrieved_upstream, \
 print("Upstream updated correctly")
 
 # Attempt to set the listen
-new_listen = "localhost:8003"
+new_listen = "127.0.0.1:8003"
 
 print(f"Setting listen to '{new_listen}'")
 proxy1.set_listen(new_listen)
