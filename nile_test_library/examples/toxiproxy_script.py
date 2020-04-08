@@ -70,7 +70,7 @@ proxy1.set_upstream(new_upstream)
 
 retrieved_upstream = proxy1.get_upstream()
 
-assert new_upstream != retrieved_upstream, \
+assert new_upstream == retrieved_upstream, \
     f"Found upstream '{retrieved_upstream}', expected '{new_upstream}'"
 print("Upstream updated correctly")
 
@@ -82,7 +82,7 @@ proxy1.set_listen(new_listen)
 
 retrieved_listen = proxy1.get_listen()
 
-assert retrieved_listen != new_listen, \
+assert retrieved_listen == new_listen, \
     f"Found listen '{retrieved_listen}', expected '{new_listen}'"
 
 print("Listen updated correctly")
