@@ -1,3 +1,5 @@
+import time
+
 from nile_test.dataflow import _reset
 from nile_test.dataflow.buffers import Buffer
 from nile_test.dataflow.pushers import DeterministicPusher, GammaPusher
@@ -33,8 +35,8 @@ def test_DPusher_run():
                                   cycle_delay=cycle_delay)
     dpusher.start()
 
-    import time
     time.sleep(cycle_delay * 2 * FUDGE_FACTOR)
+
     _reset()
 
     assert len(in_buf.data) == 0

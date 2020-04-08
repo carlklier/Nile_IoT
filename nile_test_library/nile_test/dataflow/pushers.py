@@ -119,14 +119,16 @@ class GammaPusher(DataPusher):
         DataPusher.__init__(self, source, sink)
         self.quantity = quantity
 
-        self.retry_delay_dist = gamma(retry_shape, retry_scale)
-        self.cycle_delay_dist = gamma(cycle_shape, cycle_scale)
+        self.retry_shape = retry_shape
+        self.retry_scale = retry_scale
+        self.cycle_shape = cycle_shape
+        self.cycle_scale = cycle_scale
 
     def read_quantity(self):
         return self.quantity
 
     def next_retry_delay(self):
-        return self.retry_delay_dist.sample()
+        return gamma(self.retry_shape, self.retry_scale)
 
     def next_cycle_delay(self):
-        return self.cycle_delay_dist.sample()
+        return gamma(self.cycle_shape, self.cycle_scale)
