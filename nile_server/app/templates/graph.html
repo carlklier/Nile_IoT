@@ -4,29 +4,6 @@
 {% endblock %}
 
 {% block body %}
-
-<!-- Scripts -->
-<script src="../../node_modules/chart.js/dist/Chart.js"></script>
-<script>
-function showLocustFunction() {
-  var x = document.getElementById("test-group");
-  var y = document.getElementById("test-group-2");
-  if (x.style.display === "none") {
-    x.style.display = "block";
-    y.style.display = "none";
-  }
-}
-function showSystemMetricsFunction() {
-  var x = document.getElementById("test-group-2");
-  var y = document.getElementById("test-group");
-  if (x.style.display === "none") {
-    x.style.display = "block";
-    y.style.display = "none";
-  }
-}
-</script>
-<!-- Scripts -->
-
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark special-color-dark">
     <!-- Navbar brand -->
@@ -46,46 +23,62 @@ function showSystemMetricsFunction() {
     <div class="content p-3 mb-2 overflow-hidden">
         <h1>Visualize Test Results</h1>
     </div>
-    
+    r
     <div class="container">
         <div class="row">
             <div class="btn-group" role="group" aria-label="Results Option">
-                <button type="button" class="btn btn-primary" onclick="showLocustFunction()">Locust Results</button>
-                <button type="button" class="btn btn-primary" onclick="showSystemMetricsFunction()">System Metrics</button>
+                <button type="button" class="btn btn-primary" onclick="showLocustFunction()" style="max-height: 50px;">Locust Results</button>
+                <button type="button" class="btn btn-primary" onclick="showSystemMetricsFunction()" style="max-height: 50px;">System Metrics</button>
             </div>
+            <div class="col" style="margin-top:-2%">
+                <div class="row justify-content-center">
+                    <label class="main-text drop-lead">Filter Requests:</label>
+                </div>
+                <div class="row justify-content-center">
+    
+                    <div class="btn-pair timepicker-small">
+                        <label class="list-text">From:</label>
+                        <input id="stampFilterFrom">
+                    </div>
+                    <div class="btn-pair">
+                        <label class="list-text">To:</label>
+                        <input id="stampFilterTo">
+                    </div>
+                </div>
+            </div>
+            
+            
         </div>
         <div class="row pt-3">
 
-            <div class="col-3">
+            <div class="col-md-3">
 
-              <div class="row-6">
-
-                <label class="dark-text">Find Tests:</label>
-                <div class="col-md-4">
-                    <label for="foo">From:</label>
-                    <input data-date-format="mm/dd/yyyy" id="datepickerFrom" name="foo">
+                <div class="row justify-content-center">
+                    <label class="main-text">Find Tests:</label>
+                </div>
+                <div class="row justify-content-end">
+                    <label class="list-text" data-provide="datepicker">From:</label>
+                    <input data-date-format="mm/dd/yyyy" id="datepickerFrom" name="foo" class="date-pair">
                 </div>
 
-                <div class="col-md-4">
-                    <label for="foobar">To:</label>
-                    <input data-date-format="mm/dd/yyyy" id="datepickerTo" name="foobar">
+                <div class="row justify-content-end">
+                    <label class="list-text" >To:</label>
+                    <input data-date-format="mm/dd/yyyy" data-date-end-date="0d" id="datepickerTo" class="date-pair">
                 </div>
-
-              </div>
 
               <div class="row-5 pt-3">
                 <div style="height:300px; width:300px;line-height:3em;overflow:auto;padding:5px;border-style: solid;border-color: rgb(220, 222, 231);border-width: 2px;">
                     {% for test in tests %}
-                    <ul class="list-group" id="test-group">
-                        <li class="list-group-item list-select" id="{{ test.id }}">
-                            <div class="list-text dark-text">Test {{ test.id }}</div>
+                    <ul class="list-group" id="test-table">
+                        <li class="list-group-item list-select" id="{{ test.id }}-item">
+                            <div class="list-text dark-text"  id="{{ loop.index }}-id">Test {{ test.id }}</div>
                             <div class="list-text">
                                 <a class="dark-text">Configuration: </a>
                                 {{ test.config }}
                             </div>
                             <div class="list-text">
                                 <a class="dark-text">Completed: </a>
-                                {{ test.start }}
+                                <a id="{{ test.id }}-end">{{ test.end }}</a>
                             </div>
                         </li>
                     </ul>
@@ -103,10 +96,6 @@ function showSystemMetricsFunction() {
         </div>
     </div>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.1/js/bootstrap-datepicker.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    
     <script type="text/javascript">
 
         
@@ -117,11 +106,16 @@ function showSystemMetricsFunction() {
         var $selectedTest = ""
         var $responseTimes = []
         var $timestamps = []
+        var $startTime = ""
+        var $endTime = ""
         var ctx = document.getElementById('chart').getContext('2d');
 
 
         window.onload = function() {
             if (tests.length > 0) createChart(tests[0].id)
+            document.getElementById(tests.length+'-item').click()
+            filterTests()
+            filterRequests()
         }
         
         $('#datepickerFrom').datepicker({
@@ -130,16 +124,99 @@ function showSystemMetricsFunction() {
             autoclose: true,
             todayHighlight: true,
             buttonText: "From date",
+        }).on("changeDate", function (e) {
+            filterTests()
         });
-        $('#datepickerFrom').datepicker("setDate", new Date());
+        $('#datepickerFrom').datepicker("setDate", Date.parse(tests[0].start))
+
         $('#datepickerTo').datepicker({
             weekStart: 1,
             daysOfWeekHighlighted: "6,0",
             autoclose: true,
             todayHighlight: true,
-            buttonText: "To date",
+            buttonText: "To date"
+        }).on("changeDate", function (e) {
+            filterTests()
         });
-        $('#datepickerTo').datepicker("setDate", new Date());
+        $('#datepickerTo').datepicker("setDate", Date.parse(tests[tests.length-1].start))
+
+        $('#stampFilterFrom').datetimepicker({
+            icons:
+            {
+                up: 'fa fa-angle-up',
+                down: 'fa fa-angle-down'
+            },
+            format: 'HH:mm:ss'
+        }).on("dp.change",function(e){
+            var date = e.date;
+            startTime = date.format("HH:mm:ss")
+            filterRequests()
+        })
+
+        $('#stampFilterTo').datetimepicker({
+            icons:
+            {
+                up: 'fa fa-angle-up',
+                down: 'fa fa-angle-down'
+            },
+            format: 'HH:mm:ss'
+        }).on("dp.change",function(e){
+            var date = e.date;
+            endTime = date.format("HH:mm:ss")
+            filterRequests()
+        })
+
+        function filterTests() {
+            console.log(tests)
+
+            var startDate = $('#datepickerFrom').datepicker('getDate')
+            var endDate = $('#datepickerTo').datepicker('getDate')
+
+            console.log(startDate)
+            console.log(endDate)
+
+            for(var i = 0; i < tests.length; i++) {
+
+                start = Date.parse(tests[i].start)
+                if (tests[i].end != null) end = Date.parse(tests[i].end).toLocaleString()
+                else end = "Not Complete"
+
+                document.getElementById((i + 1) + '-end').innerHTML = end;
+                if (start >= startDate && start <= endDate) {
+                    document.getElementById((i + 1) + '-item').style.display = '';
+                } else {
+                    document.getElementById((i + 1) + '-item').style.display = 'none';
+                }
+            }
+        }
+
+        function filterRequests() {
+            console.log(requests)
+
+            var startTime = $('#stampFilterFrom').datepicker('getDate')
+            var endTime = $('#stampFilterTo').datepicker('getDate')
+
+            console.log(startTime)
+            console.log(endTime)
+
+            filtered = {{ requests|tojson }};
+            requests = []
+
+            for(var i = 0; i < requests.length; i++) {
+
+                timestamp = Date.parse(requests[i].timestamp).toLocaleString()
+                
+                document.getElementById((i + 1) + '-end').innerHTML = end;
+                if (timestamp >= startDate && timestamp <= endDate) {
+                    console.log((i+1) + " show")
+                    requests.push(requests[i])
+                } else {
+                    console.log((i+1) + " none")
+                }
+            }
+            if ($selectedTest) createChart($selectedTest.id)
+            else createChart(tests[0].id)
+        }
 
         /**
         * Highlight a selected a table row
@@ -216,11 +293,22 @@ function showSystemMetricsFunction() {
             chart.update()
         }
 
-        // example of how to remove data point from end of dataset.
-        function popData() {
-            chart.data.labels.pop();
-            chart.data.datasets[0].data.pop();
-            chart.update();
+        
+        function showRequests() {
+            var x = document.getElementById("test-group")
+            var y = document.getElementById("test-group-2")
+            if (x.style.display === "none") {
+                x.style.display = "block"
+                y.style.display = "none"
+            }
+        }
+        function showMetrics() {
+            var x = document.getElementById("test-group-2")
+            var y = document.getElementById("test-group")
+            if (x.style.display === "none") {
+                x.style.display = "block"
+                y.style.display = "none"
+            }
         }
     </script>
 </main>

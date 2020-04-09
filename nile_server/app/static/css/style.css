@@ -52,6 +52,10 @@ table {
     padding-bottom: 4px;
 }
 
+.centered {
+    text-align: center;
+}
+
 .bottom-text {
     color: rgb(73, 73, 87);
     font-weight: 400;
@@ -136,6 +140,16 @@ table {
 }
 
 .btn-pair {
-    display: inline-block;
     margin-left: 5%;
 }
+
+.date-pair {
+    margin-top: -3%;
+    margin-left:2%;
+    margin-bottom: 5%;;
+}
+
+.bootstrap-datetimepicker-widget.timepicker-picker table td,
+.bootstrap-datetimepicker-widget.timepicker-picker table td span,
+.bootstrap-datetimepicker-widget.timepicker-picker table td a span
+{height: 30px; line-height: 30px; width: 30px; padding:0px;}

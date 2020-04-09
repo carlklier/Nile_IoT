@@ -149,17 +149,17 @@ def view_graphs():
     tests = db.session.query(Test).order_by(Test.id.desc()).all()
     output = []
 
-    ## TODO: Create Test/Requests dict pair to send to frontend
-    ## to avoid heavy sorting for each visualization
+    # TODO: Create Test/Requests dict pair to send to frontend
+    # to avoid heavy sorting for each visualization
 
     # Convert tests to JSON and make datetimes readable
     if len(tests) > 0:
         for test in tests:
             test_schema = TestSchema()
             test_json = test_schema.dump(test)
-            test_json['start'] = test.start.strftime('%H:%M:%S %m-%d-%Y')
+            test_json['start'] = test.start.strftime('%Y-%m-%dT%H:%M:%SZ')
             if test.end is not None:
-                test_json['end'] = test.end.strftime('%H:%M:%S %m-%d-%Y')
+                test_json['end'] = test.end.strftime('%Y-%m-%dT%H:%M:%SZ')
             output.append(test_json)
 
     requests = Request.query.all()
@@ -168,7 +168,7 @@ def view_graphs():
     if len(requests) > 0:
         for req in requests:
 
-            req_date = req.request_timestamp.strftime('%H:%M:%S %m-%d-%Y')
+            req_date = req.request_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
 
             request_schema = RequestSchema()
             request_json = request_schema.dump(req)
