@@ -112,7 +112,7 @@ toxic1_attributes = {
 }
 
 print(f"Creating Toxic named 'proxy1' on proxy '{proxy1.name}'")
-print(f"type='{toxic1_type}', stream='{toxic1_stream}', toxicity='{toxic1_toxicity}', attributes='{toxic1_attributes}'")
+print(f"t_type='{toxic1_type}', stream='{toxic1_stream}', toxicity='{toxic1_toxicity}', attributes='{toxic1_attributes}'")
 print("...")
 
 toxic1.make(
