@@ -2,7 +2,7 @@ import os
 import sys
 sys.path.append(os.path.abspath(".."))
 
-from nile_test.toxiproxy import ToxiProxy, Proxy  # noqa: E402
+from nile_test.toxiproxy import ToxiProxy, Proxy, Toxic # noqa: E402
 
 hostname = "localhost:8474"
 toxiproxy = ToxiProxy(hostname)
@@ -86,3 +86,47 @@ assert retrieved_listen == new_listen, \
     f"Found listen '{retrieved_listen}', expected '{new_listen}'"
 
 print("Listen updated correctly")
+
+
+toxic1 = Toxic(proxy1, name="toxic1")
+
+# Check if the Proxy has a Toxic named 'toxic1'
+# If it does, remove it from the proxy to establish a clean baseline
+print("Establishing clean baseline")
+if toxic1.exists():
+    print("Toxic 'toxic1' exists, deleting...")
+    toxic1.delete()
+    print("Finished deleting")
+    assert not toxic1.exists(), \
+        "A Toxic named 'toxic1' should not exist on server after delete"
+    print("Toxic named 'toxic1' deleted, baseline is clean")
+else:
+    print("No Toxic named 'toxic1' found, baseline is clean")
+
+toxic1_type = "latency"
+toxic1_stream = "downstream"
+toxic1_toxicity = 1
+toxic1_attributes = {
+    "latency": 2000,
+    "jitter": 0
+}
+
+print(f"Creating Toxic named 'proxy1' on proxy '{proxy1.name}'")
+print(f"type='{toxic1_type}', stream='{toxic1_stream}', toxicity='{toxic1_toxicity}', attributes='{toxic1_attributes}'")
+print("...")
+
+toxic1.make(
+    type=toxic1_type,
+    stream=toxic1_stream,
+    toxicity=toxic1_toxicity,
+    attributes=toxic1_attributes)
+
+print("Finished creating")
+print(f"URL is {toxic1.get_url()}")
+
+# Verify that 'proxy1' is now created
+assert toxic1.exists(), \
+    "A Toxic named 'toxic1' should exist on server after creation"
+
+
+
