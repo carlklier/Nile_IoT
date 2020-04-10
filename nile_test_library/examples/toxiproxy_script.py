@@ -182,5 +182,5 @@ retrieved_attributes = toxic1.get_attributes()
 
 assert new_attributes == retrieved_attributes, \
     f"Found upstream '{retrieved_attributes}', expected '{new_attributes}'"
-print("Aßttributes updated correctly")
+print("Attributes updated correctly")
 
