@@ -130,7 +130,7 @@ assert toxic1.exists(), \
 
 
 # Verify that the server knows the correct type value
-retrieved_type = toxic1.getType()
+retrieved_type = toxic1.get_type()
 
 assert toxic1_type == retrieved_type, \
     f"Found type '{retrieved_type}', expected '{toxic1_type}'"
