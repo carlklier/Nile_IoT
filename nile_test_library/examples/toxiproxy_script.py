@@ -129,4 +129,33 @@ assert toxic1.exists(), \
     "A Toxic named 'toxic1' should exist on server after creation"
 
 
+# Verify that the server knows the correct type value
+retrieved_type = toxic1.getType()
+
+assert toxic1_type == retrieved_type, \
+    f"Found type '{retrieved_type}', expected '{toxic1_type}'"
+
+# Verify that the server knows the correct stream value
+retrieved_stream = toxic1.get_stream()
+
+assert retrieved_stream == toxic1_stream, \
+    f"Found listen '{retrieved_stream}', expected '{toxic1_stream}'"
+
+# Verify that the server knows the correct toxicity value
+retrieved_toxicity = toxic1.get_toxicity
+
+assert retrieved_toxicity == toxic1_toxicity, \
+    f"Found listen '{retrieved_toxicity}', expected '{toxic1_toxicity}'"
+
+# Verify that the server knows the correct attributes value
+retrieved_attributes = toxic1.get_attributes()
+
+assert retrieved_attributes == toxic1_attributes, \
+    f"Found listen '{retrieved_attributes}', expected '{toxic1_attributes}'"
+
+
+
+print("Values on server are correct")
+
+
 

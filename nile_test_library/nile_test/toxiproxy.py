@@ -250,6 +250,13 @@ class Toxic:
         }
         requests.post(self.get_url(), json=json)
 
+    def get_type(self):
+        """
+                Gets the stream property of this Toxic from the server
+                """
+        response = requests.get(self.get_url())
+        return response.json().get("type")
+
     def get_toxicity(self):
         """
         Gets the toxicity property of this Toxic from the server
