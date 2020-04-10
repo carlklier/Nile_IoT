@@ -153,9 +153,34 @@ retrieved_attributes = toxic1.get_attributes()
 assert retrieved_attributes == toxic1_attributes, \
     f"Found listen '{retrieved_attributes}', expected '{toxic1_attributes}'"
 
-
-
 print("Values on server are correct")
 
 
+# Attempt to set the toxicity
+new_toxicity = 0.5
+
+print(f"Setting toxicity to '{new_toxicity}'...")
+toxic1.set_toxicity(new_toxicity)
+
+retrieved_toxicity = toxic1.get_toxicity()
+
+assert new_toxicity == retrieved_toxicity, \
+    f"Found upstream '{retrieved_toxicity}', expected '{new_toxicity}'"
+print("Toxicity updated correctly")
+
+
+# Attempt to set the attributes
+new_attributes = {
+    "latency": 5000,
+    "jitter": 20
+}
+
+print(f"Setting attributes to '{new_attributes}'...")
+toxic1.set_attributes(new_attributes)
+
+retrieved_attributes = toxic1.get_attributes()
+
+assert new_attributes == retrieved_attributes, \
+    f"Found upstream '{retrieved_attributes}', expected '{new_attributes}'"
+print("Aßttributes updated correctly")
 
