@@ -70,7 +70,7 @@
                 <div style="height:300px; width:300px;line-height:3em;overflow:auto;padding:5px;border-style: solid;border-color: rgb(220, 222, 231);border-width: 2px;">
                     {% for test in tests %}
                     <ul class="list-group" id="test-table">
-                        <li class="list-group-item list-select" id="{{ test.id }}-item">
+                        <li class="list-group-item list-select" id="{{ test.id }}">
                             <div class="list-text dark-text"  id="{{ loop.index }}-id">Test {{ test.id }}</div>
                             <div class="list-text">
                                 <a class="dark-text">Configuration: </a>
@@ -106,19 +106,17 @@
         var $selectedTest = ""
         var $responseTimes = []
         var $timestamps = []
-        var $startTime = ""
-        var $endTime = ""
         var ctx = document.getElementById('chart').getContext('2d');
 
 
         window.onload = function() {
             if (tests.length > 0) createChart(tests[0].id)
-            document.getElementById(tests.length+'-item').click()
+            document.getElementById(tests.length).click()
+
             filterTests()
-            filterRequests()
         }
         
-        $('#datepickerFrom').datepicker({
+        $('#datepickerFrom, #datepickerTo').datepicker({
             weekStart: 1,
             daysOfWeekHighlighted: "6,0",
             autoclose: true,
@@ -128,16 +126,6 @@
             filterTests()
         });
         $('#datepickerFrom').datepicker("setDate", Date.parse(tests[0].start))
-
-        $('#datepickerTo').datepicker({
-            weekStart: 1,
-            daysOfWeekHighlighted: "6,0",
-            autoclose: true,
-            todayHighlight: true,
-            buttonText: "To date"
-        }).on("changeDate", function (e) {
-            filterTests()
-        });
         $('#datepickerTo').datepicker("setDate", Date.parse(tests[tests.length-1].start))
 
         $('#stampFilterFrom').datetimepicker({
@@ -146,11 +134,14 @@
                 up: 'fa fa-angle-up',
                 down: 'fa fa-angle-down'
             },
-            format: 'HH:mm:ss'
+            format: 'HH:mm:ss',
+            defaultDate:moment(new Date()).hours(0).minutes(0).seconds(0).milliseconds(0)
         }).on("dp.change",function(e){
+            console.log(this.id)
             var date = e.date;
-            startTime = date.format("HH:mm:ss")
-            filterRequests()
+            
+            if ($selectedTest) createChart($selectedTest.id)
+            else createChart(tests[0].id, false)
         })
 
         $('#stampFilterTo').datetimepicker({
@@ -159,11 +150,14 @@
                 up: 'fa fa-angle-up',
                 down: 'fa fa-angle-down'
             },
-            format: 'HH:mm:ss'
+            format: 'HH:mm:ss',
+            defaultDate:moment(new Date()).hours(23).minutes(59).seconds(59)
         }).on("dp.change",function(e){
+            console.log(e.date)
             var date = e.date;
-            endTime = date.format("HH:mm:ss")
-            filterRequests()
+            console.log($selectedTest)
+            if ($selectedTest) createChart($selectedTest.id)
+            else createChart(tests[0].id, false)
         })
 
         function filterTests() {
@@ -183,59 +177,32 @@
 
                 document.getElementById((i + 1) + '-end').innerHTML = end;
                 if (start >= startDate && start <= endDate) {
-                    document.getElementById((i + 1) + '-item').style.display = '';
+                    document.getElementById((i + 1)).style.display = '';
                 } else {
-                    document.getElementById((i + 1) + '-item').style.display = 'none';
+                    document.getElementById((i + 1)).style.display = 'none';
                 }
             }
-        }
-
-        function filterRequests() {
-            console.log(requests)
-
-            var startTime = $('#stampFilterFrom').datepicker('getDate')
-            var endTime = $('#stampFilterTo').datepicker('getDate')
-
-            console.log(startTime)
-            console.log(endTime)
-
-            filtered = {{ requests|tojson }};
-            requests = []
-
-            for(var i = 0; i < requests.length; i++) {
-
-                timestamp = Date.parse(requests[i].timestamp).toLocaleString()
-                
-                document.getElementById((i + 1) + '-end').innerHTML = end;
-                if (timestamp >= startDate && timestamp <= endDate) {
-                    console.log((i+1) + " show")
-                    requests.push(requests[i])
-                } else {
-                    console.log((i+1) + " none")
-                }
-            }
-            if ($selectedTest) createChart($selectedTest.id)
-            else createChart(tests[0].id)
         }
 
         /**
         * Highlight a selected a table row
         */ 
         $('.list-select').click(function(e) {
-            $listRows.removeClass('active');
-            $(this).addClass('active');
-            $selectedTest = tests[this.id]
+            $listRows.removeClass('active')
+            $(this).addClass('active')
+            $selectedTest = tests[tests.length - this.id]
             console.log($selectedTest)
 
-            createChart(this.id)
+            createChart(this.id, true)
+            
 
         });
 
-        function createChart(id) {
+        function createChart(id, newTest) {
 
             var $responseTimes = []
             var $timestamps = []
-            
+
             if (chart) chart.destroy();
             var ctx = document.getElementById('chart').getContext('2d');
         
@@ -278,17 +245,42 @@
                 }
             });
 
+            var startTime = new Date($('#stampFilterFrom').data("DateTimePicker").date())
+            var endTime = new Date($('#stampFilterTo').data("DateTimePicker").date())
+
+            startTime = moment(startTime).format("HH:mm:ss")
+            endTime = moment(endTime).format("HH:mm:ss")
+
+            console.log("start: " + startTime)
+            console.log("end: " + endTime)
+
 
             for(var i = 0; i < requests.length; i++) {
-                if (requests[i].test_id == id) {
+
+                var timestamp = moment(Date.parse(requests[i].request_timestamp)).format("HH:mm:ss")
+
+                if (requests[i].test_id.toString() == id
+                    && timestamp >= startTime
+                    && timestamp <= endTime) {
+
+                    console.log("adding: " + requests[i].id)
                     $responseTimes.push(requests[i].response_time)
-                    $timestamps.push(requests[i].request_timestamp)
-                    chart.config.data.labels.push(requests[i].request_timestamp);
+                    $timestamps.push(timestamp)
+                    chart.config.data.labels.push(timestamp);
                     chart.config.data.datasets[0].data.push(requests[i].response_time);
+
                 }
             }
-            console.log($responseTimes)
-            console.log($timestamps)
+            console.log("rt: " + $responseTimes)
+            console.log("stamps: " + $timestamps)
+
+            if (newTest && $timestamps.length > 0) {
+                var start = moment(Date.parse($timestamps[0])).format("HH:mm:ss")
+                var end = moment(Date.parse($timestamps[$timestamps.length-1])).format("HH:mm:ss")
+
+                $("#stampFilterFrom").val(start)
+                $("#stampFilterTo").val(end)
+            }
 
             chart.update()
         }
