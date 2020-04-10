@@ -142,7 +142,7 @@ assert retrieved_stream == toxic1_stream, \
     f"Found listen '{retrieved_stream}', expected '{toxic1_stream}'"
 
 # Verify that the server knows the correct toxicity value
-retrieved_toxicity = toxic1.get_toxicity
+retrieved_toxicity = toxic1.get_toxicity()
 
 assert retrieved_toxicity == toxic1_toxicity, \
     f"Found listen '{retrieved_toxicity}', expected '{toxic1_toxicity}'"
