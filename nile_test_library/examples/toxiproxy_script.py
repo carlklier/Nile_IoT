@@ -116,7 +116,7 @@ print(f"t_type='{toxic1_type}', stream='{toxic1_stream}', toxicity='{toxic1_toxi
 print("...")
 
 toxic1.make(
-    type=toxic1_type,
+    t_type=toxic1_type,
     stream=toxic1_stream,
     toxicity=toxic1_toxicity,
     attributes=toxic1_attributes)
