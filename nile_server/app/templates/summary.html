@@ -17,7 +17,7 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark special-color-dark">
     <!-- Navbar brand -->
-    <a class="navbar-brand text-uppercase" href="#">Loadtest Manager</a>
+    <a class="navbar-brand" href="#">Loadtest Manager</a>
 
     <ul class="navbar-nav mr-auto">
         <a class="dropdown-item text-light" href="http://localhost:5000/tests/">View Test List</a>
@@ -52,7 +52,7 @@
             <div class="box_section col-lg-8 mdb-color lighten-5 z-depth-2" style="width:90%;float:right">
                 <h5 class="text-uppercase text-center">Test Summary</h5>
                 <div class="row">
-                    <div class="box_section_inner border-bottom col-lg-5 text-dark">
+                    <div class="box_section_inner border-bottom col-lg-5 text-dark justify-content-center">
                         <div>
                             <h4 class="text-center border-bottom border-light">System Metrics</h4>
                             <div class="border-bottom border-light main-text">
@@ -61,26 +61,34 @@
                             </div>
                         </div>
                     </div>
-                    <div class="box_section_inner border-bottom col-lg-5 text-dark">
+                    <div class="box_section_inner border-bottom col-lg-5 text-dark  justify-content-center">
                         <div>
                             <h4 class="text-center border-bottom border-light">Requests</h4>
                             <div class="border-bottom border-light main-text">
                                 <div  class="dark-text">Number of Requests</div>
                                 <div id="req{{request.test_id}}" class="text-group">{{ num_req }}</div>
-                                <div class="dark-text">Average Response Time</div> 
-                                <div class="text-group border-bottom border-light ">{{ avg_res_time }}</div>
-                                <div class="dark-text">Average Response Length</div> 
-                                <div class="text-group border-bottom border-light ">{{ avg_res_length }}</div>
-                                <div class="dark-text">Average Request Length</div> 
-                                <div class="text-group border-bottom border-light ">{{ avg_req_length }}</div>
-                                <div class="dark-text">Number of Successful Requests</div> 
-                                <div class="text-group border-bottom border-light ">{{ num_success }}</div>
+                                <div class="dark-text">Number of Successes</div> 
+                                <div class="text-group">{{ num_success }}</div>
                                 <div class="dark-text">Number of Exceptions</div> 
                                 <div class="text-group border-bottom border-light ">{{ num_exception }}</div>
 
                                 <br/>
-                                <h5>Longest Request</h5> 
+                                <h5 class="border-bottom border-light">Response Times</h5> 
                                 <br/>
+
+                                <div class="dark-text">Average Response Time</div> 
+                                <div class="text-group">{{ avg_res_time }}</div>
+                                <div class="dark-text">90th percentile</div> 
+                                <div class="text-group">{{ percentile_90 }}</div>
+                                <div class="dark-text">95th percentile</div> 
+                                <div class="text-group">{{ percentile_95 }}</div>
+                                <div class="dark-text">99th percentile</div> 
+                                <div class="text-group border-bottom border-light ">{{ percentile_99 }}</div>
+
+                                <br/>
+                                <h5 class="border-bottom border-light">Longest Request</h5> 
+                                <br/>
+
                                 <div>
                                     <div  class="dark-text">Request ID</div>
                                     <div id="req{{request.test_id}}" class="text-group">{{ longest.id }}</div>

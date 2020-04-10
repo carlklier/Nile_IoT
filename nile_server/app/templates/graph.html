@@ -7,7 +7,7 @@
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark special-color-dark">
     <!-- Navbar brand -->
-    <a class="navbar-brand text-uppercase" href="#">Loadtest Manager</a>
+    <a class="navbar-brand" href="#">Loadtest Manager</a>
 
     <!-- NavBar Items -->
     <ul class="navbar-nav mr-auto">
@@ -23,12 +23,12 @@
     <div class="content p-3 mb-2 overflow-hidden">
         <h1>Visualize Test Results</h1>
     </div>
-    r
+    
     <div class="container">
         <div class="row">
             <div class="btn-group" role="group" aria-label="Results Option">
-                <button type="button" class="btn btn-primary" onclick="showLocustFunction()" style="max-height: 50px;">Locust Results</button>
-                <button type="button" class="btn btn-primary" onclick="showSystemMetricsFunction()" style="max-height: 50px;">System Metrics</button>
+                <button type="button" class="btn btn-primary" onclick="showRequests()" style="max-height: 50px;">Locust Results</button>
+                <button type="button" class="btn btn-primary" onclick="showMetrics()" style="max-height: 50px;">System Metrics</button>
             </div>
             <div class="col" style="margin-top:-2%">
                 <div class="row justify-content-center">
@@ -38,11 +38,11 @@
     
                     <div class="btn-pair timepicker-small">
                         <label class="list-text">From:</label>
-                        <input id="stampFilterFrom">
+                        <input id="stampFilterFrom" style="max-width: 100px">
                     </div>
                     <div class="btn-pair">
                         <label class="list-text">To:</label>
-                        <input id="stampFilterTo">
+                        <input id="stampFilterTo" style="max-width: 100px">
                     </div>
                 </div>
             </div>
@@ -56,14 +56,14 @@
                 <div class="row justify-content-center">
                     <label class="main-text">Find Tests:</label>
                 </div>
-                <div class="row justify-content-end">
-                    <label class="list-text" data-provide="datepicker">From:</label>
-                    <input data-date-format="mm/dd/yyyy" id="datepickerFrom" name="foo" class="date-pair">
+                <div class="row justify-content-center">
+                    <label class="list-text">From:</label>
+                    <input data-date-format="mm/dd/yyyy" id="datepickerFrom" name="foo" class="date-pair" style="max-width: 100px;">
                 </div>
 
-                <div class="row justify-content-end">
+                <div class="row justify-content-center">
                     <label class="list-text" >To:</label>
-                    <input data-date-format="mm/dd/yyyy" data-date-end-date="0d" id="datepickerTo" class="date-pair">
+                    <input data-date-format="mm/dd/yyyy" data-date-end-date="0d" id="datepickerTo" class="date-pair" style="max-width: 100px;margin-left: 9%;">
                 </div>
 
               <div class="row-5 pt-3">
@@ -99,7 +99,7 @@
     <script type="text/javascript">
 
         
-        // Get list of tests from Flask as JSON
+        // Get list of tests and requests from Flask as JSON
         var tests = {{ tests|tojson }};
         var requests = {{ requests|tojson }};
         var $listRows = $('.list-select'); 
@@ -108,7 +108,10 @@
         var $timestamps = []
         var ctx = document.getElementById('chart').getContext('2d');
 
-
+        /**
+        * When the window loads, display the chart from the
+        * most recent test data
+        */ 
         window.onload = function() {
             if (tests.length > 0) createChart(tests[0].id)
             document.getElementById(tests.length).click()
@@ -116,6 +119,9 @@
             filterTests()
         }
         
+        /**
+        * Initialize datepickers and re-filter tests when updated
+        */ 
         $('#datepickerFrom, #datepickerTo').datepicker({
             weekStart: 1,
             daysOfWeekHighlighted: "6,0",
@@ -128,6 +134,11 @@
         $('#datepickerFrom').datepicker("setDate", Date.parse(tests[0].start))
         $('#datepickerTo').datepicker("setDate", Date.parse(tests[tests.length-1].start))
 
+        /**
+        * Using datetimepicker, recreate chart on update
+        * by checking request timestamps against the new
+        * filter times
+        */ 
         $('#stampFilterFrom').datetimepicker({
             icons:
             {
@@ -137,13 +148,9 @@
             format: 'HH:mm:ss',
             defaultDate:moment(new Date()).hours(0).minutes(0).seconds(0).milliseconds(0)
         }).on("dp.change",function(e){
-            console.log(this.id)
-            var date = e.date;
-            
             if ($selectedTest) createChart($selectedTest.id)
             else createChart(tests[0].id, false)
         })
-
         $('#stampFilterTo').datetimepicker({
             icons:
             {
@@ -153,21 +160,17 @@
             format: 'HH:mm:ss',
             defaultDate:moment(new Date()).hours(23).minutes(59).seconds(59)
         }).on("dp.change",function(e){
-            console.log(e.date)
-            var date = e.date;
-            console.log($selectedTest)
             if ($selectedTest) createChart($selectedTest.id)
             else createChart(tests[0].id, false)
         })
 
+        /**
+        * Filter the tests displayed based on the date picker
+        */ 
         function filterTests() {
-            console.log(tests)
 
             var startDate = $('#datepickerFrom').datepicker('getDate')
             var endDate = $('#datepickerTo').datepicker('getDate')
-
-            console.log(startDate)
-            console.log(endDate)
 
             for(var i = 0; i < tests.length; i++) {
 
@@ -185,7 +188,8 @@
         }
 
         /**
-        * Highlight a selected a table row
+        * Highlight a selected a test in the table and update
+        * the chart
         */ 
         $('.list-select').click(function(e) {
             $listRows.removeClass('active')
@@ -194,10 +198,14 @@
             console.log($selectedTest)
 
             createChart(this.id, true)
-            
-
         });
 
+        /**
+        * Creates a new chart by destroying the previous
+        * chart and redrawing it with newly filtered values.
+        * Date-times compared are converted to just HH:mm:ss
+        * so only the time of day is compared.
+        */ 
         function createChart(id, newTest) {
 
             var $responseTimes = []
@@ -254,7 +262,6 @@
             console.log("start: " + startTime)
             console.log("end: " + endTime)
 
-
             for(var i = 0; i < requests.length; i++) {
 
                 var timestamp = moment(Date.parse(requests[i].request_timestamp)).format("HH:mm:ss")
@@ -274,6 +281,9 @@
             console.log("rt: " + $responseTimes)
             console.log("stamps: " + $timestamps)
 
+            // If a new test is being selected, update the
+            // start/end time to the earliest/latest timestamps in the
+            // current test
             if (newTest && $timestamps.length > 0) {
                 var start = moment(Date.parse($timestamps[0])).format("HH:mm:ss")
                 var end = moment(Date.parse($timestamps[$timestamps.length-1])).format("HH:mm:ss")
