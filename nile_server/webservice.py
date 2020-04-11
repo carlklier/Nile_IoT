@@ -98,6 +98,9 @@ def view_test_id(test_id):
     longest = None
     num_success = 0
     num_exception = 0
+    percentile_90 = 0
+    percentile_95 = 0
+    percentile_99 = 0
     response_times = []
 
     if len(requests) > 0:
@@ -124,9 +127,9 @@ def view_test_id(test_id):
 
         avg_response_time /= len(requests)
 
-    percentile_90 = np.percentile(response_times, 90)
-    percentile_95 = np.percentile(response_times, 95)
-    percentile_99 = np.percentile(response_times, 99)
+        percentile_90 = np.percentile(response_times, 90)
+        percentile_95 = np.percentile(response_times, 95)
+        percentile_99 = np.percentile(response_times, 99)
 
     metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
 

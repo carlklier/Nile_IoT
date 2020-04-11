@@ -40,7 +40,7 @@
 
     <ul class="navbar-nav mr-auto">
         <a class="dropdown-item text-light" href="http://localhost:5000/tests/">View Test List</a>
-        <a class="dropdown-item text-light" href="http://localhost:5000/graphs/">Visualize Test Results</a>
+        <a class="dropdown-item text-light" href="http://localhost:5000/graphs/?test={{ test.id }}">Visualize Test Results</a>
     </ul>
 </nav>
 <div class="p-3 mb-2 overflow-hidden">
@@ -72,7 +72,7 @@
                 <h5 class="text-uppercase text-center">Test Summary</h5>
                 <div class="row">
                     <div class="box_section_inner border-bottom col-lg-5 text-dark justify-content-center">
-                        <div>
+                        <div style="width:100%">
                             <h4 class="text-center border-bottom border-light">System Metrics</h4>
                             <div class="border-bottom border-light main-text">
                                 <div class="dark-text">Number of Metrics</div>
@@ -81,7 +81,7 @@
                         </div>
                     </div>
                     <div class="box_section_inner border-bottom col-lg-5 text-dark  justify-content-center">
-                        <div>
+                        <div style="width:100%">
                             <h4 class="text-center border-bottom border-light">Requests</h4>
                             <div class="border-bottom border-light main-text">
                                 <div  class="dark-text">Requests Made</div>
@@ -95,7 +95,7 @@
                                 <h5 class="border-bottom border-light">Response Times</h5> 
                                 <br/>
 
-                                <div class="dark-text">Average Response Time</div> 
+                                <div class="dark-text">Average</div> 
                                 <div class="text-group">{{ avg_res_time }}</div>
                                 <div class="dark-text">90th percentile</div> 
                                 <div class="text-group">{{ percentile_90 }}</div>
