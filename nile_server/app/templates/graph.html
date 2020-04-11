@@ -24,7 +24,7 @@
         <h1>Visualize Test Results</h1>
     </div>
     
-    <div class="container">
+    <div class="container" style="position: static;">
         <div class="row">
             <div class="btn-group" role="group" aria-label="Results Option">
                 <button type="button" class="btn btn-primary" onclick="showRequests()" style="max-height: 50px;">Locust Results</button>
@@ -113,8 +113,20 @@
         * most recent test data
         */ 
         window.onload = function() {
-            if (tests.length > 0) createChart(tests[0].id)
-            document.getElementById(tests.length).click()
+            if (tests.length <= 0) return 0
+
+            var query = window.location.search.substring(1)
+
+            // If user selected a test to visualize, load chart
+            // with that id. Otherwise, grab the most recent test
+            // available
+            if (query) {
+                var id = query.split("=")[1];
+                console.log("id: " + (tests.length - parseInt(id)))
+                document.getElementById(parseInt(id)).click()
+            } else {
+                document.getElementById(tests[0].id).click()
+            }
 
             filterTests()
         }

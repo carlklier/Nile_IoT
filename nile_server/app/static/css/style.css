@@ -135,6 +135,10 @@ table {
     margin-right:2%
 }
 
+.list-grp {
+    float: left;
+}
+
 .chart {
     margin-left: 10%;
 }

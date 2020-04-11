@@ -215,7 +215,7 @@ def tests():
         start=test_start,
         workers=test_workers
     )
-    
+
     try:
         db.session.add(new_test)
         db.session.commit()
