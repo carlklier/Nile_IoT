@@ -6,12 +6,31 @@
 {% block body %}
 <script type="text/javascript">
     $(document).ready(function() {
+
+        var test = {{ test|tojson }};
+
         /**
         * Function called when user wants to delete a test
         */
         $('#delete').click(function(e) {
-            window.alert("Delete not implemented yet")
-        });
+            if (confirm("Are you sure you want to delete this test?")) {
+                const request = new XMLHttpRequest();
+                const url='http://localhost:5000/api/v1/delete/' + test.id;
+                request.open("POST", url);
+                request.send();
+
+                confirmed = false
+                request.onreadystatechange = (e) => {
+                    if (!confirmed && request.responseText) {
+                        window.alert(request.responseText)
+                        confirmed = true
+                        window.open("http://localhost:5000/tests/", "_self")
+                    }
+                }
+
+            } 
+            
+        })
     })
 </script>
 
@@ -65,9 +84,9 @@
                         <div>
                             <h4 class="text-center border-bottom border-light">Requests</h4>
                             <div class="border-bottom border-light main-text">
-                                <div  class="dark-text">Number of Requests</div>
+                                <div  class="dark-text">Requests Made</div>
                                 <div id="req{{request.test_id}}" class="text-group">{{ num_req }}</div>
-                                <div class="dark-text">Number of Successes</div> 
+                                <div class="dark-text">Successful Requests</div> 
                                 <div class="text-group">{{ num_success }}</div>
                                 <div class="dark-text">Number of Exceptions</div> 
                                 <div class="text-group border-bottom border-light ">{{ num_exception }}</div>

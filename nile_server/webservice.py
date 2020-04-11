@@ -389,6 +389,26 @@ def finalize_test():
             mimetype='application/json'
             )
 
+@app.route('/api/v1/delete/<test_id>', methods=['POST'])
+def delete_test(test_id):
+    """
+    Delete a test with the given ID. Also searches for
+    all relevant requests and metrics to delete as well.
+    """
+
+    try:
+        Test.query.filter(Test.id == test_id).delete()
+        Request.query.filter(Request.test_id == test_id).all()
+        SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
+        db.session.commit()
+        return f"Deleted test and data with ID: {test_id}\n"
+    except Exception as e:
+        return Response(
+            f"Failed to delete test with exception: {e}",
+            status=400,
+            mimetype='application/json'
+            )
+
 
 #########################
 # GET Request Endpoints ID Section #

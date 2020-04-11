@@ -186,15 +186,16 @@
 
             for(var i = 0; i < tests.length; i++) {
 
+                id = tests[i].id
                 start = Date.parse(tests[i].start)
                 if (tests[i].end != null) end = Date.parse(tests[i].end).toLocaleString()
                 else end = "Not Complete"
 
-                document.getElementById((i + 1) + '-end').innerHTML = end;
+                document.getElementById(id + '-end').innerHTML = end;
                 if (start >= startDate && start <= endDate) {
-                    document.getElementById((i + 1)).style.display = '';
+                    document.getElementById(id).style.display = '';
                 } else {
-                    document.getElementById((i + 1)).style.display = 'none';
+                    document.getElementById(id).style.display = 'none';
                 }
             }
         }
