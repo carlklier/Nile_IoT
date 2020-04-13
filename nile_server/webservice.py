@@ -256,10 +256,9 @@ def requests():
             requests[0]['request_timestamp'],
             "%Y-%m-%dT%H:%M:%S.%f"
             )
-        
 
         if CURRENT_TEST is None:
-            if time_sent < PREV_TEST.start and time_sent > PREV_TEST.end:
+            if time_sent < PREV_TEST.start or time_sent > PREV_TEST.end:
                 return Response(
                     "Can't submit request while no tests running.",
                     status=400,
@@ -331,10 +330,10 @@ def metrics():
     metric_value = data['metric_value']
 
     new_metric = SystemMetric(
-        test_id=CURRENT_TEST,
+        test_id=CURRENT_TEST.id,
         system_name=system_name,
         metric_name=metric_name,
-        metric_timestamp=metric_timestamp, 
+        metric_timestamp=metric_timestamp,
         metric_value=metric_value
         )
 
@@ -392,6 +391,7 @@ def finalize_test():
             mimetype='application/json'
             )
 
+
 @app.route('/api/v1/delete/<test_id>', methods=['POST'])
 def delete_test(test_id):
     """
@@ -401,8 +401,15 @@ def delete_test(test_id):
 
     try:
         Test.query.filter(Test.id == test_id).delete()
-        Request.query.filter(Request.test_id == test_id).all()
-        SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
+        reqs = Request.query.filter(Request.test_id == test_id).all()
+        mets = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
+
+        for req in reqs:
+            Request.query.filter(Request.id == req.id).delete()
+
+        for met in mets:
+            SystemMetric.query.filter(SystemMetric.id == met.id).delete()
+
         db.session.commit()
         return f"Deleted test and data with ID: {test_id}\n"
     except Exception as e:
