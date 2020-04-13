@@ -61,11 +61,11 @@ class TestEndpoint(unittest.TestCase):
         )
         return app
 
-#    def setUp(self):
-#        db.create_all()
+    def setUp(self):
+        db.create_all()
 
-#    def tearDown(self):
-        #db.session.remove()
+    def tearDown(self):
+        db.session.remove()
 
     #########################
     # Test POST section #
@@ -77,11 +77,10 @@ class TestEndpoint(unittest.TestCase):
         Test adding requests, metrics and test end time when no test running,
         expected to fail
          """
-   
+
+        test_finalize()
         reset_db()
-        add_test()
         # In case a previous test is still open for some reason
-        #test_finalize()
 
         self.assertEqual(Test.query.count(), 0)
         self.assertEqual(Request.query.count(), 0)
@@ -92,14 +91,14 @@ class TestEndpoint(unittest.TestCase):
             request.text,
             "Can't submit request while no tests running."
             )
-        self.assertEqual(request.status, 400)
+        self.assertEqual(request.status_code, 400)
 
         request = add_metric()
         self.assertEqual(
             request.text,
             "Can't submit metric while no tests running."
             )
-        self.assertEqual(request.status, 400)
+        self.assertEqual(request.status_code, 400)
 
         request = test_finalize()
         self.assertEqual(
@@ -116,9 +115,9 @@ class TestEndpoint(unittest.TestCase):
         request = add_test()
 
         self.assertEqual(Test.query.count(), count + 1)
-        self.assertEqual(
-            request.text,
-            'Added test with ID: ' + str(count + 1) + '\n'
+        self.assertIn(
+            'Added test with ID:',
+            request.text
             )
 
     def test_2_post_request(self):
@@ -129,10 +128,10 @@ class TestEndpoint(unittest.TestCase):
 
         request = add_request(5)
         time.sleep(4)
-        self.assertEqual(Request.query.count(), count + 1)
-        self.assertEqual(
-            request.text,
-            'Added request with ID: ' + str(count + 1) + '\n'
+        self.assertEqual(Request.query.count(), count + 5)
+        self.assertIn(
+            'Added request with ID: ',
+            request.text
             )
 
     def test_3_post_metric(self):
@@ -143,9 +142,9 @@ class TestEndpoint(unittest.TestCase):
 
         request = add_metric()
 
-        self.assertEqual(
-            request.text,
-            'Added metric with ID: ' + str(count + 1) + '\n'
+        self.assertIn(
+            'Added metric with ID:',
+            request.text
             )
         self.assertEqual(SystemMetric.query.count(), count + 1)
 
@@ -163,6 +162,7 @@ class TestEndpoint(unittest.TestCase):
         test_end = now()
 
         request = test_finalize(test_end)
+        self.assertIn("Finalized test with ID:", request.text)
 
         self.assertEqual(
             db.session.query(Test)
@@ -170,12 +170,20 @@ class TestEndpoint(unittest.TestCase):
             test_end
             )
 
-        count = Request.query.count()
-        request = add_request(req_time)
+        request = add_request(1, req_time)
+        self.assertIn(
+            'Added request with ID: ',
+            request.text
+            )
+
+        # If request doesn't fall within the Test time period,
+        # it cannot be added
+        request = add_request(1)
         self.assertEqual(
             request.text,
-            'Added request with ID: ' + str(count + 1) + '\n'
+            "Can't submit request while no tests running."
             )
+        self.assertEqual(request.status_code, 400)
 
     def test_5_post_invalid(self):
 
@@ -184,57 +192,89 @@ class TestEndpoint(unittest.TestCase):
         print("POST invalid")
 
         # Add invalid test
-        endpoint = test_endpoint
-        data = {
-            'config': (test_config),
-            'start': '5:35 PM',
-            'workers': num_workers
-            }
-        request = requests.post(endpoint, json=data)
-        self.assertEqual(request.text, 'Failed to add test.')
+        request = add_test('5:35 PM')
+        self.assertEqual(request.status_code, 500)
 
         # Add valid test to test invalid metrics and requests
-        count = Test.query.count()
-        data = {
-            'config': (test_config + str(count)),
-            'start': now(),
-            'workers': num_workers
-            }
-
-        print("test POST", data)
-
-        request = requests.post(endpoint, json=data)
+        request = add_test()
+        self.assertEqual(request.status_code, 200)
 
         # Attempt to add test while a test is running
-        request = requests.post(endpoint, json=data)
+        request = add_test()
         self.assertEqual(request.text, 'Can only run one test at a time.')
 
         request = add_metric('5 o clock')
-        self.assertEqual(request.text, 'Failed to add metric.')
+        self.assertEqual(request.status_code, 400)
 
-        request = add_request('Tea time')
-        self.assertEqual(request.text, 'Failed to add request.')
+        request = add_request(1, 'Tea time')
+        self.assertEqual(request.status_code, 500)
 
         # Fail to finalize test
         request = test_finalize('Late at night')
-
-        self.assertEqual(request.text, 'Failed to finalize test.')
+        self.assertEqual(request.status_code, 500)
 
         # Finalize test
-        test_finalize()
+        request = test_finalize()
+        self.assertIn("Finalized test with ID:", request.text)
 
         # Fail to add request and metric after test is finished
-        request = add_request()
-        self.assertEqual(request.text, 'Failed to add request.')
+        request = add_request(1)
+        self.assertIn(
+            "Can't submit request while no tests running.",
+            request.text
+            )
 
         request = add_metric()
-        self.assertEqual(request.text, 'Failed to add metric.')
+        self.assertIn(
+            "Can't submit metric while no tests running.",
+            request.text
+            )
+
+    def test_6_delete(self):
+
+        """ Test adding a test with test data and deleting all of it """
+
+        request = add_test()
+        self.assertEqual(request.status_code, 200)
+
+        request = add_request(5)
+        self.assertEqual(request.status_code, 200)
+
+        request = add_metric()
+        self.assertEqual(request.status_code, 200)
+
+        request = test_finalize()
+        self.assertEqual(request.status_code, 200)
+
+        test_count = Test.query.count()
+        req_count = Request.query.count()
+        met_count = SystemMetric .query.count()
+
+        id = db.session.query(
+            Test
+            ).order_by(
+                Test.id.desc()
+                ).first().id
+
+        endpoint = f'{api}/delete/{id}'
+        request = requests.post(endpoint)
+
+        self.assertEqual(
+            request.text,
+            f"Deleted test and data with ID: {id}\n"
+            )
+        self.assertEqual(request.status_code, 200)
+
+        self.assertEqual(Test.query.count(), test_count - 1)
+        self.assertEqual(Request.query.count(), req_count - 5)
+        self.assertEqual(SystemMetric.query.count(), met_count - 1)
+
 
     #########################
     # Test GET section #
     #########################
 
-    def test_6_get_all(self):
+    def test_7_get_all(self):
 
         """ Test getting a list of all test, request and metrics """
 
@@ -255,7 +295,7 @@ class TestEndpoint(unittest.TestCase):
 
         self.assertEqual(len(metrics), SystemMetric.query.count())
 
-    def test_7_get_request_id(self):
+    def test_8_get_request_id(self):
 
         """ Test receiving requests by id """
 
@@ -269,26 +309,26 @@ class TestEndpoint(unittest.TestCase):
                 Request.id.desc()
                 ).first().id
 
-        endpoint = req_endpoint + str(request_id)
+        endpoint = req_endpoint + '/' + str(request_id)
         request = json.loads(requests.get(endpoint).content)
-        print("get request by id: " + str(request))
+        print("get request by id: {request_id} - " + str(request))
 
         # Check fields match what is expected
 
         self.assertEqual(request['name'], req_name)
         self.assertEqual(request['request_method'], req_method)
-        self.assertEqual(request['response_type'], res_type)
+        self.assertEqual(request['request_length'], req_length)
         self.assertEqual(request['response_length'], res_length)
         self.assertEqual(request['response_time'], res_time)
         self.assertEqual(request['status_code'], status)
         self.assertEqual(request['success'], success)
         self.assertEqual(request['exception'], None)
 
-    def test_8_get_metric_id(self):
-     
+    def test_9_get_metric_id(self):
+
         """ Test receiving metrics by id """
 
-        print("GET metric ID")
+        print("GET metric ID ", SystemMetric.query.count())
 
         metric_id = db.session.query(
             SystemMetric
@@ -296,7 +336,7 @@ class TestEndpoint(unittest.TestCase):
                 SystemMetric.id.desc()
                 ).first().id
 
-        endpoint = met_endpoint + str(metric_id)
+        endpoint = f'{met_endpoint}/{str(metric_id)}'
         request = json.loads(requests.get(endpoint).content)
         print("get request by id: " + str(request))
 
@@ -304,14 +344,14 @@ class TestEndpoint(unittest.TestCase):
         self.assertEqual(request['metric_name'], met_name)
         self.assertEqual(request['metric_value'], met_val)
 
-    def test_9_get_test_id(self):
+    def test_91_get_test_id(self):
 
         """ Test tests requests by id """
 
-        print("GET test ID")
+        print("GET test ID ", Test.query.count())
         test_id = db.session.query(Test).order_by(Test.id.desc()).first().id
 
-        endpoint = test_endpoint + str(test_id)
+        endpoint = f'{test_endpoint}/{str(test_id)}'
         request = json.loads(requests.get(endpoint).content)
         print("get request by id: " + str(request))
 
@@ -353,7 +393,7 @@ def add_request(count=1, time=None):
         * count - can add any number of requests at once
         * time - can specify a timestamp for request being added
     """
-    
+
     request_list = []
     endpoint = req_endpoint
 
@@ -369,7 +409,7 @@ def add_request(count=1, time=None):
             'success': success,
             'exception': None
         }
-        
+
         request_list.append(data)
         count -= 1
 
@@ -392,7 +432,7 @@ def add_metric(time=None):
         'system_name': sys_name,
         'metric_name': met_name,
         'metric_timestamp':  time if time else now(),
-        'metric_value': "One hundred million dollars",
+        'metric_value': met_val,
     }
     return requests.post(endpoint, json=data)
 
@@ -414,7 +454,7 @@ def test_finalize(time=None):
 
     print("test finalize ", data)
     return requests.post(endpoint, json=data)
- 
+
 
 def now():
 
@@ -422,18 +462,26 @@ def now():
 
     return datetime.datetime.now().isoformat()
 
+
 def reset_db():
-  
-  """ Clears the database for the next test"""
 
-  meta = db.metadata
-  for table in reversed(meta.sorted_tables):
-    print(f'Clearing table {table}')
-    db.session.execute(table.delete())
-    print(f'Cleared table {table}')
+    """ Clears the database for the next test"""
 
-  db.session.commit()
-  
+    print(f'Tests: {Test.query.count()}')
+    print(f'Requests: {Request.query.count()}')
+    print(f'Metrics: {SystemMetric.query.count()}')
+
+    meta = db.metadata
+    for table in reversed(meta.sorted_tables):
+        print(f'Clearing table {table}')
+        db.session.execute(table.delete())
+        print(f'Cleared table {table}')
+
+    db.session.commit()
+
+    print(f'Tests: {Test.query.count()}')
+    print(f'Requests: {Request.query.count()}')
+    print(f'Metrics: {SystemMetric.query.count()}')
 
 if __name__ == '__main__':
     unittest.main()

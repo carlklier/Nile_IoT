@@ -94,7 +94,7 @@ class SystemMetric(db.Model):
             'id': self.id,
             'test_id': self.test_id,
             'system_name': self.system_name,
-            'metric_name': self.metric_type,
+            'metric_name': self.metric_name,
             'metric_timestamp': self.metric_timestamp,
             'metric_value': self.metric_value
         }
