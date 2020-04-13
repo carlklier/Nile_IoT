@@ -15,49 +15,62 @@ def test_init_valid_args():
     assert len(buf.data) == 0
 
 
+def test_write_multiple_preserves_order():
+    buf1 = Buffer()
+    buf1.write(["1"])
+    buf1.write(["2"])
+    buf1.write(["3"])
+
+    buf2 = Buffer()
+    buf2.write(["1", "2", "3"])
+
+    assert list(buf1.data) == ["1", "2", "3"]
+    assert list(buf2.data) == ["1", "2", "3"]
+
+
 def test_FIFO_read():
     buf = Buffer()
-    buf.data.extend(["1", "2", "3"])
+    buf.write(["1", "2", "3"])
     assert len(buf.data) == 3
 
-    assert list(buf.read()) == ["1"]
-    assert list(buf.read()) == ["2"]
-    assert list(buf.read()) == ["3"]
+    assert buf.read() == ["1"]
+    assert buf.read() == ["2"]
+    assert buf.read() == ["3"]
     assert len(buf.data) == 0
 
 
 def test_FIFO_read_multiple():
     buf = Buffer()
-    buf.data.extend(["1", "2", "3"])
+    buf.write(["1", "2", "3"])
     assert len(buf.data) == 3
 
-    assert list(buf.read(3)) == ["1", "2", "3"]
+    assert buf.read(3) == ["1", "2", "3"]
     assert len(buf.data) == 0
 
 
 def test_LIFO_read():
     buf = Buffer(yield_next="newest")
-    buf.data.extend(["1", "2", "3"])
+    buf.write(["1", "2", "3"])
     assert len(buf.data) == 3
 
-    assert list(buf.read()) == ["3"]
-    assert list(buf.read()) == ["2"]
-    assert list(buf.read()) == ["1"]
+    assert buf.read() == ["3"]
+    assert buf.read() == ["2"]
+    assert buf.read() == ["1"]
     assert len(buf.data) == 0
 
 
 def test_LIFO_read_multiple():
     buf = Buffer(yield_next="newest")
-    buf.data.extend(["1", "2", "3"])
+    buf.write(["1", "2", "3"])
     assert len(buf.data) == 3
 
-    assert list(buf.read(3)) == ["3", "2", "1"]
+    assert buf.read(3) == ["3", "2", "1"]
     assert len(buf.data) == 0
 
 
 def test_read_empty():
     buf = Buffer()
-    assert list(buf.read()) == []
+    assert buf.read() == []
     assert len(buf.data) == 0
 
 

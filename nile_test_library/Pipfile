@@ -6,11 +6,13 @@ verify_ssl = true
 [dev-packages]
 pytest="*"
 pytest-cov="*"
+pytest-mock="*"
 
 [packages]
 locustio = "*"
 coverage = "*"
 python-interface = "*"
+numpy = "*"
 
 [requires]
 python_version = "3.7"

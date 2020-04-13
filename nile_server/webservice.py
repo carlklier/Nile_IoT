@@ -12,6 +12,8 @@ from app.models import Test, Request, SystemMetric, TestSchema, RequestSchema, S
 from flask import Flask, jsonify, render_template, url_for, request, redirect, Response
 from livereload import Server
 
+import numpy as np
+
 
 #########################
 # Initialize Current Test #
@@ -93,20 +95,18 @@ def view_test_id(test_id):
 
     # Summary statistics
     avg_response_time = 0
-    avg_request_length = 0
-    avg_response_length = 0
     longest = None
     num_success = 0
     num_exception = 0
+    percentile_90 = 0
+    percentile_95 = 0
+    percentile_99 = 0
+    response_times = []
 
     if len(requests) > 0:
         longest = requests[0]
 
         for req in requests:
-            if req.response_length:
-                avg_response_length += req.response_length
-            if req.request_length:
-                avg_request_length += req.request_length
             if req.response_time:
                 avg_response_time += req.response_time
                 greater = longest.response_time > req.response_time
@@ -114,7 +114,7 @@ def view_test_id(test_id):
 
             if req.success is True:
                 num_success += 1
-            
+
             if req.exception is not None:
                 num_exception += 1
 
@@ -123,10 +123,13 @@ def view_test_id(test_id):
             request_schema = RequestSchema()
             request_json = request_schema.dump(req)
             request_json['request_timestamp'] = req_date
+            response_times.append(req.response_time)
 
         avg_response_time /= len(requests)
-        avg_response_length /= len(requests)
-        avg_request_length /= len(requests)
+
+        percentile_90 = np.percentile(response_times, 90)
+        percentile_95 = np.percentile(response_times, 95)
+        percentile_99 = np.percentile(response_times, 99)
 
     metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
 
@@ -139,17 +142,47 @@ def view_test_id(test_id):
         num_success=num_success,
         num_exception=num_exception,
         avg_res_time=avg_response_time,
-        avg_res_length=avg_response_time,
-        avg_req_length=avg_request_length
+        percentile_90=percentile_90,
+        percentile_95=percentile_95,
+        percentile_99=percentile_99
         )
 
 
 @app.route("/graphs/")
 def view_graphs():
-    tests = Test.query.all()
+    tests = db.session.query(Test).order_by(Test.id.desc()).all()
+    output = []
+
+    # TODO: Create Test/Requests dict pair to send to frontend
+    # to avoid heavy sorting for each visualization
+
+    # Convert tests to JSON and make datetimes readable
+    if len(tests) > 0:
+        for test in tests:
+            test_schema = TestSchema()
+            test_json = test_schema.dump(test)
+            test_json['start'] = test.start.strftime('%Y-%m-%dT%H:%M:%SZ')
+            if test.end is not None:
+                test_json['end'] = test.end.strftime('%Y-%m-%dT%H:%M:%SZ')
+            output.append(test_json)
+
+    requests = Request.query.all()
+    req_json = []
+
+    if len(requests) > 0:
+        for req in requests:
+
+            req_date = req.request_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+            request_schema = RequestSchema()
+            request_json = request_schema.dump(req)
+            request_json['request_timestamp'] = req_date
+            req_json.append(request_json)
+
     return render_template(
         'graph.html',
-        tests=tests
+        tests=output,
+        requests=req_json
         )
 
 
@@ -175,7 +208,10 @@ def tests():
 
     data = request.get_json()
     test_config = data['config']
-    test_start = data['start']
+    test_start = datetime.strptime(
+            data['start'],
+            "%Y-%m-%dT%H:%M:%S.%f"
+            )
     test_workers = data['workers']
     new_test = Test(
         config=test_config,
@@ -209,6 +245,7 @@ def requests():
     global PREV_TEST
 
     requests = request.get_json()
+    time_sent = ""
 
     test_id = CURRENT_TEST.id if CURRENT_TEST else PREV_TEST.id
 
@@ -219,6 +256,7 @@ def requests():
             requests[0]['request_timestamp'],
             "%Y-%m-%dT%H:%M:%S.%f"
             )
+        
 
         if CURRENT_TEST is None:
             if time_sent < PREV_TEST.start and time_sent > PREV_TEST.end:
@@ -317,7 +355,8 @@ def finalize_test():
     """
     Route to add an end time to the currently running test
     and set the current test as none and previous test as this
-    one.
+    one. Must also make sure to use the database session the 
+    test was started with.
     """
 
     global CURRENT_TEST
@@ -331,18 +370,44 @@ def finalize_test():
             )
 
     data = request.get_json()
-    CURRENT_TEST.end = data['end']
+    CURRENT_TEST.end = datetime.strptime(
+            data['end'],
+            "%Y-%m-%dT%H:%M:%S.%f"
+            )
 
     PREV_TEST = CURRENT_TEST
     CURRENT_TEST = None
 
     try:
-        db.session.add(PREV_TEST)
-        db.session.commit()
+        test_session = db.object_session(PREV_TEST)
+        if test_session is None:
+            test_session = db.session
+        test_session.add(PREV_TEST)
+        test_session.commit()
         return f"Finalized test with ID: {PREV_TEST.id}\n"
     except Exception as e:
         return Response(
             f"Failed to finalize with exception: {e}",
+            status=400,
+            mimetype='application/json'
+            )
+
+@app.route('/api/v1/delete/<test_id>', methods=['POST'])
+def delete_test(test_id):
+    """
+    Delete a test with the given ID. Also searches for
+    all relevant requests and metrics to delete as well.
+    """
+
+    try:
+        Test.query.filter(Test.id == test_id).delete()
+        Request.query.filter(Request.test_id == test_id).all()
+        SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
+        db.session.commit()
+        return f"Deleted test and data with ID: {test_id}\n"
+    except Exception as e:
+        return Response(
+            f"Failed to delete test with exception: {e}",
             status=400,
             mimetype='application/json'
             )
