@@ -483,5 +483,6 @@ def reset_db():
     print(f'Requests: {Request.query.count()}')
     print(f'Metrics: {SystemMetric.query.count()}')
 
+
 if __name__ == '__main__':
     unittest.main()

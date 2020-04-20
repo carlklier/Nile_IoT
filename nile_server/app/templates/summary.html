@@ -93,16 +93,33 @@
 
                                 <br/>
                                 <h5 class="border-bottom border-light">Response Times</h5> 
-                                <br/>
 
-                                <div class="dark-text">Average</div> 
-                                <div class="text-group">{{ avg_res_time }}</div>
-                                <div class="dark-text">90th percentile</div> 
-                                <div class="text-group">{{ percentile_90 }}</div>
-                                <div class="dark-text">95th percentile</div> 
-                                <div class="text-group">{{ percentile_95 }}</div>
-                                <div class="dark-text">99th percentile</div> 
-                                <div class="text-group border-bottom border-light ">{{ percentile_99 }}</div>
+                                <table class="table table-sm table-striped table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th colspan="2"></th>
+                                            <td colspan="4" class="dark-text">Percentiles</td>
+                                        </tr>
+                                    </thead>
+                                    <thead>
+                                        <tr>
+                                            <th scope="col" class="dark-text">Mean</th>
+                                            <th scope="col" class="dark-text">Median</th>
+                                            <th scope="col">90</th>
+                                            <th scope="col">95</th>
+                                            <th scope="col">99</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table">
+                                        <th scope="row">{{ mean }}</th>
+                                        <td class="main-text">{{ median }}</td>
+                                        <td class="main-text">{{ percentile_90 }}</td>
+                                        <td class="main-text">{{ percentile_95 }}</td>
+                                        <td class="main-text">{{ percentile_99 }}</td>
+                                     </tbody>
+                                </table>
+
+                                <div class="border-bottom border-light"></div>
 
                                 <br/>
                                 <h5 class="border-bottom border-light">Longest Request</h5> 

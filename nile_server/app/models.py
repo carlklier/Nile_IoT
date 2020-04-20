@@ -6,6 +6,7 @@ class Test(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     config = db.Column(db.String())
+    locustfile = db.Column(db.String())
     start = db.Column(db.TIMESTAMP)
     end = db.Column(db.TIMESTAMP)
     workers = db.Column(db.Integer)
@@ -20,6 +21,7 @@ class Test(db.Model):
         return {
             'id': self.id,
             'config': self.config,
+            'locustfile': self.locustfile,
             'start': self.start,
             'end': self.end,
             'workers': self.workers

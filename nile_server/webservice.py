@@ -12,9 +12,6 @@ from app.models import Test, Request, SystemMetric, TestSchema, RequestSchema, S
 from flask import Flask, jsonify, render_template, url_for, request, redirect, Response
 from livereload import Server
 
-import numpy as np
-
-
 #########################
 # Initialize Current Test #
 #########################
@@ -94,10 +91,11 @@ def view_test_id(test_id):
     requests = Request.query.filter(Request.test_id == test_id).all()
 
     # Summary statistics
-    avg_response_time = 0
     longest = None
     num_success = 0
     num_exception = 0
+    mean_response = 0
+    median_response = 0
     percentile_90 = 0
     percentile_95 = 0
     percentile_99 = 0
@@ -108,7 +106,7 @@ def view_test_id(test_id):
 
         for req in requests:
             if req.response_time:
-                avg_response_time += req.response_time
+                mean_response += req.response_time
                 greater = longest.response_time > req.response_time
                 longest = longest if greater else req
 
@@ -125,11 +123,26 @@ def view_test_id(test_id):
             request_json['request_timestamp'] = req_date
             response_times.append(req.response_time)
 
-        avg_response_time /= len(requests)
+        mean_response /= len(requests)
+        mean_response = '{0:3.1f}'.format(mean_response)
 
-        percentile_90 = np.percentile(response_times, 90)
-        percentile_95 = np.percentile(response_times, 95)
-        percentile_99 = np.percentile(response_times, 99)
+        percentiles = list(db.session.execute(
+            'select ' +
+            'percentile_cont(0.50) within ' +
+            'group (order by response_time), ' +
+            'percentile_cont(0.90) within ' +
+            'group (order by response_time), ' +
+            'percentile_cont(0.95) within ' +
+            'group (order by response_time), ' +
+            'percentile_cont(0.99) within ' +
+            'group (order by response_time) ' +
+            'from loadtest_requests'
+        ).fetchone())
+        median_response = percentiles[0]
+        percentile_90 = percentiles[1]
+        percentile_95 = percentiles[2]
+        percentile_99 = percentiles[3]
+        print('percentile: ', percentile_99)
 
     metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
 
@@ -141,7 +154,8 @@ def view_test_id(test_id):
         longest=longest,
         num_success=num_success,
         num_exception=num_exception,
-        avg_res_time=avg_response_time,
+        mean=mean_response,
+        median=median_response,
         percentile_90=percentile_90,
         percentile_95=percentile_95,
         percentile_99=percentile_99
@@ -208,6 +222,7 @@ def tests():
 
     data = request.get_json()
     test_config = data['config']
+    locustfile = data['locustfile']
     test_start = datetime.strptime(
             data['start'],
             "%Y-%m-%dT%H:%M:%S.%f"
@@ -215,6 +230,7 @@ def tests():
     test_workers = data['workers']
     new_test = Test(
         config=test_config,
+        locustfile=locustfile,
         start=test_start,
         workers=test_workers
     )
