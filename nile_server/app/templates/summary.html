@@ -31,6 +31,10 @@
             } 
             
         })
+
+        $('#view').click(function(e) {
+            window.open("http://localhost:5000/graphs/?test={{ test.id }}", "_self")
+        })
     })
 </script>
 
@@ -40,7 +44,7 @@
 
     <ul class="navbar-nav mr-auto">
         <a class="dropdown-item text-light" href="http://localhost:5000/tests/">View Test List</a>
-        <a class="dropdown-item text-light" href="http://localhost:5000/graphs/?test={{ test.id }}">Visualize Test Results</a>
+        <a class="dropdown-item text-light" href="http://localhost:5000/graphs/">Visualize Tests</a>
     </ul>
 </nav>
 <div class="p-3 mb-2 overflow-hidden">
@@ -49,11 +53,13 @@
         
         <div class="container">
         <div class="row">
-            <div class="box_section col-lg-3 dark-text z-depth-2" style="width:90%;max-height:470px">
+            <div class="box_section col-lg-3 dark-text z-depth-2" style="width:90%;max-height:610px">
                 <h5 class="text-uppercase text-center">Test Configuration</h5>
                 <div class="main-text box_section">
                     <div class="dark-text">Test ID</div>
                     <div class="text-group">{{ test.id }}</div>
+                    <div class="dark-text">Test File</div> 
+                    <div class="text-group">{{ test.locustfile }}</div>
                     <div class="dark-text">Configuration</div> 
                     <div class="text-group">{{ test.config }}</div>
                     <div class="dark-text">Start Time</div>
@@ -65,7 +71,17 @@
                     <br/>
                     <div class="border-bottom border-light"></div>
                     <br/>
-                    <button id="delete" type="button" class="btn-bottom btn-danger text-uppercase z-depth-2 delete">Delete Test</button>
+                    <div >
+                        <button id="view" type="button" class="btn-bottom icon-btn btn-primary text-uppercase delete z-depth-1">
+                            <i class="fa fa-line-chart"></i>
+                        </button>
+                    </div>
+                    <br/>
+                    <div class="border-bottom border-light"></div>
+                    <br/>
+                    <button id="delete" type="button" class="btn-bottom icon-btn btn-danger text-uppercase delete z-depth-1">
+                        <i class="fa fa-trash"></i>
+                    </button>
                 </div>
             </div>
             <div class="box_section col-lg-8 mdb-color lighten-5 z-depth-2" style="width:90%;float:right">
@@ -88,36 +104,38 @@
                                 <div id="req{{request.test_id}}" class="text-group">{{ num_req }}</div>
                                 <div class="dark-text">Successful Requests</div> 
                                 <div class="text-group">{{ num_success }}</div>
-                                <div class="dark-text">Number of Exceptions</div> 
+                                <div class="dark-text">Exceptions Thrown</div> 
                                 <div class="text-group border-bottom border-light ">{{ num_exception }}</div>
 
                                 <br/>
                                 <h5 class="border-bottom border-light">Response Times</h5> 
 
-                                <table class="table table-sm table-striped table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th colspan="2"></th>
-                                            <td colspan="4" class="dark-text">Percentiles</td>
-                                        </tr>
-                                    </thead>
-                                    <thead>
-                                        <tr>
-                                            <th scope="col" class="dark-text">Mean</th>
-                                            <th scope="col" class="dark-text">Median</th>
-                                            <th scope="col">90</th>
-                                            <th scope="col">95</th>
-                                            <th scope="col">99</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="table">
-                                        <th scope="row">{{ mean }}</th>
-                                        <td class="main-text">{{ median }}</td>
-                                        <td class="main-text">{{ percentile_90 }}</td>
-                                        <td class="main-text">{{ percentile_95 }}</td>
-                                        <td class="main-text">{{ percentile_99 }}</td>
-                                     </tbody>
-                                </table>
+                                <div style="margin-left: -2%;">
+                                    <table class="table table-sm table-striped table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th colspan="2"></th>
+                                                <td colspan="4" class="dark-text">Percentiles</td>
+                                            </tr>
+                                        </thead>
+                                        <thead>
+                                            <tr>
+                                                <th scope="col" class="dark-text">Mean</th>
+                                                <th scope="col" class="dark-text">Median</th>
+                                                <th scope="col">90</th>
+                                                <th scope="col">95</th>
+                                                <th scope="col">99</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="table">
+                                            <th scope="row">{{ mean }}</th>
+                                            <td class="main-text">{{ median }}</td>
+                                            <td class="main-text">{{ percentile_90 }}</td>
+                                            <td class="main-text">{{ percentile_95 }}</td>
+                                            <td class="main-text">{{ percentile_99 }}</td>
+                                        </tbody>
+                                    </table>
+                            </div>
 
                                 <div class="border-bottom border-light"></div>
 

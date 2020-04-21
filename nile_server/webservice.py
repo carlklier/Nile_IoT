@@ -116,7 +116,7 @@ def view_test_id(test_id):
             if req.exception is not None:
                 num_exception += 1
 
-            req_date = req.request_timestamp.strftime('%H:%M:%S %m-%d-%Y')
+            req_date = req.request_timestamp.strftime('%H:%M:%S %m-%d-%Y%f')
 
             request_schema = RequestSchema()
             request_json = request_schema.dump(req)
@@ -186,7 +186,8 @@ def view_graphs():
     if len(requests) > 0:
         for req in requests:
 
-            req_date = req.request_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
+            req_date = req.request_timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
+            print('stamp: ', req_date)
 
             request_schema = RequestSchema()
             request_json = request_schema.dump(req)
@@ -280,7 +281,7 @@ def requests():
                     status=400,
                     mimetype='application/json'
                     )
-        elif time_sent <= PREV_TEST.end:
+        elif time_sent <= PREV_TEST.end and time_sent >= PREV_TEST.start:
             test_id = PREV_TEST.id
 
     response = ''
