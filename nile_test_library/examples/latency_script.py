@@ -1,8 +1,13 @@
 import os
 import sys
+import requests
 sys.path.append(os.path.abspath(".."))
 
 from nile_test.toxiproxy import ToxiProxy, Proxy, Toxic # noqa: E402
+
+
+# check if the "proxy_without_latency" exists
+if requests.get("https").ok
 
 hostname = "localhost:8474"
 toxiproxy = ToxiProxy(hostname)
