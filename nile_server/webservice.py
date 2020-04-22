@@ -12,9 +12,6 @@ from app.models import Test, Request, SystemMetric, TestSchema, RequestSchema, S
 from flask import Flask, jsonify, render_template, url_for, request, redirect, Response
 from livereload import Server
 
-import numpy as np
-
-
 #########################
 # Initialize Current Test #
 #########################
@@ -62,9 +59,9 @@ def view_tests():
         for test in tests:
             test_schema = TestSchema()
             test_json = test_schema.dump(test)
-            test_json['start'] = test.start.strftime('%H:%M:%S %m-%d-%Y')
+            test_json['start'] = test.start.strftime('%H:%M:%S %m/%d/%Y')
             if test.end is not None:
-                test_json['end'] = test.end.strftime('%H:%M:%S %m-%d-%Y')
+                test_json['end'] = test.end.strftime('%H:%M:%S %m/%d/%Y')
             output.append(test_json)
 
     return render_template('index.html', tests=output)
@@ -86,7 +83,9 @@ def view_test_id(test_id):
 
     test_schema = TestSchema()
     test_json = test_schema.dump(test)
-    test_json['start'] = test.start.strftime('%H:%M:%S %m-%d-%Y')
+    test_json['start'] = test.start.strftime('%H:%M:%S %m/%d/%Y')
+    if test.end:
+        test_json['end'] = test.start.strftime('%H:%M:%S %m/%d/%Y')
 
     # Get request summary
     # Loop adds up durations to get the average, and keeps track
@@ -94,21 +93,21 @@ def view_test_id(test_id):
     requests = Request.query.filter(Request.test_id == test_id).all()
 
     # Summary statistics
-    avg_response_time = 0
     longest = None
     num_success = 0
     num_exception = 0
+    mean_response = 0
+    median_response = 0
     percentile_90 = 0
     percentile_95 = 0
     percentile_99 = 0
-    response_times = []
 
     if len(requests) > 0:
         longest = requests[0]
 
         for req in requests:
             if req.response_time:
-                avg_response_time += req.response_time
+                mean_response += req.response_time
                 greater = longest.response_time > req.response_time
                 longest = longest if greater else req
 
@@ -118,18 +117,31 @@ def view_test_id(test_id):
             if req.exception is not None:
                 num_exception += 1
 
-            req_date = req.request_timestamp.strftime('%H:%M:%S %m-%d-%Y')
+        longest_date = longest.request_timestamp.strftime('%H:%M:%S.%f')[:-3]
+        request_schema = RequestSchema()
+        longest_json = request_schema.dump(longest)
+        longest_json['request_timestamp'] = longest_date
 
-            request_schema = RequestSchema()
-            request_json = request_schema.dump(req)
-            request_json['request_timestamp'] = req_date
-            response_times.append(req.response_time)
+        mean_response /= len(requests)
+        mean_response = '{0:3.1f}'.format(mean_response)
 
-        avg_response_time /= len(requests)
-
-        percentile_90 = np.percentile(response_times, 90)
-        percentile_95 = np.percentile(response_times, 95)
-        percentile_99 = np.percentile(response_times, 99)
+        percentiles = list(db.session.execute(
+            'select ' +
+            'percentile_disc(0.50) within ' +
+            'group (order by response_time), ' +
+            'percentile_disc(0.90) within ' +
+            'group (order by response_time), ' +
+            'percentile_disc(0.95) within ' +
+            'group (order by response_time), ' +
+            'percentile_disc(0.99) within ' +
+            'group (order by response_time) ' +
+            f'from loadtest_requests where test_id={test_id}'
+        ).fetchone())
+        median_response = percentiles[0]
+        percentile_90 = percentiles[1]
+        percentile_95 = percentiles[2]
+        percentile_99 = percentiles[3]
+        print('percentiles: ', percentiles)
 
     metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
 
@@ -138,52 +150,60 @@ def view_test_id(test_id):
         test=test_json,
         num_req=len(requests),
         num_met=len(metrics),
-        longest=longest,
+        longest=longest_json,
         num_success=num_success,
         num_exception=num_exception,
-        avg_res_time=avg_response_time,
+        mean=mean_response,
+        median=median_response,
         percentile_90=percentile_90,
         percentile_95=percentile_95,
         percentile_99=percentile_99
-        )
+    )
 
 
 @app.route("/graphs/")
 def view_graphs():
+    """
+    This function queries all tests and their requests and creates a
+    dictionary with each test ID as the keys and associated request
+    in an array as the values. This array of tests and dictionary are
+    passed to graphs.html which renders them as a chart.js graph.
+    """
+
     tests = db.session.query(Test).order_by(Test.id.desc()).all()
     output = []
-
-    # TODO: Create Test/Requests dict pair to send to frontend
-    # to avoid heavy sorting for each visualization
+    req_json = {}
+    test_format = '%Y-%m-%dT%H:%M:%SZ'
+    req_format = '%Y-%m-%dT%H:%M:%S.%f'
 
     # Convert tests to JSON and make datetimes readable
     if len(tests) > 0:
         for test in tests:
             test_schema = TestSchema()
             test_json = test_schema.dump(test)
-            test_json['start'] = test.start.strftime('%Y-%m-%dT%H:%M:%SZ')
+            test_json['start'] = test.start.strftime(test_format)
             if test.end is not None:
-                test_json['end'] = test.end.strftime('%Y-%m-%dT%H:%M:%SZ')
+                test_json['end'] = test.end.strftime(test_format)
             output.append(test_json)
+            req_json[test.id] = []
 
     requests = Request.query.all()
-    req_json = []
 
     if len(requests) > 0:
         for req in requests:
-
-            req_date = req.request_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
+            req_date = req.request_timestamp.strftime(req_format)[:-3]
 
             request_schema = RequestSchema()
             request_json = request_schema.dump(req)
             request_json['request_timestamp'] = req_date
-            req_json.append(request_json)
+            req_json[req.test_id].append(request_json)
 
+    print("dict: ", req_json)
     return render_template(
         'graph.html',
         tests=output,
         requests=req_json
-        )
+    )
 
 
 #########################
@@ -204,17 +224,19 @@ def tests():
             "Can only run one test at a time.",
             status=400,
             mimetype='application/json'
-            )
+        )
 
     data = request.get_json()
     test_config = data['config']
+    locustfile = data['locustfile']
     test_start = datetime.strptime(
             data['start'],
             "%Y-%m-%dT%H:%M:%S.%f"
-            )
+    )
     test_workers = data['workers']
     new_test = Test(
         config=test_config,
+        locustfile=locustfile,
         start=test_start,
         workers=test_workers
     )
@@ -226,10 +248,10 @@ def tests():
         return "Added test with ID: " + str(CURRENT_TEST.id) + "\n"
     except Exception as e:
         return Response(
-            f"Failed to add test with exception:{e}",
+            f"Failed to add test with exception: {e}",
             status=400,
             mimetype='application/json'
-            )
+        )
 
 
 @app.route('/api/v1/requests', methods=['POST'])
@@ -245,27 +267,29 @@ def requests():
     global PREV_TEST
 
     requests = request.get_json()
-    time_sent = ""
-
-    test_id = CURRENT_TEST.id if CURRENT_TEST else PREV_TEST.id
+    time_sent = datetime.strptime(
+            requests[0]['request_timestamp'],
+            "%Y-%m-%dT%H:%M:%S.%f"
+    )
 
     # Assign this request to the correct test, if exists.
     # Otherwise, it cannot be added.
-    if PREV_TEST is not None:
-        time_sent = datetime.strptime(
-            requests[0]['request_timestamp'],
-            "%Y-%m-%dT%H:%M:%S.%f"
-            )
+    test_id = None
+    if CURRENT_TEST:
 
-        if CURRENT_TEST is None:
-            if time_sent < PREV_TEST.start or time_sent > PREV_TEST.end:
-                return Response(
-                    "Can't submit request while no tests running.",
-                    status=400,
-                    mimetype='application/json'
-                    )
-        elif time_sent <= PREV_TEST.end:
-            test_id = PREV_TEST.id
+        test_id = CURRENT_TEST.id
+
+    if (PREV_TEST and time_sent <= PREV_TEST.end
+            and time_sent >= PREV_TEST.start):
+
+        test_id = PREV_TEST.id
+
+    if test_id is None:
+        return Response(
+            "Can't submit request while no tests running.",
+            status=400,
+            mimetype='application/json'
+        )
 
     response = ''
 
@@ -291,7 +315,7 @@ def requests():
             status_code=status_code,
             success=success,
             exception=exception
-            )
+        )
 
         try:
             db.session.add(new_request)
@@ -300,10 +324,10 @@ def requests():
             response += f"Added request with ID: {req_id}\n"
         except Exception as e:
             return Response(
-                f"Failed to add request {req_id} with exception:{e}",
+                f"Failed to add request {req_id} with exception: {e}",
                 status=400,
                 mimetype='application/json'
-                )
+            )
 
     return response
 
@@ -321,7 +345,7 @@ def metrics():
             "Can't submit metric while no tests running.",
             status=400,
             mimetype='application/json'
-            )
+        )
 
     data = request.get_json()
     system_name = data['system_name']
@@ -335,7 +359,7 @@ def metrics():
         metric_name=metric_name,
         metric_timestamp=metric_timestamp,
         metric_value=metric_value
-        )
+    )
 
     try:
         db.session.add(new_metric)
@@ -343,10 +367,10 @@ def metrics():
         return f"Added metric with ID: {str(new_metric.id)}\n"
     except Exception as e:
         return Response(
-            f"Failed to add metric with exception:{e}",
+            f"Failed to add metric with exception: {e}",
             status=400,
             mimetype='application/json'
-            )
+        )
 
 
 @app.route('/api/v1/tests/finalize', methods=['POST'])
@@ -366,13 +390,13 @@ def finalize_test():
             "No test running.",
             status=400,
             mimetype='application/json'
-            )
+        )
 
     data = request.get_json()
     CURRENT_TEST.end = datetime.strptime(
             data['end'],
             "%Y-%m-%dT%H:%M:%S.%f"
-            )
+    )
 
     PREV_TEST = CURRENT_TEST
     CURRENT_TEST = None
@@ -389,7 +413,7 @@ def finalize_test():
             f"Failed to finalize with exception: {e}",
             status=400,
             mimetype='application/json'
-            )
+        )
 
 
 @app.route('/api/v1/delete/<test_id>', methods=['POST'])
@@ -417,7 +441,7 @@ def delete_test(test_id):
             f"Failed to delete test with exception: {e}",
             status=400,
             mimetype='application/json'
-            )
+        )
 
 
 #########################

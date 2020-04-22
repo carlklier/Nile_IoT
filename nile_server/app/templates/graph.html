@@ -24,28 +24,28 @@
         <h1>Visualize Test Results</h1>
     </div>
     
-    <div class="container" style="position: static;">
+    <div class="container" style="position:static">
         <div class="row">
-            <div class="btn-group" role="group" aria-label="Results Option">
-                <button type="button" class="btn btn-primary" onclick="showRequests()" style="max-height: 50px;">Locust Results</button>
-                <button type="button" class="btn btn-primary" onclick="showMetrics()" style="max-height: 50px;">System Metrics</button>
-            </div>
-            <div class="col" style="margin-top:-2%">
-                <div class="row justify-content-center">
-                    <label class="main-text drop-lead">Filter Requests:</label>
+                <div class="btn-group" role="group" aria-label="Results Option">
+                    <button type="button" class="btn btn-primary" onclick="showRequests()" style="max-height: 50px;">Locust Results</button>
+                    <button type="button" class="btn btn-primary" onclick="showMetrics()" style="max-height: 50px;">System Metrics</button>
                 </div>
-                <div class="row justify-content-center">
-    
-                    <div class="btn-pair timepicker-small">
-                        <label class="list-text">From:</label>
-                        <input id="stampFilterFrom" style="max-width: 100px">
+                <div class="col" style="margin-top:-2%">
+                    <div class="row justify-content-center">
+                        <label class="main-text drop-lead">Filter Requests:</label>
                     </div>
-                    <div class="btn-pair">
-                        <label class="list-text">To:</label>
-                        <input id="stampFilterTo" style="max-width: 100px">
+                    <div class="row justify-content-center">
+        
+                        <div class="btn-pair timepicker-small">
+                            <label class="list-text">From:</label>
+                            <input id="stampFilterFrom" style="max-width: 120px">
+                        </div>
+                        <div class="btn-pair">
+                            <label class="list-text">To:</label>
+                            <input id="stampFilterTo" style="max-width: 120px">
+                        </div>
                     </div>
                 </div>
-            </div>
             
             
         </div>
@@ -67,7 +67,7 @@
                 </div>
 
               <div class="row-5 pt-3">
-                <div style="height:300px; width:300px;line-height:3em;overflow:auto;padding:5px;border-style: solid;border-color: rgb(220, 222, 231);border-width: 2px;">
+                <div style="height:300px; width:250px;line-height:3em;overflow:auto;padding:5px;border-style: solid;border-color: rgb(220, 222, 231);border-width: 2px;">
                     {% for test in tests %}
                     <ul class="list-group" id="test-table">
                         <li class="list-group-item list-select" id="{{ test.id }}">
@@ -89,7 +89,7 @@
             </div>
 
             <div class="col-md-7 chart">
-                <canvas id="chart" width="10" height="9"></canvas>
+                <canvas id="chart"></canvas>
             </div>
             
 
@@ -143,8 +143,8 @@
         }).on("changeDate", function (e) {
             filterTests()
         });
-        $('#datepickerFrom').datepicker("setDate", Date.parse(tests[0].start))
-        $('#datepickerTo').datepicker("setDate", Date.parse(tests[tests.length-1].start))
+        $('#datepickerFrom').datepicker("setDate", Date.parse(tests[tests.length - 1].start))
+        $('#datepickerTo').datepicker("setDate", moment().format("MMMM Do YYYY"))
 
         /**
         * Using datetimepicker, recreate chart on update
@@ -157,7 +157,7 @@
                 up: 'fa fa-angle-up',
                 down: 'fa fa-angle-down'
             },
-            format: 'HH:mm:ss',
+            format: 'HH:mm:ss.SSS',
             defaultDate:moment(new Date()).hours(0).minutes(0).seconds(0).milliseconds(0)
         }).on("dp.change",function(e){
             if ($selectedTest) createChart($selectedTest.id)
@@ -169,7 +169,7 @@
                 up: 'fa fa-angle-up',
                 down: 'fa fa-angle-down'
             },
-            format: 'HH:mm:ss',
+            format: 'HH:mm:ss.SSS',
             defaultDate:moment(new Date()).hours(23).minutes(59).seconds(59)
         }).on("dp.change",function(e){
             if ($selectedTest) createChart($selectedTest.id)
@@ -208,7 +208,6 @@
             $listRows.removeClass('active')
             $(this).addClass('active')
             $selectedTest = tests[tests.length - this.id]
-            console.log($selectedTest)
 
             createChart(this.id, true)
         });
@@ -254,6 +253,8 @@
                     }]
                 },
                 options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
                     scales: {
                         xAxes: [{
                             ticks: {
@@ -269,37 +270,27 @@
             var startTime = new Date($('#stampFilterFrom').data("DateTimePicker").date())
             var endTime = new Date($('#stampFilterTo').data("DateTimePicker").date())
 
-            startTime = moment(startTime).format("HH:mm:ss")
-            endTime = moment(endTime).format("HH:mm:ss")
+            startTime = moment(startTime).format("HH:mm:ss.SSS")
+            endTime = moment(endTime).format("HH:mm:ss.SSS")
 
-            console.log("start: " + startTime)
-            console.log("end: " + endTime)
+            reqs = requests[id]
 
-            for(var i = 0; i < requests.length; i++) {
+            for(var i = 0; i < reqs.length; i++) {
+                var timestamp = moment(new Date(reqs[i].request_timestamp)).format('HH:mm:ss.SSS')
 
-                var timestamp = moment(Date.parse(requests[i].request_timestamp)).format("HH:mm:ss")
+                $responseTimes.push(reqs[i].response_time)
+                $timestamps.push(timestamp)
+                chart.config.data.labels.push(timestamp);
+                chart.config.data.datasets[0].data.push(reqs[i].response_time);
 
-                if (requests[i].test_id.toString() == id
-                    && timestamp >= startTime
-                    && timestamp <= endTime) {
-
-                    console.log("adding: " + requests[i].id)
-                    $responseTimes.push(requests[i].response_time)
-                    $timestamps.push(timestamp)
-                    chart.config.data.labels.push(timestamp);
-                    chart.config.data.datasets[0].data.push(requests[i].response_time);
-
-                }
             }
-            console.log("rt: " + $responseTimes)
-            console.log("stamps: " + $timestamps)
 
             // If a new test is being selected, update the
             // start/end time to the earliest/latest timestamps in the
             // current test
             if (newTest && $timestamps.length > 0) {
-                var start = moment(Date.parse($timestamps[0])).format("HH:mm:ss")
-                var end = moment(Date.parse($timestamps[$timestamps.length-1])).format("HH:mm:ss")
+                var start = $timestamps[0]
+                var end = $timestamps[$timestamps.length-1]
 
                 $("#stampFilterFrom").val(start)
                 $("#stampFilterTo").val(end)
