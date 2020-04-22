@@ -13,7 +13,7 @@ if requests.get("http://localhost:8474/proxies/proxy_without_latency").ok:
     requests.delete("http://localhost:8474/proxies/proxy_without_latency")
     print("Deleted")
 '''
-requests.delete("http://localhost:8474/proxies")
+requests.delete("http://localhost:8474/proxies", proxies={})
 
 hostname = "localhost:8474"
 toxiproxy = ToxiProxy(hostname)
@@ -72,3 +72,5 @@ assert retrieved_listen == proxy1_listen, \
     f"Found listen '{retrieved_listen}', expected '{proxy1_listen}'"
 
 print("Values on server are correct")
+
+print(toxiproxy.get_proxies())

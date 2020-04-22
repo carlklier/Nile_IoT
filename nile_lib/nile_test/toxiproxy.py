@@ -61,6 +61,12 @@ class ToxiProxy:
         else:
             return None
 
+    def get_proxies(self):
+        """
+        Get a list of all proxies
+        """
+        proxies = requests.get(self.get_proxies_url())
+        return proxies
 
 class Proxy:
     def __init__(self, toxiproxy, name):
