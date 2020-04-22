@@ -181,8 +181,6 @@
         */ 
         function filterTests() {
 
-            console.log("todays date: " + moment().format("MMMM Do YYYY"))
-
             var startDate = $('#datepickerFrom').datepicker('getDate')
             var endDate = $('#datepickerTo').datepicker('getDate')
 
@@ -210,7 +208,6 @@
             $listRows.removeClass('active')
             $(this).addClass('active')
             $selectedTest = tests[tests.length - this.id]
-            console.log($selectedTest)
 
             createChart(this.id, true)
         });
@@ -276,26 +273,17 @@
             startTime = moment(startTime).format("HH:mm:ss.SSS")
             endTime = moment(endTime).format("HH:mm:ss.SSS")
 
-            console.log("start: " + startTime)
-            console.log("end: " + endTime)
+            reqs = requests[id]
 
-            for(var i = 0; i < requests.length; i++) {
-                var timestamp = moment(new Date(requests[i].request_timestamp)).format('HH:mm:ss.SSS')
+            for(var i = 0; i < reqs.length; i++) {
+                var timestamp = moment(new Date(reqs[i].request_timestamp)).format('HH:mm:ss.SSS')
 
-                if (requests[i].test_id.toString() == id
-                    && timestamp >= startTime
-                    && timestamp <= endTime) {
+                $responseTimes.push(reqs[i].response_time)
+                $timestamps.push(timestamp)
+                chart.config.data.labels.push(timestamp);
+                chart.config.data.datasets[0].data.push(reqs[i].response_time);
 
-                    console.log("adding: " + requests[i].id)
-                    $responseTimes.push(requests[i].response_time)
-                    $timestamps.push(timestamp)
-                    chart.config.data.labels.push(timestamp);
-                    chart.config.data.datasets[0].data.push(requests[i].response_time);
-
-                }
             }
-            console.log("rt: " + $responseTimes)
-            console.log("stamps: " + $timestamps)
 
             // If a new test is being selected, update the
             // start/end time to the earliest/latest timestamps in the
@@ -303,9 +291,6 @@
             if (newTest && $timestamps.length > 0) {
                 var start = $timestamps[0]
                 var end = $timestamps[$timestamps.length-1]
-
-                console.log(start)
-                console.log(end)
 
                 $("#stampFilterFrom").val(start)
                 $("#stampFilterTo").val(end)
