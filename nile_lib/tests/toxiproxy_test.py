@@ -18,6 +18,10 @@ def cleanup_proxy(name):
             f"A Proxy named '{name}' should not exist on server after delete"
 
 
+def test_no_toxiproxy():
+    assert not ToxiProxy("localhost:20").exists()
+
+
 @pytest.mark.skipif(TOXIPROXY_UNAVAILABLE, reason=TOXIPROXY_REASON)
 def test_basic_info():
     assert f"http://{HOSTNAME}" == TOXIPROXY.get_url()
