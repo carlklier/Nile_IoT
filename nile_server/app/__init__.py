@@ -6,7 +6,7 @@ from flask_marshmallow import Marshmallow
 
 
 app = Flask(__name__)
-app.config.from_object(Config)
+app.config.from_object(os.environ['LOADTEST_ENV'])
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 migrate = Migrate(app, db)
