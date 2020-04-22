@@ -72,6 +72,7 @@ class ToxiProxy:
 
     def delete_proxies(self):
         for proxy in self.get_proxies().keys():
+            print(proxy)
             requests.delete(f"http://localhost:8474/{proxy}")
 
 
