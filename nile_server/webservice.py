@@ -165,7 +165,7 @@ def view_test_id(test_id):
 def view_graphs():
     """
     This function queries all tests and their requests and creates a
-    dictionary with each test ID as the keys and associated requests 
+    dictionary with each test ID as the keys and associated request
     in an array as the values. This array of tests and dictionary are
     passed to graphs.html which renders them as a chart.js graph.
     """
@@ -267,27 +267,29 @@ def requests():
     global PREV_TEST
 
     requests = request.get_json()
-    time_sent = ""
-
-    test_id = CURRENT_TEST.id if CURRENT_TEST else PREV_TEST.id
+    time_sent = datetime.strptime(
+            requests[0]['request_timestamp'],
+            "%Y-%m-%dT%H:%M:%S.%f"
+    )
 
     # Assign this request to the correct test, if exists.
     # Otherwise, it cannot be added.
-    if PREV_TEST is not None:
-        time_sent = datetime.strptime(
-            requests[0]['request_timestamp'],
-            "%Y-%m-%dT%H:%M:%S.%f"
-        )
+    test_id = None
+    if CURRENT_TEST:
 
-        if CURRENT_TEST is None:
-            if time_sent < PREV_TEST.start or time_sent > PREV_TEST.end:
-                return Response(
-                    "Can't submit request while no tests running.",
-                    status=400,
-                    mimetype='application/json'
-                )
-        elif time_sent <= PREV_TEST.end and time_sent >= PREV_TEST.start:
-            test_id = PREV_TEST.id
+        test_id = CURRENT_TEST.id
+
+    if (PREV_TEST and time_sent <= PREV_TEST.end
+            and time_sent >= PREV_TEST.start):
+
+        test_id = PREV_TEST.id
+
+    if test_id is None:
+        return Response(
+            "Can't submit request while no tests running.",
+            status=400,
+            mimetype='application/json'
+        )
 
     response = ''
 
