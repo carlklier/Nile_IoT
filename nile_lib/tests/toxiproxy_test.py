@@ -10,6 +10,7 @@ TOXIPROXY_REASON = f"Could not find ToxiProxy server at '{HOSTNAME}'"
 
 
 def cleanup_proxy(name):
+    TOXIPROXY.delete_proxies()
     proxy = Proxy(TOXIPROXY, name=name)
 
     if proxy.exists():

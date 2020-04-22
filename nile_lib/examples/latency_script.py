@@ -6,14 +6,12 @@ sys.path.append(os.path.abspath(".."))
 from nile_test.toxiproxy import ToxiProxy, Proxy, Toxic # noqa: E402
 
 
-# check if the "proxy_without_latency" exists
-if requests.get("http://localhost:8474/proxies/proxy_without_latency").ok:
-    print("Proxy with latency exists, deleting")
-    requests.delete("http://localhost:8474/proxies/proxy_without_latency")
-    print("Deleted")
+
 
 hostname = "localhost:8474"
 toxiproxy = ToxiProxy(hostname)
+
+toxiproxy.delete_proxies()
 
 # Check that a ToxiProxy can be found
 assert toxiproxy.exists(), f"ToxiProxy server not found at '{hostname}'"
