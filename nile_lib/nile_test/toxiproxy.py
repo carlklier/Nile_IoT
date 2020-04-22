@@ -65,7 +65,7 @@ class ToxiProxy:
         """
         Get a list of all proxies
         """
-        proxies = requests.get(self.get_proxies_url())
+        proxies = requests.get(self.get_proxies_url()).text
         return proxies
 
 class Proxy:
