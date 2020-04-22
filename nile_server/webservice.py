@@ -128,21 +128,21 @@ def view_test_id(test_id):
 
         percentiles = list(db.session.execute(
             'select ' +
-            'percentile_cont(0.50) within ' +
+            'percentile_disc(0.50) within ' +
             'group (order by response_time), ' +
-            'percentile_cont(0.90) within ' +
+            'percentile_disc(0.90) within ' +
             'group (order by response_time), ' +
-            'percentile_cont(0.95) within ' +
+            'percentile_disc(0.95) within ' +
             'group (order by response_time), ' +
-            'percentile_cont(0.99) within ' +
+            'percentile_disc(0.99) within ' +
             'group (order by response_time) ' +
-            'from loadtest_requests'
+            f'from loadtest_requests where test_id={test_id}'
         ).fetchone())
         median_response = percentiles[0]
         percentile_90 = percentiles[1]
         percentile_95 = percentiles[2]
         percentile_99 = percentiles[3]
-        print('percentile: ', percentile_99)
+        print('percentiles: ', percentiles)
 
     metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
 

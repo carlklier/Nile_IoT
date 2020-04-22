@@ -143,8 +143,8 @@
         }).on("changeDate", function (e) {
             filterTests()
         });
-        $('#datepickerFrom').datepicker("setDate", Date.parse(tests[0].start))
-        $('#datepickerTo').datepicker("setDate", Date.parse(tests[tests.length-1].start))
+        $('#datepickerFrom').datepicker("setDate", Date.parse(tests[tests.length - 1].start))
+        $('#datepickerTo').datepicker("setDate", moment().format("MMMM Do YYYY"))
 
         /**
         * Using datetimepicker, recreate chart on update
@@ -180,6 +180,8 @@
         * Filter the tests displayed based on the date picker
         */ 
         function filterTests() {
+
+            console.log("todays date: " + moment().format("MMMM Do YYYY"))
 
             var startDate = $('#datepickerFrom').datepicker('getDate')
             var endDate = $('#datepickerTo').datepicker('getDate')
