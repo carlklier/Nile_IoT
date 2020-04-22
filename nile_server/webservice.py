@@ -12,6 +12,8 @@ from app.models import Test, Request, SystemMetric, TestSchema, RequestSchema, S
 from flask import Flask, jsonify, render_template, url_for, request, redirect, Response
 from livereload import Server
 
+import numpy as np
+
 
 #########################
 # Initialize Current Test #
@@ -90,23 +92,21 @@ def view_test_id(test_id):
     # Loop adds up durations to get the average, and keeps track
     # of the current longest request duration
     requests = Request.query.filter(Request.test_id == test_id).all()
-    
+
     # Summary statistics
     avg_response_time = 0
-    avg_request_length = 0
-    avg_response_length = 0
     longest = None
     num_success = 0
     num_exception = 0
+    percentile_90 = 0
+    percentile_95 = 0
+    percentile_99 = 0
+    response_times = []
 
     if len(requests) > 0:
         longest = requests[0]
 
         for req in requests:
-            if req.response_length:
-                avg_response_length += req.response_length
-            if req.request_length:
-                avg_request_length += req.request_length
             if req.response_time:
                 avg_response_time += req.response_time
                 greater = longest.response_time > req.response_time
@@ -114,7 +114,7 @@ def view_test_id(test_id):
 
             if req.success is True:
                 num_success += 1
-          
+
             if req.exception is not None:
                 num_exception += 1
 
@@ -123,10 +123,13 @@ def view_test_id(test_id):
             request_schema = RequestSchema()
             request_json = request_schema.dump(req)
             request_json['request_timestamp'] = req_date
+            response_times.append(req.response_time)
 
         avg_response_time /= len(requests)
-        avg_response_length /= len(requests)
-        avg_request_length /= len(requests)
+
+        percentile_90 = np.percentile(response_times, 90)
+        percentile_95 = np.percentile(response_times, 95)
+        percentile_99 = np.percentile(response_times, 99)
 
     metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
 
@@ -139,8 +142,9 @@ def view_test_id(test_id):
         num_success=num_success,
         num_exception=num_exception,
         avg_res_time=avg_response_time,
-        avg_res_length=avg_response_time,
-        avg_req_length=avg_request_length
+        percentile_90=percentile_90,
+        percentile_95=percentile_95,
+        percentile_99=percentile_99
         )
 
 
@@ -149,17 +153,17 @@ def view_graphs():
     tests = db.session.query(Test).order_by(Test.id.desc()).all()
     output = []
 
-    ## TODO: Create Test/Requests dict pair to send to frontend
-    ## to avoid heavy sorting for each visualization
+    # TODO: Create Test/Requests dict pair to send to frontend
+    # to avoid heavy sorting for each visualization
 
     # Convert tests to JSON and make datetimes readable
     if len(tests) > 0:
         for test in tests:
             test_schema = TestSchema()
             test_json = test_schema.dump(test)
-            test_json['start'] = test.start.strftime('%H:%M:%S %m-%d-%Y')
+            test_json['start'] = test.start.strftime('%Y-%m-%dT%H:%M:%SZ')
             if test.end is not None:
-                test_json['end'] = test.end.strftime('%H:%M:%S %m-%d-%Y')
+                test_json['end'] = test.end.strftime('%Y-%m-%dT%H:%M:%SZ')
             output.append(test_json)
 
     requests = Request.query.all()
@@ -168,7 +172,7 @@ def view_graphs():
     if len(requests) > 0:
         for req in requests:
 
-            req_date = req.request_timestamp.strftime('%H:%M:%S %m-%d-%Y')
+            req_date = req.request_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
 
             request_schema = RequestSchema()
             request_json = request_schema.dump(req)
@@ -214,7 +218,7 @@ def tests():
         start=test_start,
         workers=test_workers
     )
-    
+
     try:
         db.session.add(new_test)
         db.session.commit()
@@ -252,10 +256,9 @@ def requests():
             requests[0]['request_timestamp'],
             "%Y-%m-%dT%H:%M:%S.%f"
             )
-        
 
         if CURRENT_TEST is None:
-            if time_sent < PREV_TEST.start and time_sent > PREV_TEST.end:
+            if time_sent < PREV_TEST.start or time_sent > PREV_TEST.end:
                 return Response(
                     "Can't submit request while no tests running.",
                     status=400,
@@ -327,10 +330,10 @@ def metrics():
     metric_value = data['metric_value']
 
     new_metric = SystemMetric(
-        test_id=CURRENT_TEST,
+        test_id=CURRENT_TEST.id,
         system_name=system_name,
         metric_name=metric_name,
-        metric_timestamp=metric_timestamp, 
+        metric_timestamp=metric_timestamp,
         metric_value=metric_value
         )
 
@@ -384,6 +387,34 @@ def finalize_test():
     except Exception as e:
         return Response(
             f"Failed to finalize with exception: {e}",
+            status=400,
+            mimetype='application/json'
+            )
+
+
+@app.route('/api/v1/delete/<test_id>', methods=['POST'])
+def delete_test(test_id):
+    """
+    Delete a test with the given ID. Also searches for
+    all relevant requests and metrics to delete as well.
+    """
+
+    try:
+        Test.query.filter(Test.id == test_id).delete()
+        reqs = Request.query.filter(Request.test_id == test_id).all()
+        mets = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
+
+        for req in reqs:
+            Request.query.filter(Request.id == req.id).delete()
+
+        for met in mets:
+            SystemMetric.query.filter(SystemMetric.id == met.id).delete()
+
+        db.session.commit()
+        return f"Deleted test and data with ID: {test_id}\n"
+    except Exception as e:
+        return Response(
+            f"Failed to delete test with exception: {e}",
             status=400,
             mimetype='application/json'
             )
