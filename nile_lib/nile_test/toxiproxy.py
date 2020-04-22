@@ -1,4 +1,5 @@
 import requests
+import json
 
 
 class ToxiProxy:
@@ -66,6 +67,7 @@ class ToxiProxy:
         Get a list of all proxies
         """
         proxies = requests.get(self.get_proxies_url()).text
+        proxies = json.loads(proxies)
         return proxies
 
     def delete_proxies(self):
