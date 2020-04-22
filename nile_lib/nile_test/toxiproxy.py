@@ -26,7 +26,10 @@ class ToxiProxy:
         """
         Checks whether this ToxiProxy server exists and is reachable
         """
-        return requests.get(self.get_proxies_url()).ok
+        try:
+            return requests.get(self.get_proxies_url()).ok
+        except requests.exceptions.ConnectionError:
+            return False
 
     def create_proxy(self, name, *, upstream_address, listen_address):
         """
