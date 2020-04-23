@@ -80,7 +80,7 @@ class HTTPClient(implements(Sink)):
             try:
                 response.raise_for_status()
 
-                events.request_success.fire(
+                events.request_failure.fire(
                     request_type=record["method"],
                     name=record["url"],
                     response_time=response_time,
@@ -89,7 +89,7 @@ class HTTPClient(implements(Sink)):
                         f"Request failed with {response.content}")
                 )
             except HTTPError as error:
-                events.request_success.fire(
+                events.request_failure.fire(
                     request_type=record["method"],
                     name=record["url"],
                     response_time=response_time,

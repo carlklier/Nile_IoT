@@ -6,7 +6,7 @@ from config import Config
 from app import app, db
 
 # App config setup
-app.config.from_object(Config)
+app.config.from_object(os.environ['APP_CONFIG_ENV'])
 
 # Flask migration setup
 migrate = Migrate(app, db)

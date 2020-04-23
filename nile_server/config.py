@@ -15,6 +15,6 @@ class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:dbpw@localhost:5432/loadtest_db'
 
-class TestingConfig(Config):
+class TestConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:dbpw@localhost:5432/loadtest_db'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:dbpw@localhost:5433/testing_db'
