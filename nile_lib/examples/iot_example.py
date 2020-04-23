@@ -11,6 +11,9 @@ from nile_test.dataflow.pushers import DeterministicPusher,\
 from nile_test.dataflow.disconnect_adapter \
     import GammaDisconnectAdapter  # noqa: E402
 from nile_test.dataflow.http_client import HTTPClient  # noqa: E402
+from nile_test.integration import launch
+
+launch("localhost:5000")
 
 
 class StatsWorker(Worker):
