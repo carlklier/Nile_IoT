@@ -20,6 +20,7 @@ def test():
     main_result = test_main()
     return main_result
 
+
 @manager.command
 def test_main(nocoverage=False):
     """Run the python only tests within tests/test_endpoint we still run
@@ -69,8 +70,7 @@ def run_command(command):
 
 # Add shutdown function to the endpoint for testing
 def shutdown():
-    """Shutdown the Werkzeug dev server, if we're using it.
-    From http://flask.pocoo.org/snippets/67/"""
+    """ Shutdown the Werkzeug dev server, if we're using it. """
     print("Shutting down server")
     func = flask.request.environ.get('werkzeug.server.shutdown')
     if func is None:  # pragma: no cover
@@ -88,7 +88,7 @@ def run_test_server():
     app.config['DEBUG'] = False
     app.config['TESTING'] = True
     # Don't use the production database but a temporary test database.
-    app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://daltonteague@localhost/testing_db"
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:dbpw@localhost:5433/testing_db'
     db.create_all()
     db.session.commit()
 
@@ -98,10 +98,11 @@ def run_test_server():
     app.add_url_rule('/shutdown', 'shutdown', shutdown,
                              methods=['POST'])
 
-    app.run(host='0.0.0.0', port="5000", use_reloader=False)
+    app.run(host='0.0.0.0', port="5001", use_reloader=False)
 
     db.session.remove()
     # db.drop_all()
+
 
 if __name__ == '__main__':
     manager.run()

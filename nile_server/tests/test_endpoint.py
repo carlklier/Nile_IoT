@@ -19,6 +19,7 @@ test_endpoint = f'{api}/tests'
 met_endpoint = f'{api}/metrics'
 req_endpoint = f'{api}/requests'
 
+test_file = "locustfile"
 test_config = "Test POST Config"
 num_workers = 50000
 
@@ -66,9 +67,9 @@ class TestEndpoint(unittest.TestCase):
         expected to fail
          """
 
+        # In case a previous test is still open for some reason
         test_finalize()
         reset_db()
-        # In case a previous test is still open for some reason
 
         self.assertEqual(Test.query.count(), 0)
         self.assertEqual(Request.query.count(), 0)
@@ -364,6 +365,7 @@ def add_test(time=None):
 
     data = {
         'config': (test_config),
+        'locustfile': test_file,
         'start': time if time else now(),
         'workers': num_workers
     }
@@ -470,6 +472,7 @@ def reset_db():
     print(f'Tests: {Test.query.count()}')
     print(f'Requests: {Request.query.count()}')
     print(f'Metrics: {SystemMetric.query.count()}')
+
 
 if __name__ == '__main__':
     unittest.main()
