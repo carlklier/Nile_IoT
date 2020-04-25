@@ -18,7 +18,6 @@ api = 'http://localhost:5000/api/v1'
 test_endpoint = f'{api}/tests'
 met_endpoint = f'{api}/metrics'
 req_endpoint = f'{api}/requests'
-db_uri = 'postgresql://postgres:dbpw@localhost:5433/testing_db'
 
 test_file = "locustfile"
 test_config = "Test POST Config"
@@ -50,17 +49,6 @@ class TestEndpoint(unittest.TestCase):
     #########################
     # Test Environment Setup #
     #########################
-
-    def create_app(self):
-
-        """ Start app and set database """
-
-        config_name = 'testing'
-        create = create_app(config_name)
-        create.config.update(
-            SQLALCHEMY_DATABASE_URI=db_uri
-        )
-        return app
 
     def setUp(self):
         db.create_all()

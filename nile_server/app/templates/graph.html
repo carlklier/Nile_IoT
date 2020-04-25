@@ -30,22 +30,6 @@
                     <button type="button" class="btn btn-primary" onclick="showRequests()" style="max-height: 50px;">Locust Results</button>
                     <button type="button" class="btn btn-primary" onclick="showMetrics()" style="max-height: 50px;">System Metrics</button>
                 </div>
-                <div class="col" style="margin-top:-2%">
-                    <div class="row justify-content-center">
-                        <label class="main-text drop-lead">Filter Requests:</label>
-                    </div>
-                    <div class="row justify-content-center">
-        
-                        <div class="btn-pair timepicker-small">
-                            <label class="list-text">From:</label>
-                            <input id="stampFilterFrom" style="max-width: 120px">
-                        </div>
-                        <div class="btn-pair">
-                            <label class="list-text">To:</label>
-                            <input id="stampFilterTo" style="max-width: 120px">
-                        </div>
-                    </div>
-                </div>
             
             
         </div>
@@ -89,7 +73,7 @@
             </div>
 
             <div class="col-md-7 chart">
-                <canvas id="chart"></canvas>
+                <div id="plot"></div>
             </div>
             
 
@@ -101,12 +85,10 @@
         
         // Get list of tests and requests from Flask as JSON
         var tests = {{ tests|tojson }};
-        var requests = {{ requests|tojson }};
         var $listRows = $('.list-select'); 
         var $selectedTest = ""
         var $responseTimes = []
         var $timestamps = []
-        var ctx = document.getElementById('chart').getContext('2d');
 
         /**
         * When the window loads, display the chart from the
@@ -114,16 +96,13 @@
         */ 
         window.onload = function() {
             if (tests.length <= 0) return 0
-
-            var query = window.location.search.substring(1)
+            var id = {{ selected }}
 
             // If user selected a test to visualize, load chart
             // with that id. Otherwise, grab the most recent test
             // available
-            if (query) {
-                var id = query.split("=")[1];
-                console.log("id: " + (tests.length - parseInt(id)))
-                document.getElementById(parseInt(id)).click()
+            if (tests[tests.length - id]) {
+                document.getElementById(id).click()
             } else {
                 document.getElementById(tests[0].id).click()
             }
@@ -144,37 +123,8 @@
             filterTests()
         });
         $('#datepickerFrom').datepicker("setDate", Date.parse(tests[tests.length - 1].start))
-        $('#datepickerTo').datepicker("setDate", moment().format("MMMM Do YYYY"))
+        $('#datepickerTo').datepicker("setDate", moment().endOf('day').format("MMMM Do YYYY"))
 
-        /**
-        * Using datetimepicker, recreate chart on update
-        * by checking request timestamps against the new
-        * filter times
-        */ 
-        $('#stampFilterFrom').datetimepicker({
-            icons:
-            {
-                up: 'fa fa-angle-up',
-                down: 'fa fa-angle-down'
-            },
-            format: 'HH:mm:ss.SSS',
-            defaultDate:moment(new Date()).hours(0).minutes(0).seconds(0).milliseconds(0)
-        }).on("dp.change",function(e){
-            if ($selectedTest) createChart($selectedTest.id)
-            else createChart(tests[0].id, false)
-        })
-        $('#stampFilterTo').datetimepicker({
-            icons:
-            {
-                up: 'fa fa-angle-up',
-                down: 'fa fa-angle-down'
-            },
-            format: 'HH:mm:ss.SSS',
-            defaultDate:moment(new Date()).hours(23).minutes(59).seconds(59)
-        }).on("dp.change",function(e){
-            if ($selectedTest) createChart($selectedTest.id)
-            else createChart(tests[0].id, false)
-        })
 
         /**
         * Filter the tests displayed based on the date picker
@@ -182,7 +132,7 @@
         function filterTests() {
 
             var startDate = $('#datepickerFrom').datepicker('getDate')
-            var endDate = $('#datepickerTo').datepicker('getDate')
+            var endDate = moment($('#datepickerTo').datepicker('getDate')).hours(23).minutes(59).seconds(59)
 
             for(var i = 0; i < tests.length; i++) {
 
@@ -205,11 +155,16 @@
         * the chart
         */ 
         $('.list-select').click(function(e) {
+            $.ajax({
+                url: "http://localhost:5000/api/v1/requests_test/" + this.id,
+                type: 'GET',
+                success: function(res) {
+                    createChart(this.id, true, JSON.parse(res))
+                }
+            });
             $listRows.removeClass('active')
             $(this).addClass('active')
             $selectedTest = tests[tests.length - this.id]
-
-            createChart(this.id, true)
         });
 
         /**
@@ -218,85 +173,35 @@
         * Date-times compared are converted to just HH:mm:ss
         * so only the time of day is compared.
         */ 
-        function createChart(id, newTest) {
+        function createChart(id, newTest, requests) {
 
-            var $responseTimes = []
-            var $timestamps = []
+            var $timestamps = requests['timestamps']
+            var $responseTimes = requests['response_times']
 
-            if (chart) chart.destroy();
-            var ctx = document.getElementById('chart').getContext('2d');
-        
-            var chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: $timestamps,
-                    datasets: [{
-                        label: "Response Time",
-                        data: $responseTimes,
-                        backgroundColor: [
-                            'rgba(2, 99, 255, 0.2)',
-                            'rgba(54, 162, 235, 0.2)',
-                            'rgba(255, 206, 86, 0.2)',
-                            'rgba(75, 192, 192, 0.2)',
-                            'rgba(153, 102, 255, 0.2)',
-                            'rgba(255, 159, 64, 0.2)'
-                        ],
-                        borderColor: [
-                            'rgba(100, 99, 255, 1)',
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(153, 102, 255, 1)',
-                            'rgba(255, 159, 64, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
+            console.log($timestamps.length)
+
+            var data = {
+                x: $timestamps,
+                y: $responseTimes,
+                mode: 'lines'
+            }
+
+            var layout = {
+                showlegend: false,
+                height: 600,
+                width: 600,
+                paper_bgcolor:'rgba(0,0,0,0)',
+                plot_bgcolor:'rgba(0,0,0,0)',
+                modebar: {
+                    bgcolor: 'white'
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        xAxes: [{
-                            ticks: {
-                                callback: function(t, i) {
-                                    if (!(i % 4)) return t;
-                                }
-                            }
-                        }]
-                    }
+                margin: {
+                    t: 60,
+                    b: 100
                 }
-            });
+            };
 
-            var startTime = new Date($('#stampFilterFrom').data("DateTimePicker").date())
-            var endTime = new Date($('#stampFilterTo').data("DateTimePicker").date())
-
-            startTime = moment(startTime).format("HH:mm:ss.SSS")
-            endTime = moment(endTime).format("HH:mm:ss.SSS")
-
-            reqs = requests[id]
-
-            for(var i = 0; i < reqs.length; i++) {
-                var timestamp = moment(new Date(reqs[i].request_timestamp)).format('HH:mm:ss.SSS')
-
-                $responseTimes.push(reqs[i].response_time)
-                $timestamps.push(timestamp)
-                chart.config.data.labels.push(timestamp);
-                chart.config.data.datasets[0].data.push(reqs[i].response_time);
-
-            }
-
-            // If a new test is being selected, update the
-            // start/end time to the earliest/latest timestamps in the
-            // current test
-            if (newTest && $timestamps.length > 0) {
-                var start = $timestamps[0]
-                var end = $timestamps[$timestamps.length-1]
-
-                $("#stampFilterFrom").val(start)
-                $("#stampFilterTo").val(end)
-            }
-
-            chart.update()
+            Plotly.newPlot('plot', [data], layout, {displayModeBar: true, displaylogo: false});
         }
 
         
