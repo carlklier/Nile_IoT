@@ -56,7 +56,6 @@ class Request(db.Model):
 
     def serialize(self):
         return {
-            'id': self.id,
             'test_id': self.test_id,
             'name': self.name,
             'request_timestamp': self.request_timestamp,
@@ -68,6 +67,13 @@ class Request(db.Model):
             'success': self.success,
             'exception': self.exception
         }
+
+    def timeseries(self):
+        return {
+            'request_timestamp': self.request_timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3],
+            'response_time': self.response_time
+        }
+
 
 
 class RequestSchema(ma.ModelSchema):

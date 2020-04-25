@@ -1,9 +1,16 @@
-import os
 from flask import Flask
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from config import Config
 from app import app, db
+from app.models import Test, Request, SystemMetric
+from alembic import op
+
+import os
+import datetime
+from datetime import timedelta
+import time
+import random
 
 # App config setup
 app.config.from_object(os.environ['APP_CONFIG_ENV'])
@@ -19,6 +26,57 @@ manager.add_command('db', MigrateCommand)
 def test():
     main_result = test_main()
     return main_result
+
+@manager.command
+def seed():
+    """ Seed the test database with data """
+    if os.environ['APP_CONFIG_ENV'] != 'config.TestConfig':
+        return
+
+    batch = 0
+    reqs_per_test = 0
+
+    print(f'Adding test {batch}')
+    new_test = Test(
+        config=f"Seed {Test.query.count()}",
+        locustfile="locustfile.py",
+        start=now(),
+        end=now(),
+        workers=5000
+    )
+    db.session.add(new_test)
+    db.session.commit()
+    test_id = new_test.id
+
+    while batch < 1000:
+        reqs = []
+        while reqs_per_test < 1000:
+
+            new_request = Request(
+                test_id=test_id,
+                name=f"Seed {reqs_per_test}",
+                request_timestamp=now(),
+                request_method="Request Method",
+                request_length=250,
+                response_length=250,
+                response_time=random.normalvariate(240, 1),
+                status_code=200,
+                success=True,
+                exception=None
+            )
+            reqs.append(new_request)
+            reqs_per_test += 1
+            time.sleep(.001)
+
+        db.session.bulk_save_objects(reqs)
+        print(f'Added {reqs_per_test} requests')
+        db.session.commit()
+        print(f'Added set {batch}')
+
+        reqs_per_test = 0
+        batch += 1
+
+    print('Finished seeding database')
 
 
 @manager.command
@@ -102,6 +160,13 @@ def run_test_server():
 
     db.session.remove()
     # db.drop_all()
+
+
+def now():
+
+    """ Shorthand method for getting formatted date """
+
+    return datetime.datetime.now().isoformat()
 
 
 if __name__ == '__main__':

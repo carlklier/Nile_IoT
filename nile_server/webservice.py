@@ -12,6 +12,8 @@ from app.models import Test, Request, SystemMetric, TestSchema, RequestSchema, S
 from flask import Flask, jsonify, render_template, url_for, request, redirect, Response
 from livereload import Server
 
+import json
+
 #########################
 # Initialize Current Test #
 #########################
@@ -76,7 +78,7 @@ def view_test_id(test_id):
     Arguments
         * test_id - the ID of the test being rendered
     """
-
+    
     test = Test.query.get(test_id)
     if test is None:
         return redirect("/tests/")
@@ -87,70 +89,58 @@ def view_test_id(test_id):
     if test.end:
         test_json['end'] = test.start.strftime('%H:%M:%S %m/%d/%Y')
 
-    # Get request summary
-    # Loop adds up durations to get the average, and keeps track
-    # of the current longest request duration
-    requests = Request.query.filter(Request.test_id == test_id).all()
+    # Summary statistics for requests
+    num_requests = Request.query.filter(Request.test_id == test_id).count()
+    num_success = Request.query.filter(
+        Request.test_id == test_id and Request.success is True
+        ).count()
+    num_exception = num_requests - num_success
 
-    # Summary statistics
-    longest = None
-    num_success = 0
-    num_exception = 0
-    mean_response = 0
-    median_response = 0
-    percentile_90 = 0
-    percentile_95 = 0
-    percentile_99 = 0
+    print('start query')
+    agg = list(db.session.execute(
+        'select ' +
+        'avg(response_time) ' +
+        f'from loadtest_requests where test_id={test_id}'
+    ).fetchone())
+    mean_response = '{0:3.1f}'.format(agg[0])
 
-    if len(requests) > 0:
-        longest = requests[0]
+    agg = list(db.session.execute(
+        'select ' +
+        'max(response_time) ' +
+        f'from loadtest_requests where test_id={test_id}'
+    ).fetchone())
+    longest = '{0:3.1f}'.format(agg[0])
+    print(agg)
 
-        for req in requests:
-            if req.response_time:
-                mean_response += req.response_time
-                greater = longest.response_time > req.response_time
-                longest = longest if greater else req
 
-            if req.success is True:
-                num_success += 1
+    percentiles = list(db.session.execute(
+        'select ' +
+        'percentile_disc(0.50) within ' +
+        'group (order by response_time), ' +
+        'percentile_disc(0.90) within ' +
+        'group (order by response_time), ' +
+        'percentile_disc(0.95) within ' +
+        'group (order by response_time), ' +
+        'percentile_disc(0.99) within ' +
+        'group (order by response_time) ' +
+        f'from loadtest_requests where test_id={test_id}'
+    ).fetchone())
+    median_response = '{0:3.1f}'.format(percentiles[0])
+    percentile_90 = '{0:3.1f}'.format(percentiles[1])
+    percentile_95 = '{0:3.1f}'.format(percentiles[2])
+    percentile_99 = '{0:3.1f}'.format(percentiles[3])
+    print('percentiles: ', percentiles)
 
-            if req.exception is not None:
-                num_exception += 1
-
-        longest_date = longest.request_timestamp.strftime('%H:%M:%S.%f')[:-3]
-        request_schema = RequestSchema()
-        longest_json = request_schema.dump(longest)
-        longest_json['request_timestamp'] = longest_date
-
-        mean_response /= len(requests)
-        mean_response = '{0:3.1f}'.format(mean_response)
-
-        percentiles = list(db.session.execute(
-            'select ' +
-            'percentile_disc(0.50) within ' +
-            'group (order by response_time), ' +
-            'percentile_disc(0.90) within ' +
-            'group (order by response_time), ' +
-            'percentile_disc(0.95) within ' +
-            'group (order by response_time), ' +
-            'percentile_disc(0.99) within ' +
-            'group (order by response_time) ' +
-            f'from loadtest_requests where test_id={test_id}'
-        ).fetchone())
-        median_response = percentiles[0]
-        percentile_90 = percentiles[1]
-        percentile_95 = percentiles[2]
-        percentile_99 = percentiles[3]
-        print('percentiles: ', percentiles)
+    print('end query')
 
     metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
 
     return render_template(
         'summary.html',
         test=test_json,
-        num_req=len(requests),
+        num_req=num_requests,
         num_met=len(metrics),
-        longest=longest_json,
+        longest=longest,
         num_success=num_success,
         num_exception=num_exception,
         mean=mean_response,
@@ -160,9 +150,13 @@ def view_test_id(test_id):
         percentile_99=percentile_99
     )
 
-
 @app.route("/graphs/")
-def view_graphs():
+def graphs_redirect():
+    first = db.session.query(Test).order_by(Test.id.desc()).first()
+    return redirect(f"/graphs/{first.id}")
+
+@app.route("/graphs/<test_id>")
+def view_graphs(test_id):
     """
     This function queries all tests and their requests and creates a
     dictionary with each test ID as the keys and associated request
@@ -173,6 +167,7 @@ def view_graphs():
     tests = db.session.query(Test).order_by(Test.id.desc()).all()
     output = []
     req_json = {}
+    reqs = []
     test_format = '%Y-%m-%dT%H:%M:%SZ'
     req_format = '%Y-%m-%dT%H:%M:%S.%f'
 
@@ -185,24 +180,11 @@ def view_graphs():
             if test.end is not None:
                 test_json['end'] = test.end.strftime(test_format)
             output.append(test_json)
-            req_json[test.id] = []
 
-    requests = Request.query.all()
-
-    if len(requests) > 0:
-        for req in requests:
-            req_date = req.request_timestamp.strftime(req_format)[:-3]
-
-            request_schema = RequestSchema()
-            request_json = request_schema.dump(req)
-            request_json['request_timestamp'] = req_date
-            req_json[req.test_id].append(request_json)
-
-    print("dict: ", req_json)
     return render_template(
         'graph.html',
-        tests=output,
-        requests=req_json
+        selected=test_id,
+        tests=output
     )
 
 
@@ -541,6 +523,49 @@ def get_metrics():
         metric_schema = SystemMetricSchema()
         output.append(metric_schema.dump(metric))
     return jsonify(output)
+
+
+@app.route('/api/v1/requests_test/<test_id>', methods=['GET'])
+def get_requests_test(test_id):
+    """
+    Retrieves all of the timestamps and response times of the
+    set of requests for the given test. This query is made
+    asynchronously from the graphs page to improve chart load
+    times.
+
+    Arguments
+        * test_id - the ID of test to fetch requests for
+    """
+
+    requests = list(db.session.execute(
+        'select response_time, request_timestamp ' +
+        f'from loadtest_requests where test_id={test_id}'
+    ).fetchall())
+
+    reqs_dict = {}
+    reqs_dict['timestamps'] = []
+    reqs_dict['response_times'] = []
+
+    for row in requests:
+        reqs_dict['timestamps'].append(row['request_timestamp'])
+        reqs_dict['response_times'].append(row['response_time'])
+
+    reqs_json = json.dumps(
+        reqs_dict,
+        separators=(',', ':'),
+        default=dateconvert
+    )
+
+    return reqs_json
+
+
+def dateconvert(o):
+    """
+    Helper function to convert datetime
+    objects into a formatted string
+    """
+    if isinstance(o, datetime):
+        return o.strftime("%H:%M:%S.%f")[:-3]
 
 
 if __name__ == "__main__":

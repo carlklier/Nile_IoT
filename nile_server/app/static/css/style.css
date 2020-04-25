@@ -157,16 +157,21 @@ table {
 @media (max-width: 980px) {
     .chart {
         max-width: 400px;
-        margin-top: 5%;
-        margin-left:15%;
+        margin-left: 7%;
+        margin-top: -7%;
     }
 }
 
 @media (min-width: 980px) {
     .chart {
-        min-width: 600px;
-        margin-left: 10%;
+        min-width: 650px;
+        margin-left: 7%;
+        margin-top: -7%;
     }
+}
+
+.js-plotly-plot .plotly .modebar {
+    margin-right: 20%;
 }
 
 canvas{
