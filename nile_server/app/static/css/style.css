@@ -53,6 +53,10 @@ table {
     padding-bottom: 4px;
 }
 
+.padded {
+    padding-right: 4px;
+}
+
 .centered {
     text-align: center;
 }
