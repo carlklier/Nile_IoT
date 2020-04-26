@@ -53,12 +53,12 @@
         
         <div class="container">
         <div class="row">
-            <div class="box_section col-lg-3 dark-text z-depth-2" style="width:90%;max-height:690px">
+            <div class="box_section col-lg-3 dark-text z-depth-2" style="width:90%;height:100%;display: block;overflow:auto">
                 <h5 class="text-uppercase text-center">Test Configuration</h5>
-                <div class="main-text box_section">
+                <div class="main-text box_section padded" style="word-wrap: break-word;">
                     <div class="dark-text">Test ID</div>
                     <div class="text-group">{{ test.id }}</div>
-                    <div class="dark-text">Locustfile</div> 
+                    <div class="dark-text">Locust file</div> 
                     <div class="text-group">{{ test.locustfile }}</div>
                     <div class="dark-text">Configuration</div> 
                     <div class="text-group">{{ test.config }}</div>

@@ -90,59 +90,57 @@ def view_test_id(test_id):
         test_json['end'] = test.start.strftime('%H:%M:%S %m/%d/%Y')
 
     # Summary statistics for requests
+    longest = None
+    num_success = 0
+    num_exception = 0
+    mean_response = 0
+    median_response = 0
+    percentile_90 = 0
+    percentile_95 = 0
+    percentile_99 = 0
     num_requests = Request.query.filter(Request.test_id == test_id).count()
-    num_success = Request.query.filter(
-        Request.test_id == test_id and Request.success is True
-        ).count()
-    num_exception = num_requests - num_success
 
-    print('start query')
-    agg = list(db.session.execute(
-        'select ' +
-        'avg(response_time) ' +
-        f'from loadtest_requests where test_id={test_id}'
-    ).fetchone())
-    print(agg)
-    if agg == [None]:
-      mean_response = 0
-    else:
-      mean_response = '{0:3.1f}'.format(agg[0])
+    if num_requests > 0:
+        num_success = Request.query.filter(
+            Request.test_id == test_id and Request.success is True
+            ).count()
+        num_exception = num_requests - num_success
 
-    agg = list(db.session.execute(
-        'select ' +
-        'max(response_time) ' +
-        f'from loadtest_requests where test_id={test_id}'
-    ).fetchone())
-    if agg == [None]:
-      longest = 0
-    else:
-      longest = '{0:3.1f}'.format(agg[0])
+        print('start query')
+        avg = list(db.session.execute(
+            'select ' +
+            'avg(response_time) ' +
+            f'from loadtest_requests where test_id={test_id}'
+        ).fetchone())
+        mean_response = '{0:3.1f}'.format(avg[0])
 
-    percentiles = list(db.session.execute(
-        'select ' +
-        'percentile_disc(0.50) within ' +
-        'group (order by response_time), ' +
-        'percentile_disc(0.90) within ' +
-        'group (order by response_time), ' +
-        'percentile_disc(0.95) within ' +
-        'group (order by response_time), ' +
-        'percentile_disc(0.99) within ' +
-        'group (order by response_time) ' +
-        f'from loadtest_requests where test_id={test_id}'
-    ).fetchone())
-    print(percentiles)
-    if list(set(percentiles)) == [None]:
-      median_response = 0
-      percentile_90 = 0
-      percentile_95 = 0
-      percentile_99 = 0
-    else:
-      median_response = '{0:3.1f}'.format(percentiles[0])
-      percentile_90 = '{0:3.1f}'.format(percentiles[1])
-      percentile_95 = '{0:3.1f}'.format(percentiles[2])
-      percentile_99 = '{0:3.1f}'.format(percentiles[3])
+        longest = db.session.query(Request).order_by(
+            Request.response_time.desc()
+        ).first()
+        longest.response_time = '{0:3.1f}'.format(longest.response_time)
+        print(longest)
 
-    print('end query')
+        percentiles = list(db.session.execute(
+            'select ' +
+            'percentile_disc(0.50) within ' +
+            'group (order by response_time), ' +
+            'percentile_disc(0.90) within ' +
+            'group (order by response_time), ' +
+            'percentile_disc(0.95) within ' +
+            'group (order by response_time), ' +
+            'percentile_disc(0.99) within ' +
+            'group (order by response_time) ' +
+            f'from loadtest_requests where test_id={test_id}'
+        ).fetchone())
+
+        print(percentiles)
+
+        median_response = '{0:3.1f}'.format(percentiles[0])
+        percentile_90 = '{0:3.1f}'.format(percentiles[1])
+        percentile_95 = '{0:3.1f}'.format(percentiles[2])
+        percentile_99 = '{0:3.1f}'.format(percentiles[3])
+
+        print('end query')
 
     metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
 
@@ -166,21 +164,18 @@ def graphs_redirect():
     first = db.session.query(Test).order_by(Test.id.desc()).first()
     return redirect(f"/graphs/{first.id}")
 
+
 @app.route("/graphs/<test_id>")
 def view_graphs(test_id):
     """
-    This function queries all tests and their requests and creates a
-    dictionary with each test ID as the keys and associated request
-    in an array as the values. This array of tests and dictionary are
-    passed to graphs.html which renders them as a chart.js graph.
+    This function queries all tests to be listed in graph.html, which
+    will query the webservice for requests when a test is selected
+    in the api/v1/request_test/test_id endpoint.
     """
 
     tests = db.session.query(Test).order_by(Test.id.desc()).all()
     output = []
-    req_json = {}
-    reqs = []
     test_format = '%Y-%m-%dT%H:%M:%SZ'
-    req_format = '%Y-%m-%dT%H:%M:%S.%f'
 
     # Convert tests to JSON and make datetimes readable
     if len(tests) > 0:

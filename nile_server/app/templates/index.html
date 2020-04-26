@@ -17,7 +17,7 @@
         var $tableRows = $('.table-select'); 
         var $selectedTest = ""
         var current_page = 1;
-        var records_per_page = 5;
+        var records_per_page = 10;
 
         // Get list of tests from Flask as JSON
         var list = {{ tests|tojson }};
@@ -108,7 +108,7 @@
             var end = document.getElementById(index + '-end')
             var endText = test.end
 
-            if (test.end === null) {
+            if (test.end == null) {
                 endText = "In Progress"
                 end.style.fontWeight = '600'
                 end.style.color = 'dark-grey'
@@ -251,7 +251,7 @@
                     <tbody id="table">
                         {% for test in tests %}
                                 <tr id="{{ loop.index }}-idx" class="table-select">
-                                    <th id="{{ loop.index }}-id" scope="row">{{ test.id }}</th>
+                                    <th id="{{ loop.index }}-id" scope="row" class="dark-text">{{ test.id }}</th>
                                     <td id="{{ loop.index }}-locustfile" class="main-text">{{ test.locustfile }}</td>
                                     <td id="{{ loop.index }}-start" class="main-text">{{ test.start }}</td>
                                     <td id="{{ loop.index }}-end" class="main-text">{{ test.end }}</td>
