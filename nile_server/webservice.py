@@ -102,16 +102,21 @@ def view_test_id(test_id):
         'avg(response_time) ' +
         f'from loadtest_requests where test_id={test_id}'
     ).fetchone())
-    mean_response = '{0:3.1f}'.format(agg[0])
+    print(agg)
+    if agg == [None]:
+      mean_response = 0
+    else:
+      mean_response = '{0:3.1f}'.format(agg[0])
 
     agg = list(db.session.execute(
         'select ' +
         'max(response_time) ' +
         f'from loadtest_requests where test_id={test_id}'
     ).fetchone())
-    longest = '{0:3.1f}'.format(agg[0])
-    print(agg)
-
+    if agg == [None]:
+      longest = 0
+    else:
+      longest = '{0:3.1f}'.format(agg[0])
 
     percentiles = list(db.session.execute(
         'select ' +
@@ -125,11 +130,17 @@ def view_test_id(test_id):
         'group (order by response_time) ' +
         f'from loadtest_requests where test_id={test_id}'
     ).fetchone())
-    median_response = '{0:3.1f}'.format(percentiles[0])
-    percentile_90 = '{0:3.1f}'.format(percentiles[1])
-    percentile_95 = '{0:3.1f}'.format(percentiles[2])
-    percentile_99 = '{0:3.1f}'.format(percentiles[3])
-    print('percentiles: ', percentiles)
+    print(percentiles)
+    if list(set(percentiles)) == [None]:
+      median_response = 0
+      percentile_90 = 0
+      percentile_95 = 0
+      percentile_99 = 0
+    else:
+      median_response = '{0:3.1f}'.format(percentiles[0])
+      percentile_90 = '{0:3.1f}'.format(percentiles[1])
+      percentile_95 = '{0:3.1f}'.format(percentiles[2])
+      percentile_99 = '{0:3.1f}'.format(percentiles[3])
 
     print('end query')
 

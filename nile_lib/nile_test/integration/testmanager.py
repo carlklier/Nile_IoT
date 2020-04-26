@@ -33,7 +33,9 @@ class TestManager:
                 slave_count = slave_arg.group(1)
             if config_arg:
                 config_file = sys.argv[i+1]
-
+        
+        self.arguments = ' '.join(sys.argv)
+        print(self.arguments)
         self.config_file = config_file
         self.slave_count = slave_count
 
@@ -42,13 +44,16 @@ class TestManager:
             DataBuffer(hostname, *args, **kwargs)
 
         self.start_test()
-
+        
+        #events.test_start += self.start_test
         events.quitting += self.finalize_test
+        #events.test_stop += self.finalize_test
 
     def start_test(self):
         print("Starting new test")
         data = {
-          'config': self.config_file,
+          'config': self.arguments,
+          'locustfile': self.config_file,
           'start': self.start_time,
           'workers': self.slave_count}
 
