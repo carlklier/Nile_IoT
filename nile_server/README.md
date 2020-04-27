@@ -18,12 +18,12 @@ This server receives Locust request data from the Nile Test Library and System M
     ```
     - This will start the postgres container
 4. If the database is being set up for the first time
-  - Delete the migrations folder
-  - Run:
+    - Delete the migrations folder
+    - Run:
     ```
     python manage.py db init; python manage.py db migrate; python manage.py db upgrade
     ```
-7. To stop the postgres container, run
+5. To stop the postgres container, run
     ```
     docker-compose down
     ```
@@ -32,7 +32,7 @@ This server receives Locust request data from the Nile Test Library and System M
 
 5. Start the webservice with 
     ```
-    ./bootstrap.sh
+    python webservice.py
     ```
 6. To stop the webservice, hit ctrl-c
 
