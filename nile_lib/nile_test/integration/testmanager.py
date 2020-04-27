@@ -4,6 +4,7 @@ import requests
 import datetime
 import sys
 import re
+import signal
 
 from locust import events
 
@@ -43,13 +44,11 @@ class TestManager:
             from .databuffer import DataBuffer
             DataBuffer(hostname, *args, **kwargs)
 
-        self.start_test()
+        events.hatch_complete += self.start_test
         
-        #events.test_start += self.start_test
         events.quitting += self.finalize_test
-        #events.test_stop += self.finalize_test
 
-    def start_test(self):
+    def start_test(self, **kwargs):
         print("Starting new test")
         data = {
           'config': self.arguments,

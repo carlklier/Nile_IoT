@@ -255,6 +255,14 @@ def requests():
     global PREV_TEST
 
     requests = request.get_json()
+
+    if requests == []:
+        return Response(
+            "Buffer of requests empty. Nothing to save.",
+            status=200,
+            mimetype='application/json'
+            )
+
     time_sent = datetime.strptime(
             requests[0]['request_timestamp'],
             "%Y-%m-%dT%H:%M:%S.%f"

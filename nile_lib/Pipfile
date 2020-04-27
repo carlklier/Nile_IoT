@@ -9,7 +9,7 @@ pytest-cov="*"
 pytest-mock="*"
 
 [packages]
-locustio = "*"
+locustio = "0.14.5"
 coverage = "*"
 python-interface = "*"
 numpy = "*"
