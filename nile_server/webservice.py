@@ -13,6 +13,7 @@ from flask import Flask, jsonify, render_template, url_for, request, redirect, R
 from livereload import Server
 
 import json
+import os
 
 #########################
 # Initialize Current Test #
@@ -56,7 +57,7 @@ def view_tests():
     tests = db.session.query(Test).order_by(Test.id.desc()).all()
     output = []
 
-    # Convert tests to JSON and make datetimes readable
+    # Convert tests to JSON and make datetimes more readable
     if len(tests) > 0:
         for test in tests:
             test_schema = TestSchema()
@@ -78,7 +79,7 @@ def view_test_id(test_id):
     Arguments
         * test_id - the ID of the test being rendered
     """
-    
+
     test = Test.query.get(test_id)
     if test is None:
         return redirect("/tests/")
@@ -89,7 +90,7 @@ def view_test_id(test_id):
     if test.end:
         test_json['end'] = test.start.strftime('%H:%M:%S %m/%d/%Y')
 
-    # Summary statistics for requests
+    # Gather summary statistics for requests
     longest = None
     num_success = 0
     num_exception = 0
@@ -106,7 +107,8 @@ def view_test_id(test_id):
             ).count()
         num_exception = num_requests - num_success
 
-        print('start query')
+        # Using raw SQL queries returns rows in a tuple, here it is
+        # converted to a list which it can be indexed and formatted from
         avg = list(db.session.execute(
             'select ' +
             'avg(response_time) ' +
@@ -118,7 +120,6 @@ def view_test_id(test_id):
             Request.response_time.desc()
         ).first()
         longest.response_time = '{0:3.1f}'.format(longest.response_time)
-        print(longest)
 
         percentiles = list(db.session.execute(
             'select ' +
@@ -133,15 +134,12 @@ def view_test_id(test_id):
             f'from loadtest_requests where test_id={test_id}'
         ).fetchone())
 
-        print(percentiles)
-
         median_response = '{0:3.1f}'.format(percentiles[0])
         percentile_90 = '{0:3.1f}'.format(percentiles[1])
         percentile_95 = '{0:3.1f}'.format(percentiles[2])
         percentile_99 = '{0:3.1f}'.format(percentiles[3])
 
-        print('end query')
-
+    # System metrics gathering not yet implemented
     metrics = SystemMetric.query.filter(SystemMetric.test_id == test_id).all()
 
     return render_template(
@@ -161,9 +159,12 @@ def view_test_id(test_id):
 
 @app.route("/graphs/")
 def graphs_redirect():
-    first = db.session.query(Test).order_by(Test.id.desc()).first()
-    return redirect(f"/graphs/{first.id}")
+    """ Redirect user to view the first test graph, if it exists """
 
+    first = db.session.query(Test).order_by(Test.id.desc()).first()
+
+    if first is not None:
+        return redirect(f"/graphs/{first.id}")
 
 @app.route("/graphs/<test_id>")
 def view_graphs(test_id):
@@ -531,7 +532,7 @@ def get_metrics():
     return jsonify(output)
 
 
-@app.route('/api/v1/requests_test/<test_id>', methods=['GET'])
+@app.route('/api/v1/requests/test/<test_id>', methods=['GET'])
 def get_requests_test(test_id):
     """
     Retrieves all of the timestamps and response times of the
@@ -565,6 +566,20 @@ def get_requests_test(test_id):
     return reqs_json
 
 
+@app.route('/shutdown', methods=['POST'])
+def shutdown():
+    """ Shutdown the test server, if we're using it. """
+
+    if os.environ['APP_CONFIG_ENV'] == 'config.TestConfig':
+        print("Shutting down server...")
+        func = request.environ.get('werkzeug.server.shutdown')
+        if func is None:  # pragma: no cover
+            raise RuntimeError('Not running with the Werkzeug Server')
+        func()
+    else:
+        print('Can only shut down test server!')
+
+
 def dateconvert(o):
     """
     Helper function to convert datetime
@@ -575,6 +590,9 @@ def dateconvert(o):
 
 
 if __name__ == "__main__":
-    # server = Server(app.wsgi_app)
-    # server.serve(port=5000)
-    app.run(host='0.0.0.0', debug=True)
+    print("Starting load test server...")
+
+    if os.environ['APP_CONFIG_ENV'] == 'config.TestConfig':
+        app.run(host='localhost', debug=True, use_reloader=False)
+    else:
+        app.run(host='localhost', debug=False)
