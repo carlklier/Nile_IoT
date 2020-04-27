@@ -156,7 +156,7 @@
         */ 
         $('.list-select').click(function(e) {
             $.ajax({
-                url: "http://localhost:5000/api/v1/requests_test/" + this.id,
+                url: "http://localhost:5000/api/v1/requests/test/" + this.id,
                 type: 'GET',
                 success: function(res) {
                     createChart(this.id, true, JSON.parse(res))
