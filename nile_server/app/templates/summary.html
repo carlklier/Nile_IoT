@@ -32,25 +32,33 @@
             
         })
 
+        /**
+        * Navigate to test graph
+        */
         $('#view').click(function(e) {
             window.open("http://localhost:5000/graphs/?test={{ test.id }}", "_self")
         })
     })
 </script>
 
+<!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark special-color-dark">
     <!-- Navbar brand -->
     <a class="navbar-brand" href="#">Loadtest Manager</a>
 
+    <!-- Navbar items -->
     <ul class="navbar-nav mr-auto">
         <a class="dropdown-item text-light" href="http://localhost:5000/tests/">View Test List</a>
         <a class="dropdown-item text-light" href="http://localhost:5000/graphs/">Visualize Tests</a>
     </ul>
 </nav>
+
+<!-- Main Layout -->
 <div class="p-3 mb-2 overflow-hidden">
 
         <h1>View Test {{ test.id }} Summary</h1>
         
+        <!-- Displays all test fields -->
         <div class="container">
         <div class="row">
             <div class="box_section col-lg-3 dark-text z-depth-2" style="width:90%;height:100%;display: block;overflow:auto">
@@ -84,9 +92,14 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Summary of requests and metrics -->
             <div class="box_section col-lg-8 mdb-color lighten-5 z-depth-2" style="width:90%;float:right">
                 <h5 class="text-uppercase text-center">Test Summary</h5>
+                
                 <div class="row">
+
+                    <!-- Metrics box -->
                     <div class="box_section_inner border-bottom col-lg-5 text-dark justify-content-center">
                         <div style="width:100%">
                             <h4 class="text-center border-bottom border-light">System Metrics</h4>
@@ -96,6 +109,8 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Requests box -->
                     <div class="box_section_inner border-bottom col-lg-5 text-dark  justify-content-center">
                         <div style="width:100%">
                             <h4 class="text-center border-bottom border-light">Requests</h4>
