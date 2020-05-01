@@ -2,7 +2,7 @@ import os
 import sys
 sys.path.append(os.path.abspath(".."))
 
-from nile_test.toxiproxy import ToxiProxy, Proxy, Toxic # noqa: E402
+from nile_test.toxiproxy import ToxiProxy, Proxy, Toxic  # noqa: E402
 
 hostname = "localhost:8474"
 toxiproxy = ToxiProxy(hostname)
@@ -112,8 +112,10 @@ toxic1_attributes = {
 }
 
 print(f"Creating Toxic named 'proxy1' on proxy '{proxy1.name}'")
-print(f"t_type='{toxic1_type}', stream='{toxic1_stream}', toxicity='{toxic1_toxicity}', attributes='{toxic1_attributes}'")
-print("...")
+print(f"t_type='{toxic1_type}'")
+print(f"stream='{toxic1_stream}'")
+print(f"toxicity='{toxic1_toxicity}''")
+print(f"attributes='{toxic1_attributes}'")
 
 toxic1.make(
     t_type=toxic1_type,
@@ -183,4 +185,3 @@ retrieved_attributes = toxic1.get_attributes()
 assert new_attributes == retrieved_attributes, \
     f"Found upstream '{retrieved_attributes}', expected '{new_attributes}'"
 print("Attributes updated correctly")
-
