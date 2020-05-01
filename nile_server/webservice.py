@@ -610,8 +610,8 @@ def dateconvert(o):
 if __name__ == "__main__":
 
     if os.environ['APP_CONFIG_ENV'] == 'config.TestConfig':
-        print("Starting TEST server...")
+        print("Starting test server...")
         app.run(host='localhost', debug=True, use_reloader=False)
     else:
-        print("Starting load test server...")
+        print("Starting development server...")
         app.run(host='localhost', debug=False)
