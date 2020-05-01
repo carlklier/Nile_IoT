@@ -4,12 +4,12 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-pytest="*"
-pytest-cov="*"
-pytest-mock="*"
+pytest = "*"
+pytest-cov = "*"
+pytest-mock = "*"
 
 [packages]
-locustio = "0.14.5"
+locustio = "~=0.14.5"
 coverage = "*"
 python-interface = "*"
 numpy = "*"

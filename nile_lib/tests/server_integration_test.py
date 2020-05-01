@@ -50,18 +50,13 @@ def test_is_master(monkeypatch):
 def test_TestManager_init(mocker, monkeypatch):
     monkeypatch.setattr(sys, "argv",
                         ["--expect-slaves=1", "-f", "locustfile.py"])
-    mock_post = mocker.patch.object(requests, 'post')
-    mock_post.return_value.status_code = 200
     tm = TestManager("localhost")
 
     assert tm.hostname == "localhost"
     assert tm.slave_count == '1'
     assert tm.start_time is not None
     assert tm.config_file == 'locustfile.py'
-
-    mock_post.return_value.status_code = 400
-    with pytest.raises(RuntimeError):
-        tm = TestManager("localhost")
+    assert tm.arguments == "--expect-slaves=1 -f locustfile.py"
 
 
 def test_TestManager_finalize_test(mocker):
