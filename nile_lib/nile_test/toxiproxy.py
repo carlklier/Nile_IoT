@@ -47,7 +47,8 @@ class ToxiProxy:
             proxy.set_upstream(upstream_address)
             proxy.set_listen(listen_address)
         else:
-            proxy.make(upstream_address, listen_address)
+            proxy.make(upstream_address=upstream_address,
+                       listen_address=listen_address)
 
         return proxy
 
@@ -175,7 +176,8 @@ class Proxy:
         if toxic.exists():
             toxic.delete()
 
-        toxic.make(t_type, stream, toxicity, attributes)
+        toxic.make(t_type=t_type, stream=stream,
+                   toxicity=toxicity, attributes=attributes)
 
         return toxic
 
@@ -213,7 +215,7 @@ class Toxic:
         """
         return requests.get(self.get_url()).ok
 
-    def make(self, t_type, stream, toxicity, attributes):
+    def make(self, *, t_type, stream, toxicity, attributes):
         """
         Tries to make this Toxic on the Proxy with the provided values
         Raises RuntimeError if the Toxic already exists
