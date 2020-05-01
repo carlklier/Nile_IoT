@@ -76,7 +76,6 @@ def test_DataBuffer_init():
     assert data_buffer1.buffer_limit == 20
     assert data_buffer1.data_endpoint == "http://localhost/api/v1/requests"
     assert len(data_buffer1.buffer) == 0
-    # not sure how to test the event hooks adding methods
 
     data_buffer2 = DataBuffer("localhost", buffer_limit=30)
     assert data_buffer2.buffer_limit == 30
