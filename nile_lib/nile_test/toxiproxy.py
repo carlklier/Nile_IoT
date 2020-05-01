@@ -1,4 +1,5 @@
 import requests
+import json
 
 
 class ToxiProxy:
@@ -26,7 +27,10 @@ class ToxiProxy:
         """
         Checks whether this ToxiProxy server exists and is reachable
         """
-        return requests.get(self.get_proxies_url()).ok
+        try:
+            return requests.get(self.get_proxies_url()).ok
+        except requests.exceptions.ConnectionError:
+            return False
 
     def create_proxy(self, name, *, upstream_address, listen_address):
         """
@@ -57,6 +61,19 @@ class ToxiProxy:
             return proxy
         else:
             return None
+
+    def get_proxies(self):
+        """
+        Get a list of all proxies
+        """
+        proxies = requests.get(self.get_proxies_url()).text
+        proxies = json.loads(proxies)
+        return proxies
+
+    def delete_proxies(self):
+        for proxy in self.get_proxies().keys():
+            print(proxy)
+            requests.delete(f"http://{self.hostname}/proxies/{proxy}")
 
 
 class Proxy:
@@ -249,6 +266,13 @@ class Toxic:
             "toxicity": toxicity
         }
         requests.post(self.get_url(), json=json)
+
+    def get_type(self):
+        """
+                Gets the stream property of this Toxic from the server
+                """
+        response = requests.get(self.get_url())
+        return response.json().get("type")
 
     def get_toxicity(self):
         """

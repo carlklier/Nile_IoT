@@ -10,7 +10,6 @@ from datetime import datetime
 from app import app, db
 from app.models import Test, Request, SystemMetric, TestSchema, RequestSchema, SystemMetricSchema
 from flask import Flask, jsonify, render_template, url_for, request, redirect, Response
-from livereload import Server
 
 import json
 import os
@@ -157,6 +156,7 @@ def view_test_id(test_id):
         percentile_99=percentile_99
     )
 
+
 @app.route("/graphs/")
 def graphs_redirect():
     """ Redirect user to view the first test graph, if it exists """
@@ -165,6 +165,7 @@ def graphs_redirect():
 
     if first is not None:
         return redirect(f"/graphs/{first.id}")
+
 
 @app.route("/graphs/<test_id>")
 def view_graphs(test_id):
@@ -574,9 +575,18 @@ def get_requests_test(test_id):
     return reqs_json
 
 
+#########################
+# POST Shutdown #
+
+# Used by automated tests to stop the server #
+#########################
+
 @app.route('/shutdown', methods=['POST'])
 def shutdown():
-    """ Shutdown the test server, if we're using it. """
+    """ 
+    Shutdown the test server. This should only be called by manage.py
+    and used to stop automated testing.
+    """
 
     if os.environ['APP_CONFIG_ENV'] == 'config.TestConfig':
         print("Shutting down server...")
@@ -598,9 +608,10 @@ def dateconvert(o):
 
 
 if __name__ == "__main__":
-    print("Starting load test server...")
 
     if os.environ['APP_CONFIG_ENV'] == 'config.TestConfig':
+        print("Starting test server...")
         app.run(host='localhost', debug=True, use_reloader=False)
     else:
+        print("Starting development server...")
         app.run(host='localhost', debug=False)

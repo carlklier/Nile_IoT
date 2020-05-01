@@ -60,7 +60,7 @@ def start_test_server(test):
     server_return_code = server.wait(timeout=60)
 
     # Display the coverage report for the server
-    os.system("coverage report -m webservice.py")
+    os.system("coverage report -i webservice.py")
 
     # Reset the environment variable
     os.putenv("APP_CONFIG_ENV", "config.DevelopmentConfig")
@@ -71,38 +71,48 @@ def start_test_server(test):
 
 
 @manager.command
-def seed():
+def seed(num_tests=10, reqs_per_test=100):
     """
     Seed the test database with data by adding a test with
     a large number of requests
+
+    Arguments
+        * num_tests - number of tests to insert
+        * reqs_per_test - number of requests to insert per test
     """
 
     if os.environ['APP_CONFIG_ENV'] != 'config.TestConfig':
-        print('You can only seed the test database')
+        print(
+            """
+            You can only seed the test database.
+            Set APP_CONFIG_ENV environment variable to 'config.TestConfig'
+            and try again.
+            """
+        )
         return
 
-    batch = 0
-    reqs_per_test = 0
+    test_count = 0
+    req_count = 0
 
-    print(f'Adding test {batch}')
-    new_test = Test(
-        config=f"Seed {Test.query.count()}",
-        locustfile="locustfile.py",
-        start=now(),
-        end=now(),
-        workers=5000
-    )
-    db.session.add(new_test)
-    db.session.commit()
-    test_id = new_test.id
+    while test_count < int(num_tests):
+        print(f'Adding test {test_count + 1} with {reqs_per_test} requests')
+        new_test = Test(
+            config=f"Seed {Test.query.count()}",
+            locustfile="locustfile.py",
+            start=now(),
+            end=now(),
+            workers=5000
+        )
+        db.session.add(new_test)
+        db.session.commit()
+        test_id = new_test.id
 
-    while batch < 1000:
         reqs = []
-        while reqs_per_test < 1000:
+        while req_count < int(reqs_per_test):
 
             new_request = Request(
                 test_id=test_id,
-                name=f"Seed {reqs_per_test}",
+                name=f"Seed {req_count}",
                 request_timestamp=now(),
                 request_method="Request Method",
                 request_length=250,
@@ -113,16 +123,14 @@ def seed():
                 exception=None
             )
             reqs.append(new_request)
-            reqs_per_test += 1
+            req_count += 1
             time.sleep(.001)
 
         db.session.bulk_save_objects(reqs)
-        print(f'Added {reqs_per_test} requests')
         db.session.commit()
-        print(f'Added set {batch}')
 
-        reqs_per_test = 0
-        batch += 1
+        req_count = 0
+        test_count += 1
 
     print('Finished seeding database')
 

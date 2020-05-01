@@ -57,8 +57,8 @@
                         <li class="list-group-item list-select" id="{{ test.id }}">
                             <div class="list-text dark-text"  id="{{ loop.index }}-id">Test {{ test.id }}</div>
                             <div class="list-text">
-                                <a class="dark-text">Configuration: </a>
-                                {{ test.config }}
+                                <a class="dark-text">Workers: </a>
+                                {{ test.workers }}
                             </div>
                             <div class="list-text">
                                 <a class="dark-text">Completed: </a>
@@ -168,10 +168,9 @@
         });
 
         /**
-        * Creates a new chart by destroying the previous
-        * chart and redrawing it with newly filtered values.
-        * Date-times compared are converted to just HH:mm:ss
-        * so only the time of day is compared.
+        * Creates a chart with the given requests variable,
+        * which consists of 2 nested arrays of request timestsamps
+        * and response times.
         */ 
         function createChart(id, newTest, requests) {
 
