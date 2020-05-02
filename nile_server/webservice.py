@@ -604,7 +604,7 @@ def dateconvert(o):
     objects into a formatted string
     """
     if isinstance(o, datetime):
-        return o.strftime("%H:%M:%S.%f")[:-3]
+        return o.strftime("%Y-%d-%m %H:%M:%S.%f")
 
 
 if __name__ == "__main__":
