@@ -44,7 +44,7 @@ class TestManager:
             from .databuffer import DataBuffer
             DataBuffer(hostname, *args, **kwargs)
 
-        events.hatch_complete += self.start_test
+        self.start_test()
         
         events.quitting += self.finalize_test
 
