@@ -616,8 +616,12 @@ if __name__ == "__main__":
     """
 
     if os.environ['APP_CONFIG_ENV'] == 'config.TestConfig':
-        print("Starting TEST server...")
+        print("Starting test server...")
         app.run(host='localhost', debug=True, use_reloader=False)
-    else:
-        print("Starting server...")
+    elif os.environ['APP_CONFIG_ENV'] == 'config.DevelopmentConfig':
+        print("Starting dev server...")
+        app.run(host='localhost', debug=True)
+    elif os.environ['APP_CONFIG_ENV'] == 'config.ProductionConfig':
+        print("Starting production server...")
         app.run(host='localhost', debug=False)
+

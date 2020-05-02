@@ -3,14 +3,15 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config(object):
-  DEBUG = False
-  TESTING = False
-  SQLALCHEMY_TRACK_MODIFICATIONS = True
+    DEBUG = False
+    TESTING = False
+    SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 
 class ProductionConfig(Config):
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:dbpw@localhost:5434/prod_db'
+
 
 class DevelopmentConfig(Config):
     DEVELOPMENT = True
