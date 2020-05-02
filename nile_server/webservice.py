@@ -608,10 +608,16 @@ def dateconvert(o):
 
 
 if __name__ == "__main__":
+    """
+    Server starting point. The environment variable
+    APP_CONFIG_ENV is used to determine which database the
+    server connects to, and is set to config.DevelopmentConfig
+    by default when the pipenv environment is started.
+    """
 
     if os.environ['APP_CONFIG_ENV'] == 'config.TestConfig':
-        print("Starting test server...")
+        print("Starting TEST server...")
         app.run(host='localhost', debug=True, use_reloader=False)
     else:
-        print("Starting development server...")
+        print("Starting server...")
         app.run(host='localhost', debug=False)

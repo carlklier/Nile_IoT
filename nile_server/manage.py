@@ -83,11 +83,9 @@ def seed(num_tests=10, reqs_per_test=100):
 
     if os.environ['APP_CONFIG_ENV'] != 'config.TestConfig':
         print(
-            """
-            You can only seed the test database.
-            Set APP_CONFIG_ENV environment variable to 'config.TestConfig'
-            and try again.
-            """
+            'You can only seed the test database.',
+            'Set APP_CONFIG_ENV environment variable to config.TestConfig',
+            'and try again.'
         )
         return
 
