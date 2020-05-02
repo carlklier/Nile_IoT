@@ -6,6 +6,7 @@ class Test(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     config = db.Column(db.String())
+    locustfile = db.Column(db.String())
     start = db.Column(db.TIMESTAMP)
     end = db.Column(db.TIMESTAMP)
     workers = db.Column(db.Integer)
@@ -20,6 +21,7 @@ class Test(db.Model):
         return {
             'id': self.id,
             'config': self.config,
+            'locustfile': self.locustfile,
             'start': self.start,
             'end': self.end,
             'workers': self.workers
@@ -54,7 +56,6 @@ class Request(db.Model):
 
     def serialize(self):
         return {
-            'id': self.id,
             'test_id': self.test_id,
             'name': self.name,
             'request_timestamp': self.request_timestamp,
@@ -66,6 +67,13 @@ class Request(db.Model):
             'success': self.success,
             'exception': self.exception
         }
+
+    def timeseries(self):
+        return {
+            'request_timestamp': self.request_timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3],
+            'response_time': self.response_time
+        }
+
 
 
 class RequestSchema(ma.ModelSchema):
@@ -94,7 +102,7 @@ class SystemMetric(db.Model):
             'id': self.id,
             'test_id': self.test_id,
             'system_name': self.system_name,
-            'metric_name': self.metric_type,
+            'metric_name': self.metric_name,
             'metric_timestamp': self.metric_timestamp,
             'metric_value': self.metric_value
         }

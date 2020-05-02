@@ -18,8 +18,8 @@ api = 'http://localhost:5000/api/v1'
 test_endpoint = f'{api}/tests'
 met_endpoint = f'{api}/metrics'
 req_endpoint = f'{api}/requests'
-db_uri = 'postgresql://postgres:dbpw@localhost:5433/testing_db'
 
+test_file = "locustfile"
 test_config = "Test POST Config"
 num_workers = 50000
 
@@ -50,119 +50,116 @@ class TestEndpoint(unittest.TestCase):
     # Test Environment Setup #
     #########################
 
-    def create_app(self):
+    def setUp(self):
+        db.create_all()
 
-        """ Start app and set database """
-
-        config_name = 'testing'
-        create = create_app(config_name)
-        create.config.update(
-            SQLALCHEMY_DATABASE_URI=db_uri
-        )
-        return app
-
-#    def setUp(self):
-#        db.create_all()
-
-#    def tearDown(self):
-        #db.session.remove()
+    def tearDown(self):
+        db.session.remove()
 
     #########################
     # Test POST section #
     #########################
 
-    def test_0_no_tests(self):
+    def test_00_no_tests(self):
 
         """
         Test adding requests, metrics and test end time when no test running,
         expected to fail
          """
-   
-        reset_db()
-        add_test()
+
         # In case a previous test is still open for some reason
-        #test_finalize()
+        finalize_test()
+        reset_db()
 
         self.assertEqual(Test.query.count(), 0)
         self.assertEqual(Request.query.count(), 0)
         self.assertEqual(SystemMetric.query.count(), 0)
+
+        print("Testing empty database")
 
         request = add_request()
         self.assertEqual(
             request.text,
             "Can't submit request while no tests running."
             )
-        self.assertEqual(request.status, 400)
+        self.assertEqual(request.status_code, 400)
 
         request = add_metric()
         self.assertEqual(
             request.text,
             "Can't submit metric while no tests running."
             )
-        self.assertEqual(request.status, 400)
+        self.assertEqual(request.status_code, 400)
 
-        request = test_finalize()
+        request = finalize_test()
         self.assertEqual(
             request.text,
             "No test running."
             )
 
-    def test_1_post_test(self):
+    def test_01_post_test(self):
 
         """ Test adding new test """
+
+        print("Testing post test")
 
         count = Test.query.count()
 
         request = add_test()
 
         self.assertEqual(Test.query.count(), count + 1)
-        self.assertEqual(
-            request.text,
-            'Added test with ID: ' + str(count + 1) + '\n'
+        self.assertIn(
+            'Added test with ID:',
+            request.text
             )
 
-    def test_2_post_request(self):
+    def test_02_post_request(self):
 
         """ Test adding new request """
+
+        print("Testing post requests")
 
         count = Request.query.count()
 
         request = add_request(5)
         time.sleep(4)
-        self.assertEqual(Request.query.count(), count + 1)
-        self.assertEqual(
-            request.text,
-            'Added request with ID: ' + str(count + 1) + '\n'
+        self.assertEqual(Request.query.count(), count + 5)
+        self.assertIn(
+            'Added request with ID: ',
+            request.text
             )
 
-    def test_3_post_metric(self):
+    def test_03_post_metric(self):
 
         """ Test adding new metric """
+
+        print("Testing post metric")
 
         count = SystemMetric.query.count()
 
         request = add_metric()
 
-        self.assertEqual(
-            request.text,
-            'Added metric with ID: ' + str(count + 1) + '\n'
+        self.assertIn(
+            'Added metric with ID:',
+            request.text
             )
         self.assertEqual(SystemMetric.query.count(), count + 1)
 
-    def test_4_post_finalize(self):
+    def test_04_post_finalize(self):
 
         """
         Here we test that we can save requests even if they aren't
         posted until after their running test has been finalized
         """
 
-        print("POST finalize")
+        print("Testing finalize test request")
 
         req_time = now()
         time.sleep(1)
         test_end = now()
 
-        request = test_finalize(test_end)
+        request = finalize_test(test_end)
+        self.assertIn("Finalized test with ID:", request.text)
 
         self.assertEqual(
             db.session.query(Test)
@@ -170,96 +167,141 @@ class TestEndpoint(unittest.TestCase):
             test_end
             )
 
-        count = Request.query.count()
-        request = add_request(req_time)
-        self.assertEqual(
-            request.text,
-            'Added request with ID: ' + str(count + 1) + '\n'
+        request = add_request(1, req_time)
+        self.assertIn(
+            'Added request with ID: ',
+            request.text
             )
 
-    def test_5_post_invalid(self):
+        # If request doesn't fall within the Test time period,
+        # it cannot be added
+        request = add_request(1)
+        self.assertEqual(
+            request.text,
+            "Can't submit request while no tests running."
+            )
+        self.assertEqual(request.status_code, 400)
+
+    def test_05_post_invalid(self):
 
         """ Test posting invalid data, expected to fail """
 
-        print("POST invalid")
+        print("Testing invalid post requests")
 
         # Add invalid test
-        endpoint = test_endpoint
-        data = {
-            'config': (test_config),
-            'start': '5:35 PM',
-            'workers': num_workers
-            }
-        request = requests.post(endpoint, json=data)
-        self.assertEqual(request.text, 'Failed to add test.')
+        request = add_test('5:35 PM')
+        self.assertEqual(request.status_code, 500)
 
         # Add valid test to test invalid metrics and requests
-        count = Test.query.count()
-        data = {
-            'config': (test_config + str(count)),
-            'start': now(),
-            'workers': num_workers
-            }
-
-        print("test POST", data)
-
-        request = requests.post(endpoint, json=data)
+        request = add_test()
+        self.assertEqual(request.status_code, 200)
 
         # Attempt to add test while a test is running
-        request = requests.post(endpoint, json=data)
+        request = add_test()
         self.assertEqual(request.text, 'Can only run one test at a time.')
 
         request = add_metric('5 o clock')
-        self.assertEqual(request.text, 'Failed to add metric.')
+        self.assertEqual(request.status_code, 400)
 
-        request = add_request('Tea time')
-        self.assertEqual(request.text, 'Failed to add request.')
+        request = add_request(1, 'Tea time')
+        self.assertEqual(request.status_code, 500)
 
         # Fail to finalize test
-        request = test_finalize('Late at night')
-
-        self.assertEqual(request.text, 'Failed to finalize test.')
+        request = finalize_test('Late at night')
+        self.assertEqual(request.status_code, 500)
 
         # Finalize test
-        test_finalize()
+        request = finalize_test()
+        self.assertIn("Finalized test with ID:", request.text)
 
         # Fail to add request and metric after test is finished
-        request = add_request()
-        self.assertEqual(request.text, 'Failed to add request.')
+        request = add_request(1)
+        self.assertIn(
+            "Can't submit request while no tests running.",
+            request.text
+            )
 
         request = add_metric()
-        self.assertEqual(request.text, 'Failed to add metric.')
+        self.assertIn(
+            "Can't submit metric while no tests running.",
+            request.text
+            )
+
+    def test_06_delete(self):
+
+        """ Test adding a test with test data and deleting all of it """
+
+        print("Testing deletion of test data")
+
+        request = add_test()
+        self.assertEqual(request.status_code, 200)
+
+        request = add_request(5)
+        self.assertEqual(request.status_code, 200)
+
+        request = add_metric()
+        self.assertEqual(request.status_code, 200)
+
+        request = finalize_test()
+        self.assertEqual(request.status_code, 200)
+
+        test_count = Test.query.count()
+        req_count = Request.query.count()
+        met_count = SystemMetric .query.count()
+
+        id = db.session.query(
+            Test
+            ).order_by(
+                Test.id.desc()
+            ).first().id
+
+        endpoint = f'{api}/delete/{id}'
+        request = requests.post(endpoint)
+
+        self.assertEqual(
+            request.text,
+            f"Deleted test and data with ID: {id}\n"
+            )
+        self.assertEqual(request.status_code, 200)
+
+        self.assertEqual(Test.query.count(), test_count - 1)
+        self.assertEqual(Request.query.count(), req_count - 5)
+        self.assertEqual(SystemMetric.query.count(), met_count - 1)
 
     #########################
     # Test GET section #
     #########################
 
-    def test_6_get_all(self):
+    def test_07_get_all(self):
 
         """ Test getting a list of all test, request and metrics """
 
-        print("GET all")
+        print("Testing get all tests")
 
         endpoint = test_endpoint
         tests = json.loads(requests.get(endpoint).content)
 
         self.assertEqual(len(tests), Test.query.count())
 
+        print("Testing get all requests")
+
         endpoint = req_endpoint
         loc_requests = json.loads(requests.get(endpoint).content)
 
         self.assertEqual(len(loc_requests), Request.query.count())
+
+        print("Testing get all metrics")
 
         endpoint = met_endpoint
         metrics = json.loads(requests.get(endpoint).content)
 
         self.assertEqual(len(metrics), SystemMetric.query.count())
 
-    def test_7_get_request_id(self):
+    def test_08_get_request_id(self):
 
         """ Test receiving requests by id """
 
-        print("GET request ID")
+        print('Testing get request by id')
 
         add_request()
 
@@ -267,59 +309,87 @@ class TestEndpoint(unittest.TestCase):
             Request
             ).order_by(
                 Request.id.desc()
-                ).first().id
+            ).first().id
 
-        endpoint = req_endpoint + str(request_id)
+        endpoint = f'{req_endpoint}/{request_id}'
         request = json.loads(requests.get(endpoint).content)
-        print("get request by id: " + str(request))
 
         # Check fields match what is expected
 
         self.assertEqual(request['name'], req_name)
         self.assertEqual(request['request_method'], req_method)
-        self.assertEqual(request['response_type'], res_type)
+        self.assertEqual(request['request_length'], req_length)
         self.assertEqual(request['response_length'], res_length)
         self.assertEqual(request['response_time'], res_time)
         self.assertEqual(request['status_code'], status)
         self.assertEqual(request['success'], success)
         self.assertEqual(request['exception'], None)
 
-    def test_8_get_metric_id(self):
-     
+        # Test getting the request through its test's id
+        test_id = request['test_id']
+
+        endpoint = f'{req_endpoint}/test/{test_id}'
+        request = json.loads(requests.get(endpoint).content)
+
+        # Check fields match what is expected
+        num_requests = Request.query.filter(
+            Request.test_id == test_id
+        ).count()
+
+        self.assertTrue(len(request['timestamps']) == num_requests)
+
+        requests.get(f'http://localhost:5000/tests/{test_id}')
+
+    def test_09_get_metric_id(self):
+
         """ Test receiving metrics by id """
 
-        print("GET metric ID")
+        print('Testing get metric by id')
 
         metric_id = db.session.query(
             SystemMetric
             ).order_by(
                 SystemMetric.id.desc()
-                ).first().id
+            ).first().id
 
-        endpoint = met_endpoint + str(metric_id)
+        endpoint = f'{met_endpoint}/{metric_id}'
         request = json.loads(requests.get(endpoint).content)
-        print("get request by id: " + str(request))
 
         self.assertEqual(request['system_name'], sys_name)
         self.assertEqual(request['metric_name'], met_name)
         self.assertEqual(request['metric_value'], met_val)
 
-    def test_9_get_test_id(self):
+    def test_10_get_test_id(self):
 
         """ Test tests requests by id """
 
-        print("GET test ID")
+        print('Testing get test by id')
+
         test_id = db.session.query(Test).order_by(Test.id.desc()).first().id
 
-        endpoint = test_endpoint + str(test_id)
+        endpoint = f'{test_endpoint}/{str(test_id)}'
         request = json.loads(requests.get(endpoint).content)
-        print("get request by id: " + str(request))
 
         self.assertEqual(request['workers'], num_workers)
 
+    def test_11_end(self):
+
+        """ Up the coverage report for rendering web
+            pages for which selenium tests have not yet
+            been implemented.
+        """
+
+        test_id = db.session.query(Test).order_by(Test.id.desc()).first().id
+
+        requests.get('http://localhost:5000/index')
+        requests.get('http://localhost:5000/graphs')
+        requests.get(f'http://localhost:5000/tests/{test_id}')
+
+        reset_db()
+
 
 #########################
-# Helper methods  #
+# Helper functions  #
 #########################
 
 
@@ -336,11 +406,11 @@ def add_test(time=None):
 
     data = {
         'config': (test_config),
+        'locustfile': test_file,
         'start': time if time else now(),
         'workers': num_workers
     }
 
-    print("POST TEST ", data)
     return requests.post(endpoint, json=data)
 
 
@@ -353,7 +423,7 @@ def add_request(count=1, time=None):
         * count - can add any number of requests at once
         * time - can specify a timestamp for request being added
     """
-    
+
     request_list = []
     endpoint = req_endpoint
 
@@ -369,11 +439,10 @@ def add_request(count=1, time=None):
             'success': success,
             'exception': None
         }
-        
+
         request_list.append(data)
         count -= 1
 
-    print("request POST", data)
     return requests.post(endpoint, json=request_list)
 
 
@@ -392,12 +461,12 @@ def add_metric(time=None):
         'system_name': sys_name,
         'metric_name': met_name,
         'metric_timestamp':  time if time else now(),
-        'metric_value': "One hundred million dollars",
+        'metric_value': met_val,
     }
     return requests.post(endpoint, json=data)
 
 
-def test_finalize(time=None):
+def finalize_test(time=None):
 
     """
     Helper for finalizing a test
@@ -412,28 +481,37 @@ def test_finalize(time=None):
         'end': time if time else now()
     }
 
-    print("test finalize ", data)
     return requests.post(endpoint, json=data)
- 
+
 
 def now():
 
-    """ Shorthand method for getting formatted date """
+    """ Shorthand function for getting formatted date """
 
     return datetime.datetime.now().isoformat()
 
+
 def reset_db():
-  
-  """ Clears the database for the next test"""
 
-  meta = db.metadata
-  for table in reversed(meta.sorted_tables):
-    print(f'Clearing table {table}')
-    db.session.execute(table.delete())
-    print(f'Cleared table {table}')
+    """ Clears the database for the next test"""
 
-  db.session.commit()
-  
+    print('Resetting database...')
+    print(f'Tests: {Test.query.count()}')
+    print(f'Requests: {Request.query.count()}')
+    print(f'Metrics: {SystemMetric.query.count()}')
+
+    meta = db.metadata
+    for table in reversed(meta.sorted_tables):
+        print(f'Clearing table {table}')
+        db.session.execute(table.delete())
+        print(f'Cleared table {table}')
+
+    db.session.commit()
+
+    print(f'Tests: {Test.query.count()}')
+    print(f'Requests: {Request.query.count()}')
+    print(f'Metrics: {SystemMetric.query.count()}')
+
 
 if __name__ == '__main__':
     unittest.main()

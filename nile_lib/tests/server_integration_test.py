@@ -58,11 +58,11 @@ def test_TestManager_init(mocker, monkeypatch):
     assert tm.slave_count == '1'
     assert tm.start_time is not None
     assert tm.config_file == 'locustfile.py'
+    assert tm.arguments == "--expect-slaves=1 -f locustfile.py"
 
     mock_post.return_value.status_code = 400
     with pytest.raises(RuntimeError):
-        tm = TestManager("localhost")
-
+      tm = TestManager("localhost")
 
 def test_TestManager_finalize_test(mocker):
     mock_post = mocker.patch.object(requests, 'post')
@@ -81,7 +81,6 @@ def test_DataBuffer_init():
     assert data_buffer1.buffer_limit == 20
     assert data_buffer1.data_endpoint == "http://localhost/api/v1/requests"
     assert len(data_buffer1.buffer) == 0
-    # not sure how to test the event hooks adding methods
 
     data_buffer2 = DataBuffer("localhost", buffer_limit=30)
     assert data_buffer2.buffer_limit == 30

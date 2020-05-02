@@ -4,33 +4,10 @@
 {% endblock %}
 
 {% block body %}
-
-<!-- Scripts -->
-<script src="../../node_modules/chart.js/dist/Chart.js"></script>
-<script>
-function showLocustFunction() {
-  var x = document.getElementById("test-group");
-  var y = document.getElementById("test-group-2");
-  if (x.style.display === "none") {
-    x.style.display = "block";
-    y.style.display = "none";
-  }
-}
-function showSystemMetricsFunction() {
-  var x = document.getElementById("test-group-2");
-  var y = document.getElementById("test-group");
-  if (x.style.display === "none") {
-    x.style.display = "block";
-    y.style.display = "none";
-  }
-}
-</script>
-<!-- Scripts -->
-
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark special-color-dark">
     <!-- Navbar brand -->
-    <a class="navbar-brand text-uppercase" href="#">Loadtest Manager</a>
+    <a class="navbar-brand" href="#">Loadtest Manager</a>
 
     <!-- NavBar Items -->
     <ul class="navbar-nav mr-auto">
@@ -47,45 +24,45 @@ function showSystemMetricsFunction() {
         <h1>Visualize Test Results</h1>
     </div>
     
-    <div class="container">
+    <div class="container" style="position:static">
         <div class="row">
-            <div class="btn-group" role="group" aria-label="Results Option">
-                <button type="button" class="btn btn-primary" onclick="showLocustFunction()">Locust Results</button>
-                <button type="button" class="btn btn-primary" onclick="showSystemMetricsFunction()">System Metrics</button>
-            </div>
+                <div class="btn-group" role="group" aria-label="Results Option">
+                    <button type="button" class="btn btn-primary" onclick="showRequests()" style="max-height: 50px;">Locust Results</button>
+                    <button type="button" class="btn btn-primary" onclick="showMetrics()" style="max-height: 50px;">System Metrics</button>
+                </div>
+            
+            
         </div>
         <div class="row pt-3">
 
-            <div class="col-3">
+            <div class="col-md-3">
 
-              <div class="row-6">
-
-                <label class="dark-text">Find Tests:</label>
-                <div class="col-md-4">
-                    <label for="foo">From:</label>
-                    <input data-date-format="mm/dd/yyyy" id="datepickerFrom" name="foo">
+                <div class="row justify-content-center">
+                    <label class="main-text">Find Tests:</label>
+                </div>
+                <div class="row justify-content-center">
+                    <label class="list-text">From:</label>
+                    <input data-date-format="mm/dd/yyyy" id="datepickerFrom" name="foo" class="date-pair" style="max-width: 100px;">
                 </div>
 
-                <div class="col-md-4">
-                    <label for="foobar">To:</label>
-                    <input data-date-format="mm/dd/yyyy" id="datepickerTo" name="foobar">
+                <div class="row justify-content-center">
+                    <label class="list-text" >To:</label>
+                    <input data-date-format="mm/dd/yyyy" data-date-end-date="0d" id="datepickerTo" class="date-pair" style="max-width: 100px;margin-left: 9%;">
                 </div>
-
-              </div>
 
               <div class="row-5 pt-3">
-                <div style="height:300px; width:300px;line-height:3em;overflow:auto;padding:5px;border-style: solid;border-color: rgb(220, 222, 231);border-width: 2px;">
+                <div style="height:300px; width:250px;line-height:3em;overflow:auto;padding:5px;border-style: solid;border-color: rgb(220, 222, 231);border-width: 2px;">
                     {% for test in tests %}
-                    <ul class="list-group" id="test-group">
+                    <ul class="list-group" id="test-table">
                         <li class="list-group-item list-select" id="{{ test.id }}">
-                            <div class="list-text dark-text">Test {{ test.id }}</div>
+                            <div class="list-text dark-text"  id="{{ loop.index }}-id">Test {{ test.id }}</div>
                             <div class="list-text">
-                                <a class="dark-text">Configuration: </a>
-                                {{ test.config }}
+                                <a class="dark-text">Workers: </a>
+                                {{ test.workers }}
                             </div>
                             <div class="list-text">
                                 <a class="dark-text">Completed: </a>
-                                {{ test.start }}
+                                <a id="{{ test.id }}-end">{{ test.end }}</a>
                             </div>
                         </li>
                     </ul>
@@ -96,131 +73,152 @@ function showSystemMetricsFunction() {
             </div>
 
             <div class="col-md-7 chart">
-                <canvas id="chart" width="10" height="9"></canvas>
+                <div id="plot"></div>
             </div>
             
 
         </div>
     </div>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.1/js/bootstrap-datepicker.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    
     <script type="text/javascript">
 
         
-        // Get list of tests from Flask as JSON
+        // Get list of tests and requests from Flask as JSON
         var tests = {{ tests|tojson }};
-        var requests = {{ requests|tojson }};
         var $listRows = $('.list-select'); 
         var $selectedTest = ""
         var $responseTimes = []
         var $timestamps = []
-        var ctx = document.getElementById('chart').getContext('2d');
 
-
+        /**
+        * When the window loads, display the chart from the
+        * most recent test data
+        */ 
         window.onload = function() {
-            if (tests.length > 0) createChart(tests[0].id)
+            if (tests.length <= 0) return 0
+            var id = {{ selected }}
+
+            // If user selected a test to visualize, load chart
+            // with that id. Otherwise, grab the most recent test
+            // available
+            if (tests[tests.length - id]) {
+                document.getElementById(id).click()
+            } else {
+                document.getElementById(tests[0].id).click()
+            }
+
+            filterTests()
         }
         
-        $('#datepickerFrom').datepicker({
+        /**
+        * Initialize datepickers and re-filter tests when updated
+        */ 
+        $('#datepickerFrom, #datepickerTo').datepicker({
             weekStart: 1,
             daysOfWeekHighlighted: "6,0",
             autoclose: true,
             todayHighlight: true,
             buttonText: "From date",
+        }).on("changeDate", function (e) {
+            filterTests()
         });
-        $('#datepickerFrom').datepicker("setDate", new Date());
-        $('#datepickerTo').datepicker({
-            weekStart: 1,
-            daysOfWeekHighlighted: "6,0",
-            autoclose: true,
-            todayHighlight: true,
-            buttonText: "To date",
-        });
-        $('#datepickerTo').datepicker("setDate", new Date());
+        $('#datepickerFrom').datepicker("setDate", Date.parse(tests[tests.length - 1].start))
+        $('#datepickerTo').datepicker("setDate", moment().endOf('day').format("MMMM Do YYYY"))
+
 
         /**
-        * Highlight a selected a table row
+        * Filter the tests displayed based on the date picker
         */ 
-        $('.list-select').click(function(e) {
-            $listRows.removeClass('active');
-            $(this).addClass('active');
-            $selectedTest = tests[this.id]
-            console.log($selectedTest)
+        function filterTests() {
 
-            createChart(this.id)
+            var startDate = $('#datepickerFrom').datepicker('getDate')
+            var endDate = moment($('#datepickerTo').datepicker('getDate')).hours(23).minutes(59).seconds(59)
 
-        });
+            for(var i = 0; i < tests.length; i++) {
 
-        function createChart(id) {
+                id = tests[i].id
+                start = Date.parse(tests[i].start)
+                if (tests[i].end != null) end = Date.parse(tests[i].end).toLocaleString()
+                else end = "Not Complete"
 
-            var $responseTimes = []
-            var $timestamps = []
-            
-            if (chart) chart.destroy();
-            var ctx = document.getElementById('chart').getContext('2d');
-        
-            var chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: $timestamps,
-                    datasets: [{
-                        label: "Response Time",
-                        data: $responseTimes,
-                        backgroundColor: [
-                            'rgba(2, 99, 255, 0.2)',
-                            'rgba(54, 162, 235, 0.2)',
-                            'rgba(255, 206, 86, 0.2)',
-                            'rgba(75, 192, 192, 0.2)',
-                            'rgba(153, 102, 255, 0.2)',
-                            'rgba(255, 159, 64, 0.2)'
-                        ],
-                        borderColor: [
-                            'rgba(100, 99, 255, 1)',
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(153, 102, 255, 1)',
-                            'rgba(255, 159, 64, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        xAxes: [{
-                            ticks: {
-                                callback: function(t, i) {
-                                    if (!(i % 4)) return t;
-                                }
-                            }
-                        }]
-                    }
-                }
-            });
-
-
-            for(var i = 0; i < requests.length; i++) {
-                if (requests[i].test_id == id) {
-                    $responseTimes.push(requests[i].response_time)
-                    $timestamps.push(requests[i].request_timestamp)
-                    chart.config.data.labels.push(requests[i].request_timestamp);
-                    chart.config.data.datasets[0].data.push(requests[i].response_time);
+                document.getElementById(id + '-end').innerHTML = end;
+                if (start >= startDate && start <= endDate) {
+                    document.getElementById(id).style.display = '';
+                } else {
+                    document.getElementById(id).style.display = 'none';
                 }
             }
-            console.log($responseTimes)
-            console.log($timestamps)
-
-            chart.update()
         }
 
-        // example of how to remove data point from end of dataset.
-        function popData() {
-            chart.data.labels.pop();
-            chart.data.datasets[0].data.pop();
-            chart.update();
+        /**
+        * Highlight a selected a test in the table and update
+        * the chart
+        */ 
+        $('.list-select').click(function(e) {
+            $.ajax({
+                url: "http://localhost:5000/api/v1/requests/test/" + this.id,
+                type: 'GET',
+                success: function(res) {
+                    createChart(this.id, true, JSON.parse(res))
+                }
+            });
+            $listRows.removeClass('active')
+            $(this).addClass('active')
+            $selectedTest = tests[tests.length - this.id]
+        });
+
+        /**
+        * Creates a chart with the given requests variable,
+        * which consists of 2 nested arrays of request timestsamps
+        * and response times.
+        */ 
+        function createChart(id, newTest, requests) {
+
+            var $timestamps = requests['timestamps']
+            var $responseTimes = requests['response_times']
+
+            console.log($timestamps.length)
+
+            var data = {
+                x: $timestamps,
+                y: $responseTimes,
+                mode: 'lines'
+            }
+
+            var layout = {
+                showlegend: false,
+                height: 600,
+                width: 600,
+                paper_bgcolor:'rgba(0,0,0,0)',
+                plot_bgcolor:'rgba(0,0,0,0)',
+                modebar: {
+                    bgcolor: 'white'
+                },
+                margin: {
+                    t: 60,
+                    b: 100
+                }
+            };
+
+            Plotly.newPlot('plot', [data], layout, {displayModeBar: true, displaylogo: false});
+        }
+
+        
+        function showRequests() {
+            var x = document.getElementById("test-group")
+            var y = document.getElementById("test-group-2")
+            if (x.style.display === "none") {
+                x.style.display = "block"
+                y.style.display = "none"
+            }
+        }
+        function showMetrics() {
+            var x = document.getElementById("test-group-2")
+            var y = document.getElementById("test-group")
+            if (x.style.display === "none") {
+                x.style.display = "block"
+                y.style.display = "none"
+            }
         }
     </script>
 </main>

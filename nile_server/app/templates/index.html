@@ -4,11 +4,10 @@
 {% endblock %}
 
 {% block body %}
+
+<!-- Source Javascript -->
 <script>
     $(document).ready(function() {
-
-        // TODO: This script needs to move to script.js
-        // once we can extract the test list from Flask
 
         /**
          Initialize local variables
@@ -34,7 +33,7 @@
         }
 
         /**
-        * Highlight a selected a table row
+        * More convenient page refresh
         */ 
         $('#table-refresh').click(function(e) {
             window.location.reload(false)
@@ -49,6 +48,8 @@
             $selectedTest = $(this).find('th:first').text()
             document.getElementById("view-test").innerHTML =  "View Test " + $selectedTest
             view = document.getElementById("view-summary")
+            view.style.opacity = 1
+            view = document.getElementById("graphs-id")
             view.style.opacity = 1
         });
 
@@ -85,9 +86,15 @@
         });
 
         // Visualize Tests navigates to /graphs/
+        $("#graphs-id").click(function() {
+            console.log("view graphs")
+            window.open("http://localhost:5000/graphs?test=" + $selectedTest, "_self")
+        });
+
+        // Visualize Tests navigates to /graphs/
         $("#graphs").click(function() {
             console.log("view graphs")
-            window.open("http://localhost:5000/graphs/", "_self")
+            window.open("http://localhost:5000/graphs", "_self")
         });
         
         // Modify the table HTML to match the current sorting
@@ -100,7 +107,7 @@
             var end = document.getElementById(index + '-end')
             var endText = test.end
 
-            if (test.end === null) {
+            if (test.end == null) {
                 endText = "In Progress"
                 end.style.fontWeight = '600'
                 end.style.color = 'dark-grey'
@@ -111,6 +118,7 @@
             document.getElementById(index + '-id').innerHTML = test.id
             document.getElementById(index + '-id').style.fontWeight = '600'
             document.getElementById(index + '-cfg').innerHTML = test.config
+            document.getElementById(index + '-locustfile').innerHTML = test.locustfile
             document.getElementById(index + '-start').innerHTML = test.start
             document.getElementById(index + '-end').innerHTML = endText
             document.getElementById(index + '-workers').innerHTML = test.workers
@@ -194,21 +202,25 @@
         }
 
     })
-    
-
 </script>
+
+<!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark special-color-dark">
     <!-- Navbar brand -->
     <a class="navbar-brand text-white" href="#">Loadtest Manager</a>
 
+    <!-- Navbar items -->
     <ul class="navbar-nav mr-auto">
-        <a class="dropdown-item text-light" href="http://localhost:5000/graphs/">Vizualize Test Results</a>
+        <a class="dropdown-item text-light" href="http://localhost:5000/graphs/">Visualize Test Results</a>
     </ul>
 </nav>
 
+<!-- Main Layout -->
 <div  class="content p-3 mb-2 overflow-hidden">
     <h1>View Test List</h1>
     <br>
+
+    <!-- Sort table dropdown -->
     <div class="drop-pair">
         <div class="main-text drop-lead">Sort by:</div>
         
@@ -223,9 +235,11 @@
             </div>
         </div>
 
-        <button id="table-refresh"  class="arrow-btn btn-primary z-depth-2" style="margin-top:0.5%"><i class="fa fa-refresh"></i></button>
+        <button id="table-refresh"  class="arrow-btn btn-primary z-depth-1" style="margin-top:0.7%"><i class="fa fa-refresh"></i></button>
        
     </div>
+
+    <!-- Table of tests -->
     <div class="row">
         <div class="col-lg-8 col-md-6">
             <div class="row">
@@ -233,7 +247,7 @@
                     <thead>
                         <tr>
                             <th scope="col" class="text-center dark-text">Test ID</th>
-                            <th scope="col" class="text-center dark-text">Config</th>
+                            <th scope="col" class="text-center dark-text">Locustfile</th>
                             <th scope="col" class="text-center dark-text">Start Time</th>
                             <th scope="col" class="text-center dark-text">End Time</th>
                             <th scope="col" class="text-center dark-text">Workers</th>
@@ -242,8 +256,8 @@
                     <tbody id="table">
                         {% for test in tests %}
                                 <tr id="{{ loop.index }}-idx" class="table-select">
-                                    <th id="{{ loop.index }}-id" scope="row">{{ test.id }}</th>
-                                    <td id="{{ loop.index }}-cfg" class="main-text">{{ test.config }}</td>
+                                    <th id="{{ loop.index }}-id" scope="row" class="dark-text">{{ test.id }}</th>
+                                    <td id="{{ loop.index }}-locustfile" class="main-text">{{ test.locustfile }}</td>
                                     <td id="{{ loop.index }}-start" class="main-text">{{ test.start }}</td>
                                     <td id="{{ loop.index }}-end" class="main-text">{{ test.end }}</td>
                                     <td id="{{ loop.index }}-workers" class="main-text">{{ test.workers }}</td>
@@ -252,18 +266,21 @@
                     </tbody>
                 </table>
             </div>
-            <div class="row">
-                <div class="text-center btn-center">
-                    <button id="prev" class="arrow-btn btn-primary z-depth-2"><i class="fa fa-arrow-circle-left"></i></button>
-                    
-                    <button id="graphs" class="btn-middle btn-primary text-uppercase z-depth-2">Visualize Tests</button>
 
-                    <button id="next"  class="arrow-btn btn-primary z-depth-2"><i class="fa fa-arrow-circle-right"></i></button>
+            <!-- Buttons to increment/decrement table page -->
+            <div class="row">
+                <div class="text-center btn-center" style="margin-left:20%">
+                    <button id="prev" class="list-grp arrow-btn btn-primary z-depth-1"><i class="fa fa-arrow-circle-left"></i></button>
                     
-                    <div id="shown" class="bottom-text" style="color:grey;margin-top: 2%;align-self: center;margin-left: 5%;"></div>
+                    <div id="shown" class="list-grp bottom-text" style="color:grey;margin-top: 2%;align-self: center;margin-left: 5%;"></div>
+
+                    <button id="next"  class="list-grp arrow-btn btn-primary z-depth-1"><i class="fa fa-arrow-circle-right"></i></button>
+                    
                 </div>
             </div>
         </div>
+
+        <!-- Section for test-specific info -->
         <div class="col-lg-4 col-md-6">
             <div class="box_section dark-text z-depth-2 text-center small-box">
                 
@@ -272,7 +289,7 @@
                 <div style="width:100%;margin:auto">
                     <button id="view-summary" type="button" class="btn btn-primary" style="width:250px;opacity:.5">View Test Summary</button>
                     <br>
-                    <button  id="view-data"type="button" class="btn btn-primary"style="width:250px;opacity:.5">View Test Data</button>
+                    <button  id="graphs-id"type="button" class="btn btn-primary"style="width:250px;opacity:.5">View Test Graph</button>
                 </div>
             </div>
         </div>
