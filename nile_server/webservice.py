@@ -555,6 +555,7 @@ def get_requests_test(test_id):
 
     requests = list(db.session.execute(
         'select response_time, request_timestamp ' +
+        'order by request_timestamp'
         f'from loadtest_requests where test_id={test_id}'
     ).fetchall())
 
@@ -583,7 +584,7 @@ def get_requests_test(test_id):
 
 @app.route('/shutdown', methods=['POST'])
 def shutdown():
-    """ 
+    """
     Shutdown the test server. This should only be called by manage.py
     and used to stop automated testing.
     """
