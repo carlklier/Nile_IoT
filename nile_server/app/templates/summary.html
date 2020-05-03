@@ -10,10 +10,24 @@
         var test = {{ test|tojson }};
 
         /**
+        * On start, disable delete for in-progress tests to avoid
+        * deadlock
+        */
+        window.onload = function() {
+            var deleteButton = document.getElementById('delete');
+
+            if (test.end === null) {
+                console.log('Test is not finalized.')
+                deleteButton.style.opacity = 0.5
+                deleteButton.disable = true
+            }
+        }
+
+        /**
         * Function called when user wants to delete a test
         */
         $('#delete').click(function(e) {
-            if (confirm("Are you sure you want to delete this test?")) {
+            if (this.enable && confirm("Are you sure you want to delete this test?")) {
                 const request = new XMLHttpRequest();
                 const url='http://localhost:5000/api/v1/delete/' + test.id;
                 request.open("POST", url);

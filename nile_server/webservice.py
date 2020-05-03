@@ -555,8 +555,8 @@ def get_requests_test(test_id):
 
     requests = list(db.session.execute(
         'select response_time, request_timestamp ' +
+        f'from loadtest_requests where test_id={test_id} ' +
         'order by request_timestamp'
-        f'from loadtest_requests where test_id={test_id}'
     ).fetchall())
 
     reqs_dict = {}
