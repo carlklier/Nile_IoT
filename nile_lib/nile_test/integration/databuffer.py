@@ -68,7 +68,7 @@ class DataBuffer:
             data['status_code'] = None
 
         self.buffer.append(data)
-        if len(self.buffer) > 20:
+        if len(self.buffer) > self.buffer_limit:
             self._upload_buffer()
 
     def on_quitting(self):
@@ -76,12 +76,12 @@ class DataBuffer:
         self._upload_buffer()
 
     def _upload_buffer(self):
-        print('Nile: Uploading Buffer with size ' + str(len(self.buffer)))
+        contents = self.buffer
+        self.buffer = list()
+        print('Nile: Uploading Buffer with size ' + str(len(contents)))
         requests_endpoint = f'http://{self.hostname}/api/v1/requests'
 
-        response = requests.post(requests_endpoint, json=self.buffer)
+        response = requests.post(requests_endpoint, json=contents)
         if response.status_code != 200:
             raise RuntimeError(f'Could not upload buffer after test \
                 shutdown {response}')
-
-        self.buffer = list()
