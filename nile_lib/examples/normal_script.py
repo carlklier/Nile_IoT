@@ -21,7 +21,7 @@ hostname = "localhost:8474"
 toxiproxy = ToxiProxy(hostname)
 
 toxiproxy.delete_proxies()
-print('12345' + str(toxiproxy.get_proxies()) + '45678')
+print('Proxies after deletion: ' + str(toxiproxy.get_proxies()))
 
 # Check that a ToxiProxy can be found
 assert toxiproxy.exists(), f"ToxiProxy server not found at '{hostname}'"
